@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
     
     // Title
     val title = android.widget.TextView(this).apply {
-      text = "🎯 Yuno SDK Example"
+      text = "🎯 ${getString(R.string.main_title)}"
       textSize = 28f
       setTextColor(android.graphics.Color.WHITE)
       gravity = android.view.Gravity.CENTER
@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
     
     // Subtitle
     val subtitle = android.widget.TextView(this).apply {
-      text = "🤖 Android"
+      text = getString(R.string.main_subtitle)
       textSize = 16f
       setTextColor(android.graphics.Color.WHITE)
       gravity = android.view.Gravity.CENTER
@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
 
     // Card title
     val cardTitle = android.widget.TextView(this).apply {
-      text = "⚙️ Configuración"
+      text = getString(R.string.config_title)
       textSize = 18f
       setTextColor(android.graphics.Color.parseColor("#333333"))
       typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -110,7 +110,7 @@ class MainActivity : AppCompatActivity() {
     
     // Instructions
     val instructions = android.widget.TextView(this).apply {
-      text = "Yuno Configuration JSON:"
+      text = getString(R.string.config_json_label)
       textSize = 14f
       setTextColor(android.graphics.Color.parseColor("#333333"))
       typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -120,7 +120,7 @@ class MainActivity : AppCompatActivity() {
 
     // Config JSON input with styled background (multiline)
     configInput = EditText(this).apply {
-      hint = "Ingresa el JSON de configuración"
+      hint = getString(R.string.config_json_hint)
       textSize = 12f
       setTextColor(android.graphics.Color.parseColor("#333333"))
       setHintTextColor(android.graphics.Color.parseColor("#999999"))
@@ -147,7 +147,7 @@ class MainActivity : AppCompatActivity() {
 
     // Start button with purple background
     startButton = Button(this).apply {
-      text = "Start Yuno SDK Example"
+      text = getString(R.string.button_start)
       textSize = 15f
       setTextColor(android.graphics.Color.WHITE)
       typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -193,7 +193,7 @@ class MainActivity : AppCompatActivity() {
     }
     
     val infoTitle = android.widget.TextView(this).apply {
-      text = "ℹ️ Información"
+      text = getString(R.string.info_title)
       textSize = 16f
       setTextColor(android.graphics.Color.parseColor("#1976D2"))
       typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -202,12 +202,7 @@ class MainActivity : AppCompatActivity() {
     infoCard.addView(infoTitle)
     
     val infoText = android.widget.TextView(this).apply {
-      text = "El SDK de Yuno ya está listo para usar.\n\n" +
-             "• Ingresa el JSON de configuración completo\n" +
-             "• Incluye country, language, merchantKeys y options\n" +
-             "• Presiona Start para continuar\n" +
-             "• El SDK se inicializará con tu configuración\n" +
-             "• Podrás probar todas las funcionalidades"
+      text = getString(R.string.info_text)
       textSize = 13f
       setTextColor(android.graphics.Color.parseColor("#1565C0"))
       lineHeight = (20 * resources.displayMetrics.scaledDensity).toInt()
@@ -216,9 +211,9 @@ class MainActivity : AppCompatActivity() {
     
     layout.addView(infoCard)
     
-    // Footer
+    // Footer with SDK version
     val footer = android.widget.TextView(this).apply {
-      text = "Yuno SDK React Native v1.0.0"
+      text = getString(R.string.footer_version)
       textSize = 12f
       setTextColor(android.graphics.Color.parseColor("#999999"))
       gravity = android.view.Gravity.CENTER
@@ -234,7 +229,7 @@ class MainActivity : AppCompatActivity() {
     val configJson = configInput.text.toString().trim()
     
     if (configJson.isEmpty()) {
-      Toast.makeText(this, "Please enter a valid configuration JSON", Toast.LENGTH_SHORT).show()
+      Toast.makeText(this, getString(R.string.error_empty_json), Toast.LENGTH_SHORT).show()
       return
     }
 
@@ -294,10 +289,10 @@ class MainActivity : AppCompatActivity() {
       
     } catch (e: org.json.JSONException) {
       android.util.Log.e("MainActivity", "❌ Invalid JSON format: ${e.message}", e)
-      Toast.makeText(this, "Invalid JSON format: ${e.message}", Toast.LENGTH_LONG).show()
+      Toast.makeText(this, getString(R.string.error_invalid_json, e.message ?: "Unknown"), Toast.LENGTH_LONG).show()
     } catch (e: Exception) {
       android.util.Log.e("MainActivity", "❌ Failed to initialize Yuno SDK: ${e.message}", e)
-      Toast.makeText(this, "Failed to initialize Yuno SDK: ${e.message}", Toast.LENGTH_LONG).show()
+      Toast.makeText(this, getString(R.string.error_init_failed, e.message ?: "Unknown"), Toast.LENGTH_LONG).show()
     }
   }
 }
