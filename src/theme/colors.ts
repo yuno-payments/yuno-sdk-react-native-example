@@ -1,185 +1,180 @@
 /**
- * Yuno Color Palette
- * Supports Light Mode and Dark Mode based on Yuno's Design System
+ * Yuno Official Color Palette
+ * Matches Yuno's native SDK design system
  */
 
 export interface ColorPalette {
+  // Neutral colors (black/white that swap in dark mode)
+  neutralB: string;
+  neutralW: string;
+  
+  // Grey scale (0-5, lightest to darkest)
+  grey0: string;
+  grey1: string;
+  grey2: string;
+  grey3: string;
+  grey4: string;
+  grey5: string;
+  
   // Primary colors
-  primary: string;
-  primaryLight: string;
-  primaryDark: string;
+  primary1: string;
+  primary2: string;
+  primary3: string;
+  primary4: string;
+  primary5: string;
   
   // Secondary colors
-  secondary: string;
-  secondaryLight: string;
-  secondaryDark: string;
+  secondary1: string;
+  secondary2: string;
+  secondary3: string;
+  secondary4: string;
+  secondary5: string;
+  secondary6: string;
   
-  // Tertiary colors (Tags, accents)
-  tertiary: string;
-  tertiaryLight: string;
-  tertiaryDark: string;
+  // Tertiary colors
+  tertiary1: string;
+  tertiary2: string;
+  tertiary3: string;
+  tertiary4: string;
   
-  // Neutral colors
+  // Semantic mappings (for easier usage)
   background: string;
   surface: string;
   surfaceVariant: string;
-  
-  // Text colors
   text: string;
   textPrimary: string;
   textSecondary: string;
   textTertiary: string;
   textInverse: string;
-  
-  // Border and dividers
   border: string;
   borderLight: string;
-  divider: string;
-  
-  // Status colors
-  success: string;
-  successLight: string;
-  error: string;
-  errorLight: string;
-  warning: string;
-  warningLight: string;
-  info: string;
-  infoLight: string;
-  
-  // Disabled state
-  disabled: string;
-  disabledText: string;
-  
-  // Overlay
-  overlay: string;
-  overlayLight: string;
-  
-  // Card and elevation
   card: string;
   cardBorder: string;
   elevation: string;
+  success: string;
+  error: string;
+  warning: string;
+  info: string;
+  disabled: string;
+  disabledText: string;
 }
 
 /**
- * Light Mode Color Palette
- * Based on Yuno's Design System
+ * Light Mode - Yuno Official Palette
  */
 export const lightColors: ColorPalette = {
-  // Primary - Yuno Purple
-  primary: '#4E3DD8',
-  primaryLight: '#7B68FF',
-  primaryDark: '#3A2FB3',
+  // Neutral
+  neutralB: '#282A30',
+  neutralW: '#FFFFFF',
   
-  // Secondary - Yuno Blue
-  secondary: '#2196F3',
-  secondaryLight: '#64B5F6',
-  secondaryDark: '#1976D2',
+  // Grey Scale
+  grey0: '#FCFCFF',
+  grey1: '#F6F7FA',
+  grey2: '#ECEFF2',
+  grey3: '#BFC2C7',
+  grey4: '#92959B',
+  grey5: '#6C6F75',
   
-  // Tertiary - Accent colors
-  tertiary: '#00BCD4',
-  tertiaryLight: '#4DD0E1',
-  tertiaryDark: '#0097A7',
+  // Primary
+  primary1: '#3E4FE0',
+  primary2: '#29D99A',
+  primary3: '#FDB600',
+  primary4: '#F13F5E',
+  primary5: '#086BFF',
   
-  // Neutral - Backgrounds
-  background: '#F5F7FA',
+  // Secondary
+  secondary1: '#E3EEFF',
+  secondary2: '#DEFFF3',
+  secondary3: '#FFF6DB',
+  secondary4: '#FFDFE3',
+  secondary5: '#E9E8FF',
+  secondary6: '#FEEBE1',
+  
+  // Tertiary
+  tertiary1: '#12823B',
+  tertiary2: '#E5A424',
+  tertiary3: '#E02E4D',
+  tertiary4: '#F6610C',
+  
+  // Semantic Mappings (Light Mode)
+  background: '#F6F7FA',
   surface: '#FFFFFF',
-  surfaceVariant: '#F9FAFB',
-  
-  // Text colors
-  text: '#1A1A1A',
-  textPrimary: '#1A1A1A',
-  textSecondary: '#666666',
-  textTertiary: '#999999',
+  surfaceVariant: '#FCFCFF',
+  text: '#282A30',
+  textPrimary: '#282A30',
+  textSecondary: '#6C6F75',
+  textTertiary: '#92959B',
   textInverse: '#FFFFFF',
-  
-  // Borders
-  border: '#E0E0E0',
-  borderLight: '#F0F0F0',
-  divider: '#EEEEEE',
-  
-  // Status colors
-  success: '#4CAF50',
-  successLight: '#E8F5E9',
-  error: '#F44336',
-  errorLight: '#FFEBEE',
-  warning: '#FF9800',
-  warningLight: '#FFF3E0',
-  info: '#2196F3',
-  infoLight: '#E3F2FD',
-  
-  // Disabled
-  disabled: '#BDBDBD',
-  disabledText: '#9E9E9E',
-  
-  // Overlay
-  overlay: 'rgba(0, 0, 0, 0.5)',
-  overlayLight: 'rgba(0, 0, 0, 0.2)',
-  
-  // Card
+  border: '#BFC2C7',
+  borderLight: '#ECEFF2',
   card: '#FFFFFF',
-  cardBorder: '#E0E0E0',
+  cardBorder: '#BFC2C7',
   elevation: 'rgba(0, 0, 0, 0.1)',
+  success: '#29D99A',
+  error: '#F13F5E',
+  warning: '#FDB600',
+  info: '#086BFF',
+  disabled: '#BFC2C7',
+  disabledText: '#92959B',
 };
 
 /**
- * Dark Mode Color Palette
- * Based on Yuno's Design System
+ * Dark Mode - Yuno Official Palette
  */
 export const darkColors: ColorPalette = {
-  // Primary - Yuno Purple (adjusted for dark mode)
-  primary: '#7B68FF',
-  primaryLight: '#9D8CFF',
-  primaryDark: '#4E3DD8',
+  // Neutral (swapped)
+  neutralB: '#FFFFFF',
+  neutralW: '#1F2023',
   
-  // Secondary - Yuno Blue (adjusted for dark mode)
-  secondary: '#64B5F6',
-  secondaryLight: '#90CAF9',
-  secondaryDark: '#42A5F5',
+  // Grey Scale (Dark)
+  grey0: '#1F2023',
+  grey1: '#2E2F36',
+  grey2: '#35363E',
+  grey3: '#797E85',
+  grey4: '#9CA0A6',
+  grey5: '#BFC2C7',
   
-  // Tertiary - Accent colors
-  tertiary: '#4DD0E1',
-  tertiaryLight: '#80DEEA',
-  tertiaryDark: '#26C6DA',
+  // Primary (same as light)
+  primary1: '#3E4FE0',
+  primary2: '#29D99A',
+  primary3: '#FDB600',
+  primary4: '#F13F5E',
+  primary5: '#086BFF',
   
-  // Neutral - Dark backgrounds
-  background: '#121212',
-  surface: '#1E1E1E',
-  surfaceVariant: '#2A2A2A',
+  // Secondary (same as light)
+  secondary1: '#E3EEFF',
+  secondary2: '#DEFFF3',
+  secondary3: '#FFF6DB',
+  secondary4: '#FFDFE3',
+  secondary5: '#E9E8FF',
+  secondary6: '#FEEBE1',
   
-  // Text colors
-  text: '#E0E0E0',
+  // Tertiary (same as light)
+  tertiary1: '#12823B',
+  tertiary2: '#E5A424',
+  tertiary3: '#E02E4D',
+  tertiary4: '#F6610C',
+  
+  // Semantic Mappings (Dark Mode)
+  background: '#2E2F36',
+  surface: '#1F2023',
+  surfaceVariant: '#1F2023',
+  text: '#FFFFFF',
   textPrimary: '#FFFFFF',
-  textSecondary: '#B0B0B0',
-  textTertiary: '#808080',
-  textInverse: '#1A1A1A',
-  
-  // Borders
-  border: '#3A3A3A',
-  borderLight: '#2A2A2A',
-  divider: '#303030',
-  
-  // Status colors (adjusted for dark mode)
-  success: '#66BB6A',
-  successLight: '#1B5E20',
-  error: '#EF5350',
-  errorLight: '#B71C1C',
-  warning: '#FFA726',
-  warningLight: '#E65100',
-  info: '#64B5F6',
-  infoLight: '#0D47A1',
-  
-  // Disabled
-  disabled: '#4A4A4A',
-  disabledText: '#606060',
-  
-  // Overlay
-  overlay: 'rgba(0, 0, 0, 0.7)',
-  overlayLight: 'rgba(0, 0, 0, 0.4)',
-  
-  // Card
-  card: '#2A2A2A',
-  cardBorder: '#3A3A3A',
+  textSecondary: '#BFC2C7',
+  textTertiary: '#9CA0A6',
+  textInverse: '#1F2023',
+  border: '#797E85',
+  borderLight: '#35363E',
+  card: '#1F2023',
+  cardBorder: '#797E85',
   elevation: 'rgba(0, 0, 0, 0.3)',
+  success: '#29D99A',
+  error: '#F13F5E',
+  warning: '#FDB600',
+  info: '#086BFF',
+  disabled: '#797E85',
+  disabledText: '#9CA0A6',
 };
 
 /**

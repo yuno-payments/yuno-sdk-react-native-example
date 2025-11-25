@@ -6,6 +6,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.yunosdkreactnative.YunoSdkModule
 import org.json.JSONObject
 
@@ -31,8 +32,8 @@ class MainActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     
-    // Set background color to match React Native app
-    window.decorView.setBackgroundColor(android.graphics.Color.parseColor("#F5F7FA"))
+    // Set background color to match React Native app (adapts to theme)
+    window.decorView.setBackgroundColor(ContextCompat.getColor(this, R.color.background_light))
     
     // Main scroll container
     val scrollView = android.widget.ScrollView(this).apply {
@@ -47,10 +48,10 @@ class MainActivity : AppCompatActivity() {
       orientation = android.widget.LinearLayout.VERTICAL
     }
 
-    // Header (purple background like React Native)
+    // Header (purple background like React Native - adapts to theme)
     val header = android.widget.LinearLayout(this).apply {
       orientation = android.widget.LinearLayout.VERTICAL
-      setBackgroundColor(android.graphics.Color.parseColor("#4E3DD8"))
+      setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.yuno_primary))
       setPadding(64, 80, 64, 64)
     }
     
@@ -58,7 +59,7 @@ class MainActivity : AppCompatActivity() {
     val title = android.widget.TextView(this).apply {
       text = "🎯 ${getString(R.string.main_title)}"
       textSize = 28f
-      setTextColor(android.graphics.Color.WHITE)
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_on_primary))
       gravity = android.view.Gravity.CENTER
       typeface = android.graphics.Typeface.DEFAULT_BOLD
     }
@@ -68,7 +69,7 @@ class MainActivity : AppCompatActivity() {
     val subtitle = android.widget.TextView(this).apply {
       text = getString(R.string.main_subtitle)
       textSize = 16f
-      setTextColor(android.graphics.Color.WHITE)
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_on_primary))
       gravity = android.view.Gravity.CENTER
       setPadding(0, 8, 0, 0)
       alpha = 0.9f
@@ -77,10 +78,10 @@ class MainActivity : AppCompatActivity() {
     
     layout.addView(header)
 
-    // Content card
+    // Content card (adapts to theme)
     val cardLayout = android.widget.LinearLayout(this).apply {
       orientation = android.widget.LinearLayout.VERTICAL
-      setBackgroundColor(android.graphics.Color.WHITE)
+      setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.surface_light))
       val margin = 48
       setPadding(48, 48, 48, 48)
       val params = android.widget.LinearLayout.LayoutParams(
@@ -94,7 +95,8 @@ class MainActivity : AppCompatActivity() {
       // Rounded corners
       background = android.graphics.drawable.GradientDrawable().apply {
         cornerRadius = 32f
-        setColor(android.graphics.Color.WHITE)
+        setColor(ContextCompat.getColor(this@MainActivity, R.color.surface_light))
+        setStroke(2, ContextCompat.getColor(this@MainActivity, R.color.border))
       }
     }
 
@@ -102,7 +104,7 @@ class MainActivity : AppCompatActivity() {
     val cardTitle = android.widget.TextView(this).apply {
       text = getString(R.string.config_title)
       textSize = 18f
-      setTextColor(android.graphics.Color.parseColor("#333333"))
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_primary))
       typeface = android.graphics.Typeface.DEFAULT_BOLD
       setPadding(0, 0, 0, 48)
     }
@@ -112,18 +114,18 @@ class MainActivity : AppCompatActivity() {
     val instructions = android.widget.TextView(this).apply {
       text = getString(R.string.config_json_label)
       textSize = 14f
-      setTextColor(android.graphics.Color.parseColor("#333333"))
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_primary))
       typeface = android.graphics.Typeface.DEFAULT_BOLD
       setPadding(0, 0, 0, 16)
     }
     cardLayout.addView(instructions)
 
-    // Config JSON input with styled background (multiline)
+    // Config JSON input with styled background (multiline - adapts to theme)
     configInput = EditText(this).apply {
       hint = getString(R.string.config_json_hint)
       textSize = 12f
-      setTextColor(android.graphics.Color.parseColor("#333333"))
-      setHintTextColor(android.graphics.Color.parseColor("#999999"))
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.input_text))
+      setHintTextColor(ContextCompat.getColor(this@MainActivity, R.color.input_hint))
       setPadding(32, 32, 32, 32)
       minLines = 8
       maxLines = 15
@@ -132,8 +134,8 @@ class MainActivity : AppCompatActivity() {
       setHorizontallyScrolling(false)
       background = android.graphics.drawable.GradientDrawable().apply {
         cornerRadius = 24f
-        setColor(android.graphics.Color.parseColor("#F9F9F9"))
-        setStroke(2, android.graphics.Color.parseColor("#DDDDDD"))
+        setColor(ContextCompat.getColor(this@MainActivity, R.color.input_background))
+        setStroke(2, ContextCompat.getColor(this@MainActivity, R.color.input_border))
       }
       val params = android.widget.LinearLayout.LayoutParams(
         android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
@@ -145,17 +147,17 @@ class MainActivity : AppCompatActivity() {
     }
     cardLayout.addView(configInput)
 
-    // Start button with purple background
+    // Start button with purple background (adapts to theme)
     startButton = Button(this).apply {
       text = getString(R.string.button_start)
       textSize = 15f
-      setTextColor(android.graphics.Color.WHITE)
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_on_primary))
       typeface = android.graphics.Typeface.DEFAULT_BOLD
       setPadding(32, 40, 32, 40)
       isAllCaps = false
       background = android.graphics.drawable.GradientDrawable().apply {
         cornerRadius = 24f
-        setColor(android.graphics.Color.parseColor("#4E3DD8"))
+        setColor(ContextCompat.getColor(this@MainActivity, R.color.yuno_primary))
       }
       setOnClickListener {
         onStartButtonClicked()
@@ -171,10 +173,10 @@ class MainActivity : AppCompatActivity() {
     
     layout.addView(cardLayout)
 
-    // Info card
+    // Info card (adapts to theme)
     val infoCard = android.widget.LinearLayout(this).apply {
       orientation = android.widget.LinearLayout.VERTICAL
-      setBackgroundColor(android.graphics.Color.parseColor("#E3F2FD"))
+      setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.info_background))
       val margin = 48
       setPadding(48, 48, 48, 48)
       val params = android.widget.LinearLayout.LayoutParams(
@@ -187,15 +189,15 @@ class MainActivity : AppCompatActivity() {
       // Rounded corners
       background = android.graphics.drawable.GradientDrawable().apply {
         cornerRadius = 32f
-        setColor(android.graphics.Color.parseColor("#E3F2FD"))
-        setStroke(8, android.graphics.Color.parseColor("#2196F3"))
+        setColor(ContextCompat.getColor(this@MainActivity, R.color.info_background))
+        setStroke(8, ContextCompat.getColor(this@MainActivity, R.color.info_border))
       }
     }
     
     val infoTitle = android.widget.TextView(this).apply {
       text = getString(R.string.info_title)
       textSize = 16f
-      setTextColor(android.graphics.Color.parseColor("#1976D2"))
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.info_text))
       typeface = android.graphics.Typeface.DEFAULT_BOLD
       setPadding(0, 0, 0, 16)
     }
@@ -204,18 +206,18 @@ class MainActivity : AppCompatActivity() {
     val infoText = android.widget.TextView(this).apply {
       text = getString(R.string.info_text)
       textSize = 13f
-      setTextColor(android.graphics.Color.parseColor("#1565C0"))
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.info_text))
       lineHeight = (20 * resources.displayMetrics.scaledDensity).toInt()
     }
     infoCard.addView(infoText)
     
     layout.addView(infoCard)
     
-    // Footer with SDK version
+    // Footer with SDK version (adapts to theme)
     val footer = android.widget.TextView(this).apply {
       text = getString(R.string.footer_version)
       textSize = 12f
-      setTextColor(android.graphics.Color.parseColor("#999999"))
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_tertiary))
       gravity = android.view.Gravity.CENTER
       setPadding(0, 64, 0, 64)
     }
