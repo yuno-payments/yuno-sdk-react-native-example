@@ -9,7 +9,6 @@ import type {
 } from '@yuno/yuno-sdk-react-native';
 
 export interface PaymentConfig {
-  customerSession: string;
   checkoutSession: string;
   countryCode: string;
 }

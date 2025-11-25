@@ -30,7 +30,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
   return (
     <Card title="⚙️ Configuración">
       <Input
-        label="Customer Session *"
+        label="Customer Session (solo para Enrollment)"
         placeholder="Ingresa el customer session"
         value={customerSession}
         onChangeText={onCustomerSessionChange}
@@ -39,7 +39,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       />
 
       <Input
-        label="Checkout Session *"
+        label="Checkout Session (para Payment flows) *"
         placeholder="Ingresa el checkout session"
         value={checkoutSession}
         onChangeText={onCheckoutSessionChange}

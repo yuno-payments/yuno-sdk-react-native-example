@@ -58,6 +58,7 @@ class YunoService {
 
   /**
    * Inicia un flujo de pago completo
+   * Solo requiere checkoutSession
    */
   async startPayment(config: PaymentConfig): Promise<void> {
     console.log('💳 Starting full payment flow...');
@@ -65,7 +66,6 @@ class YunoService {
 
     await YunoSdk.startPayment(
       {
-        customerSession: config.customerSession,
         checkoutSession: config.checkoutSession,
       },
       config.countryCode,
@@ -76,13 +76,13 @@ class YunoService {
 
   /**
    * Inicia un flujo de pago lite
+   * Solo requiere checkoutSession
    */
   async startPaymentLite(config: PaymentLiteConfig): Promise<void> {
     console.log('💳 Starting payment lite flow...');
     console.log('Config:', config);
 
     const params: any = {
-      customerSession: config.customerSession,
       checkoutSession: config.checkoutSession,
       paymentMethodType: config.paymentMethodType,
     };
@@ -115,13 +115,13 @@ class YunoService {
 
   /**
    * Inicia un flujo de pago seamless
+   * Solo requiere checkoutSession
    */
   async startPaymentSeamlessLite(config: PaymentLiteConfig): Promise<void> {
     console.log('💳 Starting seamless payment flow...');
     console.log('Config:', config);
 
     const params: any = {
-      customerSession: config.customerSession,
       checkoutSession: config.checkoutSession,
       paymentMethodType: config.paymentMethodType,
     };

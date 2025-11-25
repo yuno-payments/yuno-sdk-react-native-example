@@ -59,38 +59,34 @@ export const HomeScreen: React.FC = () => {
   // Handlers
   const handleStartPayment = useCallback(() => {
     console.log('🔵 handleStartPayment called');
-    if (!customerSession.trim()) {
-      Alert.alert('Error', 'Por favor ingresa el Customer Session');
-      return;
-    }
+    console.log('📋 checkoutSession:', checkoutSession || '(vacío)');
+    
+    // Payment solo requiere checkoutSession
     if (!checkoutSession.trim()) {
-      Alert.alert('Error', 'Por favor ingresa el Checkout Session');
+      Alert.alert('Campo Requerido', 'Por favor ingresa el Checkout Session');
       return;
     }
 
     const config: PaymentConfig = {
-      customerSession,
       checkoutSession,
       countryCode,
     };
 
     console.log('✅ Calling startPayment with config:', config);
     startPayment(config);
-  }, [customerSession, checkoutSession, countryCode, startPayment]);
+  }, [checkoutSession, countryCode, startPayment]);
 
   const handleStartPaymentLite = useCallback(() => {
     console.log('🔵 handleStartPaymentLite called');
-    if (!customerSession.trim()) {
-      Alert.alert('Error', 'Por favor ingresa el Customer Session');
-      return;
-    }
+    console.log('📋 checkoutSession:', checkoutSession || '(vacío)');
+    
+    // Payment Lite solo requiere checkoutSession
     if (!checkoutSession.trim()) {
-      Alert.alert('Error', 'Por favor ingresa el Checkout Session');
+      Alert.alert('Campo Requerido', 'Por favor ingresa el Checkout Session');
       return;
     }
 
     const config: PaymentLiteConfig = {
-      customerSession,
       checkoutSession,
       countryCode,
       paymentMethodType,
@@ -100,7 +96,6 @@ export const HomeScreen: React.FC = () => {
     console.log('✅ Calling startPaymentLite with config:', config);
     startPaymentLite(config);
   }, [
-    customerSession,
     checkoutSession,
     countryCode,
     paymentMethodType,
@@ -110,8 +105,11 @@ export const HomeScreen: React.FC = () => {
 
   const handleEnrollment = useCallback(() => {
     console.log('🔵 handleEnrollment called');
+    console.log('📋 customerSession:', customerSession || '(vacío)');
+    
+    // Enrollment solo requiere customerSession
     if (!customerSession.trim()) {
-      Alert.alert('Error', 'Por favor ingresa el Customer Session');
+      Alert.alert('Campo Requerido', 'Por favor ingresa el Customer Session');
       return;
     }
 
@@ -126,17 +124,15 @@ export const HomeScreen: React.FC = () => {
 
   const handleSeamlessPayment = useCallback(() => {
     console.log('🔵 handleSeamlessPayment called');
-    if (!customerSession.trim()) {
-      Alert.alert('Error', 'Por favor ingresa el Customer Session');
-      return;
-    }
+    console.log('📋 checkoutSession:', checkoutSession || '(vacío)');
+    
+    // Seamless Payment solo requiere checkoutSession
     if (!checkoutSession.trim()) {
-      Alert.alert('Error', 'Por favor ingresa el Checkout Session');
+      Alert.alert('Campo Requerido', 'Por favor ingresa el Checkout Session');
       return;
     }
 
     const config: PaymentLiteConfig = {
-      customerSession,
       checkoutSession,
       countryCode,
       paymentMethodType,
@@ -146,7 +142,6 @@ export const HomeScreen: React.FC = () => {
     console.log('✅ Calling startPaymentSeamlessLite with config:', config);
     startPaymentSeamlessLite(config);
   }, [
-    customerSession,
     checkoutSession,
     countryCode,
     paymentMethodType,
