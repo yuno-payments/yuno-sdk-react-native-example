@@ -275,6 +275,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               countryCode={countryCode}
               onPaymentMethodSelected={handlePaymentMethodSelected}
               onPaymentMethodError={handlePaymentMethodError}
+              style={styles.paymentMethods}
             />
           </ScrollView>
         </View>
@@ -416,6 +417,10 @@ const styles = StyleSheet.create({
   },
   paymentMethodsScrollView: {
     flex: 1, // Ocupa todo el espacio del wrapper
+  },
+  paymentMethods: {
+    width: '100%',
+    minHeight: 600, // Altura mínima para que el componente nativo se renderice
   },
   payButton: {
     backgroundColor: colors.primary,
