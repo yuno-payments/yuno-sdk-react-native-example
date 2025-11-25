@@ -97,25 +97,25 @@ export const lightColors: ColorPalette = {
   tertiary4: '#F6610C',
   
   // Semantic Mappings (Light Mode)
-  background: '#F6F7FA',
-  surface: '#FFFFFF',
-  surfaceVariant: '#FCFCFF',
-  text: '#282A30',
-  textPrimary: '#282A30',
-  textSecondary: '#6C6F75',
-  textTertiary: '#92959B',
-  textInverse: '#FFFFFF',
-  border: '#BFC2C7',
-  borderLight: '#ECEFF2',
-  card: '#FFFFFF',
-  cardBorder: '#BFC2C7',
+  background: '#F6F7FA',        // grey1
+  surface: '#FFFFFF',           // neutralW
+  surfaceVariant: '#FCFCFF',    // grey0
+  text: '#282A30',              // neutralB
+  textPrimary: '#282A30',       // neutralB
+  textSecondary: '#6C6F75',     // grey5
+  textTertiary: '#92959B',      // grey4
+  textInverse: '#FFFFFF',       // neutralW (for buttons/header)
+  border: '#BFC2C7',            // grey3
+  borderLight: '#ECEFF2',       // grey2
+  card: '#FFFFFF',              // neutralW
+  cardBorder: '#BFC2C7',        // grey3
   elevation: 'rgba(0, 0, 0, 0.1)',
-  success: '#29D99A',
-  error: '#F13F5E',
-  warning: '#FDB600',
-  info: '#086BFF',
-  disabled: '#BFC2C7',
-  disabledText: '#92959B',
+  success: '#29D99A',           // primary2
+  error: '#F13F5E',             // primary4
+  warning: '#FDB600',           // primary3
+  info: '#086BFF',              // primary5
+  disabled: '#BFC2C7',          // grey3
+  disabledText: '#92959B',      // grey4
 };
 
 /**
@@ -156,25 +156,25 @@ export const darkColors: ColorPalette = {
   tertiary4: '#F6610C',
   
   // Semantic Mappings (Dark Mode)
-  background: '#2E2F36',
-  surface: '#1F2023',
-  surfaceVariant: '#1F2023',
-  text: '#FFFFFF',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#BFC2C7',
-  textTertiary: '#9CA0A6',
-  textInverse: '#1F2023',
-  border: '#797E85',
-  borderLight: '#35363E',
-  card: '#1F2023',
-  cardBorder: '#797E85',
+  background: '#2E2F36',        // grey1
+  surface: '#1F2023',           // neutralW (dark)
+  surfaceVariant: '#1F2023',    // grey0
+  text: '#FFFFFF',              // neutralB (dark - inverted)
+  textPrimary: '#FFFFFF',       // neutralB (dark - inverted)
+  textSecondary: '#BFC2C7',     // grey5
+  textTertiary: '#9CA0A6',      // grey4
+  textInverse: '#1F2023',       // neutralW (for buttons/header)
+  border: '#797E85',            // grey3
+  borderLight: '#35363E',       // grey2
+  card: '#1F2023',              // neutralW (dark)
+  cardBorder: '#797E85',        // grey3
   elevation: 'rgba(0, 0, 0, 0.3)',
-  success: '#29D99A',
-  error: '#F13F5E',
-  warning: '#FDB600',
-  info: '#086BFF',
-  disabled: '#797E85',
-  disabledText: '#9CA0A6',
+  success: '#29D99A',           // primary2
+  error: '#F13F5E',             // primary4
+  warning: '#FDB600',           // primary3
+  info: '#086BFF',              // primary5
+  disabled: '#797E85',          // grey3
+  disabledText: '#9CA0A6',      // grey4
 };
 
 /**

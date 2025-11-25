@@ -411,19 +411,19 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
     backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.text,     // neutralB (black in light, white in dark)
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
     alignItems: 'center',
   },
   title: {
     ...typography.h1,
-    color: colors.textInverse,
+    color: colors.textInverse,         // neutralW (white in light, black in dark)
     marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.body,
-    color: colors.textInverse,
+    color: colors.textInverse,         // neutralW (white in light, black in dark)
     opacity: 0.9,
   },
   scrollView: {
@@ -466,7 +466,7 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
     flex: 1,
   },
   payButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.text,      // neutralB (black in light, white in dark)
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     marginHorizontal: spacing.md,
@@ -482,7 +482,7 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
   payButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.textInverse,
+    color: colors.textInverse,         // neutralW (white in light, black in dark)
   },
   backButton: {
     backgroundColor: colors.surface,
@@ -503,7 +503,7 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.primary,
+    color: colors.text,                // neutralB (black in light, white in dark)
   },
 });
 

@@ -59,7 +59,7 @@ export const Button: React.FC<ButtonProps> = ({
       activeOpacity={0.7}>
       {loading ? (
         <ActivityIndicator
-          color={variant === 'secondary' ? colors.primary : colors.textInverse}
+          color={variant === 'secondary' ? colors.text : colors.textInverse}
         />
       ) : (
         <Text style={textStyleFinal}>{title}</Text>
@@ -82,18 +82,18 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
   },
   // Variants
   primary: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.text,      // neutralB (black in light, white in dark)
   },
   primaryText: {
-    color: colors.textInverse,
+    color: colors.textInverse,         // neutralW (white in light, black in dark)
   },
   secondary: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: colors.text,          // neutralB (black in light, white in dark)
   },
   secondaryText: {
-    color: colors.primary,
+    color: colors.text,                // neutralB (black in light, white in dark)
   },
   success: {
     backgroundColor: colors.success,

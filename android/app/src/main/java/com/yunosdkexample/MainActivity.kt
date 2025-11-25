@@ -48,10 +48,10 @@ class MainActivity : AppCompatActivity() {
       orientation = android.widget.LinearLayout.VERTICAL
     }
 
-    // Header (purple background like React Native - adapts to theme)
+    // Header (neutralB background - adapts to theme)
     val header = android.widget.LinearLayout(this).apply {
       orientation = android.widget.LinearLayout.VERTICAL
-      setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.yuno_primary))
+      setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.header_background))
       setPadding(64, 80, 64, 64)
     }
     
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
     val title = android.widget.TextView(this).apply {
       text = "🎯 ${getString(R.string.main_title)}"
       textSize = 28f
-      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_on_primary))
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.header_text))
       gravity = android.view.Gravity.CENTER
       typeface = android.graphics.Typeface.DEFAULT_BOLD
     }
@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
     val subtitle = android.widget.TextView(this).apply {
       text = getString(R.string.main_subtitle)
       textSize = 16f
-      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_on_primary))
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.header_text))
       gravity = android.view.Gravity.CENTER
       setPadding(0, 8, 0, 0)
       alpha = 0.9f
@@ -147,17 +147,17 @@ class MainActivity : AppCompatActivity() {
     }
     cardLayout.addView(configInput)
 
-    // Start button with purple background (adapts to theme)
+    // Start button with neutralB background (adapts to theme)
     startButton = Button(this).apply {
       text = getString(R.string.button_start)
       textSize = 15f
-      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_on_primary))
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.button_text))
       typeface = android.graphics.Typeface.DEFAULT_BOLD
       setPadding(32, 40, 32, 40)
       isAllCaps = false
       background = android.graphics.drawable.GradientDrawable().apply {
         cornerRadius = 24f
-        setColor(ContextCompat.getColor(this@MainActivity, R.color.yuno_primary))
+        setColor(ContextCompat.getColor(this@MainActivity, R.color.button_background))
       }
       setOnClickListener {
         onStartButtonClicked()

@@ -33,8 +33,8 @@ function App(props: AppProps): React.JSX.Element {
   return (
     <>
       <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={colors.primary}
+        barStyle={isDark ? 'dark-content' : 'light-content'}
+        backgroundColor={colors.text}
       />
       <HomeScreen 
         initialCountryCode={props.countryCode}
