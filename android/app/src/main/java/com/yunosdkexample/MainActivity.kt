@@ -255,7 +255,7 @@ class MainActivity : AppCompatActivity() {
       // Extract options
       val options = json.getJSONObject("options")
       val savedCardEnable = options.optBoolean("savedCardEnable", false)
-      val cardType = options.optString("cardType", "ONE_STEP")
+      val cardType = if (options.has("cardType")) options.getString("cardType") else "ONE_STEP"
       
       android.util.Log.d("MainActivity", "📋 Configuration parsed:")
       android.util.Log.d("MainActivity", "  - API Key: ${apiKey.take(20)}...")

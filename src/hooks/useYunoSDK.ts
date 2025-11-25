@@ -171,7 +171,11 @@ export const useYunoSDK = (initialCountryCode: string = 'CO') => {
   );
 
   const continuePayment = useCallback(
-    async (checkoutSession: string, countryCode: string) => {
+    async (
+      checkoutSession: string,
+      countryCode: string,
+      showPaymentStatus: boolean = true
+    ) => {
       if (!ottToken) {
         Alert.alert('Error', 'No hay OTT disponible para continuar el pago');
         return;
@@ -179,7 +183,7 @@ export const useYunoSDK = (initialCountryCode: string = 'CO') => {
 
       setIsLoading(true);
       try {
-        await yunoService.continuePayment(checkoutSession, countryCode);
+        await yunoService.continuePayment(checkoutSession, countryCode, showPaymentStatus);
       } catch (error: any) {
         Alert.alert(
           'Error',

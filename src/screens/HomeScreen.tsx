@@ -213,8 +213,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   ]);
 
   const handleContinuePayment = useCallback(() => {
-    continuePayment(checkoutSession, countryCode);
-  }, [checkoutSession, countryCode, continuePayment]);
+    continuePayment(checkoutSession, countryCode, showPaymentStatus);
+  }, [checkoutSession, countryCode, showPaymentStatus, continuePayment]);
 
   return (
     <SafeAreaView style={styles.container}>

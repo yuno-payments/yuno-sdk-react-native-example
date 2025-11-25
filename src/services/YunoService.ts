@@ -150,12 +150,17 @@ class YunoService {
    * Continúa con un pago usando un OTT
    * NOTA: El OTT debe estar ya configurado en el SDK nativo antes de llamar continuePayment
    */
-  async continuePayment(checkoutSession: string, countryCode: string): Promise<void> {
+  async continuePayment(
+    checkoutSession: string,
+    countryCode: string,
+    showPaymentStatus: boolean = true
+  ): Promise<void> {
     console.log('➡️ Continuing payment...');
     console.log('Checkout Session:', checkoutSession);
     console.log('Country Code:', countryCode);
+    console.log('Show Payment Status:', showPaymentStatus);
 
-    await YunoSdk.continuePayment(checkoutSession, countryCode, true);
+    await YunoSdk.continuePayment(checkoutSession, countryCode, showPaymentStatus);
     console.log('✅ Continue payment called');
   }
 }
