@@ -3,7 +3,7 @@
  */
 
 import React, {useState, useCallback, useEffect} from 'react';
-import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity} from 'react-native';
+import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler} from 'react-native';
 import {YunoPaymentMethods} from '@yuno/yuno-sdk-react-native';
 import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno/yuno-sdk-react-native';
 import {useYunoSDK} from '../hooks';
@@ -102,6 +102,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       }, 300);
     }
   }, [showPaymentMethods, paymentStatus, ottToken]);
+
+  // Manejar el botón "atrás" de Android
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        // Si estamos mostrando los métodos de pago, volver a la vista principal
+        if (showPaymentMethods) {
+          console.log('🔙 Back button pressed - Returning to main view');
+          setShowPaymentMethods(false);
+          setIsPaymentMethodSelected(false);
+          return true; // Prevenir comportamiento por defecto (cerrar activity)
+        }
+        
+        // Si no, permitir comportamiento por defecto (ir a MainActivity)
+        console.log('🔙 Back button pressed - Going to previous activity');
+        return false;
+      },
+    );
+
+    // Cleanup: remover el listener cuando el componente se desmonte
+    return () => backHandler.remove();
+  }, [showPaymentMethods]);
 
   // Validación de campos requeridos
   const validateRequiredFields = useCallback(
