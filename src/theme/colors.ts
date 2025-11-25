@@ -57,6 +57,10 @@ export interface ColorPalette {
   info: string;
   disabled: string;
   disabledText: string;
+  
+  // Header specific (static colors, no auto-inversion)
+  headerBackground: string;
+  headerText: string;
 }
 
 /**
@@ -116,6 +120,10 @@ export const lightColors: ColorPalette = {
   info: '#086BFF',              // primary5
   disabled: '#BFC2C7',          // grey3
   disabledText: '#92959B',      // grey4
+  
+  // Header (Light Mode: white bg, black text)
+  headerBackground: '#FFFFFF',  // neutralW
+  headerText: '#282A30',        // neutralB
 };
 
 /**
@@ -175,6 +183,10 @@ export const darkColors: ColorPalette = {
   info: '#086BFF',              // primary5
   disabled: '#797E85',          // grey3
   disabledText: '#9CA0A6',      // grey4
+  
+  // Header (Dark Mode: black bg, white text)
+  headerBackground: '#282A30',  // neutralB (original from light)
+  headerText: '#FFFFFF',        // neutralB (inverted)
 };
 
 /**

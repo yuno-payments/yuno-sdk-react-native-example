@@ -39,8 +39,8 @@
     <color name="yuno_primary">@color/primary_1</color>
     <color name="button_background">@color/neutral_b</color>
     <color name="button_text">@color/neutral_w</color>
-    <color name="header_background">@color/neutral_b</color>
-    <color name="header_text">@color/neutral_w</color>
+    <color name="header_background">@color/neutral_w</color>
+    <color name="header_text">@color/neutral_b</color>
     <color name="background_light">@color/grey_1</color>
     <color name="surface_light">@color/neutral_w</color>
     <color name="surface_variant">@color/grey_0</color>

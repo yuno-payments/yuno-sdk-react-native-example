@@ -411,19 +411,19 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
     backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: colors.text,     // neutralB (black in light, white in dark)
+    backgroundColor: colors.headerBackground,  // White in light, black in dark
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
     alignItems: 'center',
   },
   title: {
     ...typography.h1,
-    color: colors.textInverse,         // neutralW (white in light, black in dark)
+    color: colors.headerText,                  // Black in light, white in dark
     marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.body,
-    color: colors.textInverse,         // neutralW (white in light, black in dark)
+    color: colors.headerText,                  // Black in light, white in dark
     opacity: 0.9,
   },
   scrollView: {
