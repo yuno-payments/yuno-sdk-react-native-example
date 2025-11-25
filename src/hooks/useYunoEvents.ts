@@ -1,5 +1,5 @@
 /**
- * Hook para manejar eventos del SDK de Yuno
+ * Hook to handle Yuno SDK events
  */
 
 import {useEffect, useCallback} from 'react';

@@ -1,6 +1,6 @@
 /**
  * Yuno SDK Service
- * Encapsula toda la lógica de interacción con el SDK de Yuno
+ * Encapsulates all Yuno SDK interaction logic
  */
 
 import {

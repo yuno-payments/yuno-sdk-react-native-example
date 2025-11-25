@@ -1,12 +1,12 @@
 /**
  * Yuno SDK React Native - Example App
- * Aplicación de ejemplo para demostrar el uso del SDK de Yuno
+ * Example application to demonstrate Yuno SDK usage
  * 
- * Arquitectura Clean con separación de responsabilidades:
- * - Services: Lógica de negocio e interacción con el SDK
- * - Hooks: Lógica reutilizable y manejo de estado
- * - Components: UI reutilizable y presentacional
- * - Screens: Composición de componentes y lógica de pantalla
+ * Clean Architecture with separation of concerns:
+ * - Services: Business logic and SDK interaction
+ * - Hooks: Reusable logic and state management
+ * - Components: Reusable and presentational UI
+ * - Screens: Component composition and screen logic
  */
 
 import React, {useEffect} from 'react';

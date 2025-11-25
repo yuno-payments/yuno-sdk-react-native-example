@@ -1,5 +1,5 @@
 /**
- * Botón reutilizable
+ * Reusable button component
  */
 
 import React from 'react';

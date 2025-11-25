@@ -1,5 +1,5 @@
 /**
- * Componente para mostrar información del OTT
+ * Component to display OTT information
  */
 
 import React from 'react';
@@ -8,6 +8,7 @@ import {Card} from './Card';
 import {InfoRow} from './InfoRow';
 import {Button} from './Button';
 import {colors, spacing, typography} from '../theme';
+import {useTranslation} from '../i18n';
 import type {OneTimeTokenInfo} from '../types';
 
 interface OTTDisplayProps {
@@ -27,14 +28,16 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
   onClear,
   loading = false,
 }) => {
+  const t = useTranslation();
+
   if (!token) {
     return null;
   }
 
   return (
-    <Card title="🎟️ One Time Token">
+    <Card title={`🎟️ ${t.ott.title}`}>
       <View style={styles.tokenContainer}>
-        <Text style={styles.tokenLabel}>Token:</Text>
+        <Text style={styles.tokenLabel}>{t.ott.token}:</Text>
         <Text style={styles.tokenValue} selectable>
           {token}
         </Text>
@@ -42,28 +45,28 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
 
       {tokenInfo && (
         <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>Información Adicional:</Text>
-          <InfoRow label="Account ID" value={tokenInfo.account_id} />
-          <InfoRow label="Customer Session" value={tokenInfo.customer_session} />
-          <InfoRow label="Checkout Session" value={tokenInfo.checkout_session} />
-          <InfoRow label="Account Type" value={tokenInfo.account_type} />
-          <InfoRow label="Category" value={tokenInfo.category} />
+          <Text style={styles.sectionTitle}>{t.ott.additionalInfo}:</Text>
+          <InfoRow label={t.ott.accountId} value={tokenInfo.account_id} />
+          <InfoRow label={t.ott.customerSession} value={tokenInfo.customer_session} />
+          <InfoRow label={t.ott.checkoutSession} value={tokenInfo.checkout_session} />
+          <InfoRow label={t.ott.accountType} value={tokenInfo.account_type} />
+          <InfoRow label={t.ott.category} value={tokenInfo.category} />
           <InfoRow
-            label="Issuer"
+            label={t.ott.issuer}
             value={
               typeof tokenInfo.issuer === 'object'
                 ? tokenInfo.issuer?.name || 'N/A'
                 : tokenInfo.issuer || 'N/A'
             }
           />
-          <InfoRow label="Last 4" value={tokenInfo.last_four_digits} />
+          <InfoRow label={t.ott.lastFourDigits} value={tokenInfo.last_four_digits} />
         </View>
       )}
 
       <View style={styles.buttonContainer}>
         {checkoutSession && (
           <Button
-            title="Continuar Pago con OTT"
+            title={t.ott.continuePayment}
             onPress={onContinuePayment}
             variant="success"
             disabled={loading}
@@ -72,7 +75,7 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
           />
         )}
         <Button
-          title="Limpiar OTT"
+          title={t.ott.clear}
           onPress={onClear}
           variant="secondary"
           disabled={loading}

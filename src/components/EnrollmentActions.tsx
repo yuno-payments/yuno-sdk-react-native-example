@@ -1,5 +1,5 @@
 /**
- * Componente para las acciones de enrollment
+ * Enrollment actions component
  */
 
 import React from 'react';
@@ -7,6 +7,7 @@ import {StyleSheet} from 'react-native';
 import {Card} from './Card';
 import {Button} from './Button';
 import {spacing} from '../theme';
+import {useTranslation} from '../i18n';
 
 interface EnrollmentActionsProps {
   onEnrollment: () => void;
@@ -17,10 +18,12 @@ export const EnrollmentActions: React.FC<EnrollmentActionsProps> = ({
   onEnrollment,
   loading = false,
 }) => {
+  const t = useTranslation();
+
   return (
-    <Card title="🔐 Enrollment">
+    <Card title={`🔐 ${t.enrollment.title}`}>
       <Button
-        title="Enrollment Payment"
+        title={t.enrollment.startEnrollment}
         onPress={onEnrollment}
         variant="primary"
         disabled={loading}

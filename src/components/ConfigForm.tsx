@@ -1,10 +1,11 @@
 /**
- * Componente para el formulario de configuración
+ * Configuration form component
  */
 
 import React from 'react';
 import {Card} from './Card';
 import {Input} from './Input';
+import {useTranslation} from '../i18n';
 
 interface ConfigFormProps {
   customerSession: string;
@@ -27,11 +28,13 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
   onPaymentMethodTypeChange,
   onVaultedTokenChange,
 }) => {
+  const t = useTranslation();
+
   return (
-    <Card title="⚙️ Configuración">
+    <Card title={`⚙️ ${t.config.title}`}>
       <Input
-        label="Customer Session (solo para Enrollment)"
-        placeholder="Ingresa el customer session"
+        label={`${t.config.customerSession} (${t.config.requiredForEnrollment})`}
+        placeholder={t.config.customerSessionPlaceholder}
         value={customerSession}
         onChangeText={onCustomerSessionChange}
         autoCapitalize="none"
@@ -39,8 +42,8 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       />
 
       <Input
-        label="Checkout Session (para Payment flows) *"
-        placeholder="Ingresa el checkout session"
+        label={`${t.config.checkoutSession} (${t.config.requiredForPayment}) *`}
+        placeholder={t.config.checkoutSessionPlaceholder}
         value={checkoutSession}
         onChangeText={onCheckoutSessionChange}
         autoCapitalize="none"
@@ -48,8 +51,8 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       />
 
       <Input
-        label="Payment Method Type (requerido para Lite/Seamless) *"
-        placeholder="Ej: CARD, BANCOLOMBIA_TRANSFER, etc."
+        label={`${t.config.paymentMethodType} (${t.config.requiredForLite}) *`}
+        placeholder={t.config.paymentMethodTypePlaceholder}
         value={paymentMethodType}
         onChangeText={onPaymentMethodTypeChange}
         autoCapitalize="characters"
@@ -57,8 +60,8 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       />
 
       <Input
-        label="Vaulted Token (opcional)"
-        placeholder="Ingresa el vaulted token"
+        label={t.config.vaultedToken}
+        placeholder={t.config.vaultedTokenPlaceholder}
         value={vaultedToken}
         onChangeText={onVaultedTokenChange}
         autoCapitalize="none"

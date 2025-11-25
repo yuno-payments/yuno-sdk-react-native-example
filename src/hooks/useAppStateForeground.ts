@@ -1,5 +1,5 @@
 /**
- * Hook para detectar cuando la app vuelve al foreground
+ * Hook to detect when the app returns to foreground
  */
 
 import {useEffect, useRef} from 'react';

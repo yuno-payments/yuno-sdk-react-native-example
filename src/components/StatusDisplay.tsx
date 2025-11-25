@@ -1,11 +1,12 @@
 /**
- * Componente para mostrar estados de Payment y Enrollment
+ * Component to display Payment and Enrollment status
  */
 
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {Card} from './Card';
 import {colors, spacing, typography} from '../theme';
+import {useTranslation} from '../i18n';
 
 interface StatusDisplayProps {
   paymentStatus?: string;
@@ -16,6 +17,8 @@ export const StatusDisplay: React.FC<StatusDisplayProps> = ({
   paymentStatus,
   enrollmentStatus,
 }) => {
+  const t = useTranslation();
+
   if (!paymentStatus && !enrollmentStatus) {
     return null;
   }
@@ -23,7 +26,7 @@ export const StatusDisplay: React.FC<StatusDisplayProps> = ({
   return (
     <View>
       {paymentStatus && (
-        <Card title="📊 Payment Status">
+        <Card title={`📊 ${t.status.paymentStatus}`}>
           <View style={styles.statusContainer}>
             <Text style={styles.statusText}>{paymentStatus}</Text>
           </View>
@@ -31,7 +34,7 @@ export const StatusDisplay: React.FC<StatusDisplayProps> = ({
       )}
 
       {enrollmentStatus && (
-        <Card title="🔐 Enrollment Status">
+        <Card title={`🔐 ${t.status.enrollmentStatus}`}>
           <View style={styles.statusContainer}>
             <Text style={styles.statusText}>{enrollmentStatus}</Text>
           </View>

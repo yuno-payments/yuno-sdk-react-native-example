@@ -1,5 +1,5 @@
 /**
- * Hook principal para manejar el SDK de Yuno
+ * Main hook to handle the Yuno SDK
  */
 
 import {useState, useCallback, useEffect} from 'react';

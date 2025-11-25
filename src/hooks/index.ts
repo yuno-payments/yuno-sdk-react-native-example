@@ -1,5 +1,5 @@
 /**
- * Hooks exports
+ * Custom hooks exports
  */
 
 export * from './useYunoSDK';

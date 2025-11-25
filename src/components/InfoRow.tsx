@@ -1,5 +1,5 @@
 /**
- * Componente para mostrar información en formato clave-valor
+ * Component to display information in key-value format
  */
 
 import React from 'react';
