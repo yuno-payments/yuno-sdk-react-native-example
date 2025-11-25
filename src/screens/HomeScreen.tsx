@@ -87,6 +87,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     clearOTT,
   } = useYunoSDK(countryCode);
 
+  // Efecto para regresar a la vista principal cuando el flujo de pago termine
+  useEffect(() => {
+    // Si estamos mostrando los métodos de pago Y recibimos un status o token, volver a la vista principal
+    if (showPaymentMethods && (paymentStatus || ottToken)) {
+      console.log('✅ Payment flow completed, returning to main view');
+      console.log('📊 Payment Status:', paymentStatus || 'N/A');
+      console.log('🎫 OTT Token:', ottToken || 'N/A');
+      
+      // Pequeño delay para asegurar que el SDK nativo terminó completamente
+      setTimeout(() => {
+        setShowPaymentMethods(false);
+        setIsPaymentMethodSelected(false);
+      }, 300);
+    }
+  }, [showPaymentMethods, paymentStatus, ottToken]);
+
   // Validación de campos requeridos
   const validateRequiredFields = useCallback(
     (requireCheckout: boolean = true): boolean => {
