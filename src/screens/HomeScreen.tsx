@@ -240,11 +240,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     setIsPaymentMethodSelected(false);
   }, []);
 
-  // Handler para el botón "Pagar"
+  // Handler para el botón "Pagar" (Payment Full Flow)
   const handlePayButtonPress = useCallback(() => {
-    console.log('💰 Pay button pressed');
-    // TODO: Implementar lógica de pago
-  }, []);
+    console.log('🔵 handlePayButtonPress called (Payment Full)');
+    console.log('📋 checkoutSession:', checkoutSession);
+    console.log('📋 countryCode:', countryCode);
+    console.log('📋 showPaymentStatus:', showPaymentStatus);
+
+    // No necesitamos validar porque ya se validó al mostrar la lista
+    const config: PaymentConfig = {
+      checkoutSession,
+      countryCode,
+      showPaymentStatus,
+    };
+
+    console.log('✅ Calling startPayment with config:', config);
+    startPayment(config);
+  }, [checkoutSession, countryCode, showPaymentStatus, startPayment]);
 
   // Si se están mostrando los métodos de pago, renderizar el componente
   if (showPaymentMethods) {
