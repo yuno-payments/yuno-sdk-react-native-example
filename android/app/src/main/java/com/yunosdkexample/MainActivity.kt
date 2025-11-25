@@ -265,7 +265,7 @@ class MainActivity : AppCompatActivity() {
       android.util.Log.d("MainActivity", "  - Saved Card Enable: $savedCardEnable")
       
       // Initialize Yuno SDK with application context and configuration
-      YunoSdkModule.initializeYunoSdk(
+      YunoSdkModule.initialize(
         applicationContext = applicationContext,
         apiKey = apiKey,
         language = language,
