@@ -244,25 +244,36 @@ class MainActivity : AppCompatActivity() {
       
       // Extract API key from merchantKeys.publicKey
       val merchantKeys = json.getJSONObject("merchantKeys")
-      val apiKey = merchantKeys.getString("publicKey")
+      val apiKey = merchantKeys.getString("publicKey").trim().removeSurrounding("\"")
       
       // Extract country code
-      val country = json.getString("country")
+      val country = json.getString("country").trim().removeSurrounding("\"")
       
       // Extract language (optional)
-      val language = if (json.has("language")) json.getString("language") else null
+      val language = if (json.has("language")) {
+        json.getString("language").trim().removeSurrounding("\"")
+      } else {
+        null
+      }
       
       // Extract options
       val options = json.getJSONObject("options")
       val savedCardEnable = options.optBoolean("savedCardEnable", false)
-      val cardType = if (options.has("cardType")) options.getString("cardType") else "ONE_STEP"
+      val cardType = if (options.has("cardType")) {
+        options.getString("cardType").trim().removeSurrounding("\"")
+      } else {
+        "ONE_STEP"
+      }
+      val showPaymentStatus = options.optBoolean("showPaymentStatus", true)
       
-      android.util.Log.d("MainActivity", "📋 Configuration parsed:")
+      android.util.Log.d("MainActivity", "📋 Configuration parsed (cleaned):")
       android.util.Log.d("MainActivity", "  - API Key: ${apiKey.take(20)}...")
-      android.util.Log.d("MainActivity", "  - Country: $country")
-      android.util.Log.d("MainActivity", "  - Language: $language")
-      android.util.Log.d("MainActivity", "  - Card Type: $cardType")
+      android.util.Log.d("MainActivity", "  - Country: [$country]")
+      android.util.Log.d("MainActivity", "  - Language: [$language]")
+      android.util.Log.d("MainActivity", "  - Card Type: [$cardType]")
+      android.util.Log.d("MainActivity", "  - Card Type (uppercase): [${cardType.uppercase()}]")
       android.util.Log.d("MainActivity", "  - Saved Card Enable: $savedCardEnable")
+      android.util.Log.d("MainActivity", "  - Show Payment Status: $showPaymentStatus")
       
       // Initialize Yuno SDK with application context and configuration
       YunoSdkModule.initialize(
