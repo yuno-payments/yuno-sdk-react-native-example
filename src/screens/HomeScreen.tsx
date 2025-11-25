@@ -264,18 +264,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <Text style={styles.infoValue}>{countryCode}</Text>
         </View>
 
-        <ScrollView 
-          style={styles.paymentMethodsScrollView}
-          contentContainerStyle={styles.paymentMethodsContentContainer}
-          showsVerticalScrollIndicator={true}>
-          <YunoPaymentMethods
-            checkoutSession={checkoutSession}
-            countryCode={countryCode}
-            onPaymentMethodSelected={handlePaymentMethodSelected}
-            onPaymentMethodError={handlePaymentMethodError}
-            style={styles.paymentMethods}
-          />
-        </ScrollView>
+        {/* Contenedor flex que toma todo el espacio disponible */}
+        <View style={styles.paymentMethodsWrapper}>
+          <ScrollView 
+            style={styles.paymentMethodsScrollView}
+            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}>
+            <YunoPaymentMethods
+              checkoutSession={checkoutSession}
+              countryCode={countryCode}
+              onPaymentMethodSelected={handlePaymentMethodSelected}
+              onPaymentMethodError={handlePaymentMethodError}
+            />
+          </ScrollView>
+        </View>
 
         {isPaymentMethodSelected && (
           <TouchableOpacity
@@ -399,8 +401,8 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '600',
   },
-  paymentMethodsScrollView: {
-    flex: 1,
+  paymentMethodsWrapper: {
+    flex: 1, // Equivalente a weight(1f) en Compose - toma todo el espacio disponible
     marginTop: spacing.md,
     marginHorizontal: spacing.md,
     backgroundColor: colors.surface,
@@ -410,12 +412,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    overflow: 'hidden', // Para que el borderRadius funcione correctamente
   },
-  paymentMethodsContentContainer: {
-    flexGrow: 1,
-  },
-  paymentMethods: {
-    minHeight: 400,
+  paymentMethodsScrollView: {
+    flex: 1, // Ocupa todo el espacio del wrapper
   },
   payButton: {
     backgroundColor: colors.primary,
