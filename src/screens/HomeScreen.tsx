@@ -79,10 +79,18 @@ export const HomeScreen: React.FC = () => {
   const handleStartPaymentLite = useCallback(() => {
     console.log('🔵 handleStartPaymentLite called');
     console.log('📋 checkoutSession:', checkoutSession || '(vacío)');
+    console.log('📋 paymentMethodType:', paymentMethodType || '(vacío)');
     
-    // Payment Lite solo requiere checkoutSession
-    if (!checkoutSession.trim()) {
-      Alert.alert('Campo Requerido', 'Por favor ingresa el Checkout Session');
+    // Payment Lite requiere checkoutSession + paymentMethodType
+    const missingFields = [];
+    if (!checkoutSession.trim()) missingFields.push('Checkout Session');
+    if (!paymentMethodType.trim()) missingFields.push('Payment Method Type');
+    
+    if (missingFields.length > 0) {
+      Alert.alert(
+        'Campos Requeridos',
+        `Por favor ingresa: ${missingFields.join(', ')}`,
+      );
       return;
     }
 
@@ -125,10 +133,18 @@ export const HomeScreen: React.FC = () => {
   const handleSeamlessPayment = useCallback(() => {
     console.log('🔵 handleSeamlessPayment called');
     console.log('📋 checkoutSession:', checkoutSession || '(vacío)');
+    console.log('📋 paymentMethodType:', paymentMethodType || '(vacío)');
     
-    // Seamless Payment solo requiere checkoutSession
-    if (!checkoutSession.trim()) {
-      Alert.alert('Campo Requerido', 'Por favor ingresa el Checkout Session');
+    // Seamless Payment requiere checkoutSession + paymentMethodType
+    const missingFields = [];
+    if (!checkoutSession.trim()) missingFields.push('Checkout Session');
+    if (!paymentMethodType.trim()) missingFields.push('Payment Method Type');
+    
+    if (missingFields.length > 0) {
+      Alert.alert(
+        'Campos Requeridos',
+        `Por favor ingresa: ${missingFields.join(', ')}`,
+      );
       return;
     }
 

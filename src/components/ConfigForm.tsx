@@ -48,7 +48,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       />
 
       <Input
-        label="Payment Method Type (para Lite/Seamless)"
+        label="Payment Method Type (requerido para Lite/Seamless) *"
         placeholder="Ej: CARD, BANCOLOMBIA_TRANSFER, etc."
         value={paymentMethodType}
         onChangeText={onPaymentMethodTypeChange}
@@ -57,7 +57,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       />
 
       <Input
-        label="Vaulted Token (opcional para Lite/Seamless)"
+        label="Vaulted Token (opcional)"
         placeholder="Ingresa el vaulted token"
         value={vaultedToken}
         onChangeText={onVaultedTokenChange}
