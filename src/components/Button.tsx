@@ -11,7 +11,8 @@ import {
   type ViewStyle,
   type TextStyle,
 } from 'react-native';
-import {colors, spacing, typography} from '../theme';
+import {spacing, typography} from '../theme';
+import {useTheme} from '../hooks';
 
 interface ButtonProps {
   title: string;
@@ -32,6 +33,8 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
 }) => {
+  const {colors} = useTheme();
+  const styles = createStyles(colors);
   const isDisabled = disabled || loading;
 
   const buttonStyle = [
@@ -56,7 +59,7 @@ export const Button: React.FC<ButtonProps> = ({
       activeOpacity={0.7}>
       {loading ? (
         <ActivityIndicator
-          color={variant === 'secondary' ? colors.primary : colors.surface}
+          color={variant === 'secondary' ? colors.primary : colors.textInverse}
         />
       ) : (
         <Text style={textStyleFinal}>{title}</Text>
@@ -65,7 +68,7 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleSheet.create({
   button: {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
@@ -82,10 +85,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   primaryText: {
-    color: colors.surface,
+    color: colors.textInverse,
   },
   secondary: {
-    backgroundColor: colors.transparent,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.primary,
   },
@@ -96,13 +99,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
   },
   successText: {
-    color: colors.surface,
+    color: colors.textInverse,
   },
   error: {
     backgroundColor: colors.error,
   },
   errorText: {
-    color: colors.surface,
+    color: colors.textInverse,
   },
   // States
   disabled: {
@@ -110,7 +113,7 @@ const styles = StyleSheet.create({
     borderColor: colors.disabled,
   },
   disabledText: {
-    color: colors.textSecondary,
+    color: colors.disabledText,
   },
 });
 

@@ -7,8 +7,9 @@ import {View, Text, StyleSheet} from 'react-native';
 import {Card} from './Card';
 import {InfoRow} from './InfoRow';
 import {Button} from './Button';
-import {colors, spacing, typography} from '../theme';
+import {spacing, typography} from '../theme';
 import {useTranslation} from '../i18n';
+import {useTheme} from '../hooks';
 import type {OneTimeTokenInfo} from '../types';
 
 interface OTTDisplayProps {
@@ -29,6 +30,8 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
   loading = false,
 }) => {
   const t = useTranslation();
+  const {colors} = useTheme();
+  const styles = createStyles(colors);
 
   if (!token) {
     return null;
@@ -86,12 +89,14 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleSheet.create({
   tokenContainer: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceVariant,
     padding: spacing.md,
     borderRadius: 8,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   tokenLabel: {
     ...typography.bodySmall,

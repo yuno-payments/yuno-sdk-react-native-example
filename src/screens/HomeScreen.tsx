@@ -6,7 +6,7 @@ import React, {useState, useCallback, useEffect} from 'react';
 import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler} from 'react-native';
 import {YunoPaymentMethods} from '@yuno/yuno-sdk-react-native';
 import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno/yuno-sdk-react-native';
-import {useYunoSDK} from '../hooks';
+import {useYunoSDK, useTheme} from '../hooks';
 import {
   ConfigForm,
   PaymentActions,
@@ -14,7 +14,7 @@ import {
   OTTDisplay,
   StatusDisplay,
 } from '../components';
-import {colors, spacing, typography} from '../theme';
+import {spacing, typography} from '../theme';
 import {useTranslation} from '../i18n';
 import type {
   PaymentConfig,
@@ -32,6 +32,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   initialConfigJson,
 }) => {
   const t = useTranslation();
+  const {colors} = useTheme();
+  const styles = createStyles(colors);
 
   // Local state for configuration
   const [countryCode, setCountryCode] = useState('CO');
@@ -403,7 +405,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -416,12 +418,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h1,
-    color: colors.surface,
+    color: colors.textInverse,
     marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.body,
-    color: colors.surface,
+    color: colors.textInverse,
     opacity: 0.9,
   },
   scrollView: {
@@ -431,12 +433,14 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   infoContainer: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     padding: spacing.md,
     marginHorizontal: spacing.md,
     marginTop: spacing.md,
     borderRadius: 8,
-    shadowColor: '#000',
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    shadowColor: colors.elevation,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -454,12 +458,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   paymentMethodsWrapper: {
-    flex: 1, // Equivalent to weight(1f) in Compose - takes all available space
+    flex: 1,
     marginTop: spacing.md,
     marginHorizontal: spacing.md,
   },
   paymentMethods: {
-    flex: 1, // Takes all wrapper space - scroll is internal (native)
+    flex: 1,
   },
   payButton: {
     backgroundColor: colors.primary,
@@ -469,7 +473,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     borderRadius: 8,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.elevation,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -478,7 +482,7 @@ const styles = StyleSheet.create({
   payButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.surface,
+    color: colors.textInverse,
   },
   backButton: {
     backgroundColor: colors.surface,
@@ -488,7 +492,9 @@ const styles = StyleSheet.create({
     marginVertical: spacing.md,
     borderRadius: 8,
     alignItems: 'center',
-    shadowColor: '#000',
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.elevation,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,

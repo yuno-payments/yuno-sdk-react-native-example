@@ -1,5 +1,5 @@
 /**
- * Input reutilizable
+ * Reusable input component
  */
 
 import React from 'react';
@@ -11,7 +11,8 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
-import {colors, spacing, typography} from '../theme';
+import {spacing, typography} from '../theme';
+import {useTheme} from '../hooks';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -26,6 +27,9 @@ export const Input: React.FC<InputProps> = ({
   style,
   ...textInputProps
 }) => {
+  const {colors} = useTheme();
+  const styles = createStyles(colors);
+  
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -39,7 +43,7 @@ export const Input: React.FC<InputProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleSheet.create({
   container: {
     marginBottom: spacing.md,
   },
@@ -51,7 +55,7 @@ const styles = StyleSheet.create({
   },
   input: {
     ...typography.body,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceVariant,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,

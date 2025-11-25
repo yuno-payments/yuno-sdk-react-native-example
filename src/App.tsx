@@ -12,7 +12,7 @@
 import React, {useEffect} from 'react';
 import {StatusBar} from 'react-native';
 import {HomeScreen} from './screens';
-import {colors} from './theme';
+import {useTheme} from './hooks';
 
 interface AppProps {
   countryCode?: string;
@@ -20,6 +20,8 @@ interface AppProps {
 }
 
 function App(props: AppProps): React.JSX.Element {
+  const {colors, isDark} = useTheme();
+
   useEffect(() => {
     if (props.countryCode || props.configJson) {
       console.log('📦 App received initial props from native:');
@@ -31,7 +33,7 @@ function App(props: AppProps): React.JSX.Element {
   return (
     <>
       <StatusBar
-        barStyle="light-content"
+        barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.primary}
       />
       <HomeScreen 

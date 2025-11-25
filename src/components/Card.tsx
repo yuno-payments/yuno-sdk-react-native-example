@@ -1,10 +1,11 @@
 /**
- * Card component para agrupar contenido
+ * Card component to group content
  */
 
 import React from 'react';
 import {View, Text, StyleSheet, type ViewStyle} from 'react-native';
-import {colors, spacing, typography} from '../theme';
+import {spacing, typography} from '../theme';
+import {useTheme} from '../hooks';
 
 interface CardProps {
   title?: string;
@@ -13,6 +14,9 @@ interface CardProps {
 }
 
 export const Card: React.FC<CardProps> = ({title, children, style}) => {
+  const {colors} = useTheme();
+  const styles = createStyles(colors);
+  
   return (
     <View style={[styles.card, style]}>
       {title && <Text style={styles.title}>{title}</Text>}
@@ -21,13 +25,15 @@ export const Card: React.FC<CardProps> = ({title, children, style}) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.md,
-    shadowColor: colors.text,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    shadowColor: colors.elevation,
     shadowOffset: {
       width: 0,
       height: 2,

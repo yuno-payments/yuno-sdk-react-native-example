@@ -4,7 +4,8 @@
 
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
-import {colors, spacing, typography} from '../theme';
+import {spacing, typography} from '../theme';
+import {useTheme} from '../hooks';
 
 interface InfoRowProps {
   label: string;
@@ -12,6 +13,9 @@ interface InfoRowProps {
 }
 
 export const InfoRow: React.FC<InfoRowProps> = ({label, value}) => {
+  const {colors} = useTheme();
+  const styles = createStyles(colors);
+  
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}:</Text>
@@ -20,7 +24,7 @@ export const InfoRow: React.FC<InfoRowProps> = ({label, value}) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     marginBottom: spacing.sm,
