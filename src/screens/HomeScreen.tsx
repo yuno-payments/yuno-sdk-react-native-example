@@ -166,8 +166,8 @@ export const HomeScreen: React.FC = () => {
   ]);
 
   const handleContinuePayment = useCallback(() => {
-    continuePayment(checkoutSession);
-  }, [checkoutSession, continuePayment]);
+    continuePayment(checkoutSession, countryCode);
+  }, [checkoutSession, countryCode, continuePayment]);
 
   return (
     <SafeAreaView style={styles.container}>

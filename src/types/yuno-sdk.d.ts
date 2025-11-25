@@ -83,6 +83,10 @@ declare module '@yuno/yuno-sdk-react-native' {
       },
       countryCode: string,
     ): Promise<void>;
-    static continuePayment(checkoutSession: string, oneTimeToken: string): Promise<void>;
+    static continuePayment(
+      checkoutSession: string,
+      countryCode: string,
+      showPaymentStatus: boolean,
+    ): Promise<void>;
   }
 }
