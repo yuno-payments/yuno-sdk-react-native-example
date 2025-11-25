@@ -3,5 +3,4 @@
  */
 
 export * from './HomeScreen';
-export * from './PaymentMethodsScreen';
 

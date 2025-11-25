@@ -40,5 +40,4 @@ export interface AppState {
 }
 
 export type {YunoPaymentState, YunoEnrollmentState, OneTimeTokenInfo};
-export type {RootStackParamList} from './navigation';
 

@@ -11,13 +11,8 @@
 
 import React, {useEffect} from 'react';
 import {StatusBar} from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {HomeScreen, PaymentMethodsScreen} from './screens';
+import {HomeScreen} from './screens';
 import {colors} from './theme';
-import type {RootStackParamList} from './types/navigation';
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
 
 interface AppProps {
   countryCode?: string;
@@ -39,28 +34,10 @@ function App(props: AppProps): React.JSX.Element {
         barStyle="light-content"
         backgroundColor={colors.primary}
       />
-      <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName="Home"
-          screenOptions={{
-            headerShown: false,
-            animation: 'slide_from_right',
-          }}>
-          <Stack.Screen name="Home">
-            {(screenProps) => (
-              <HomeScreen
-                {...screenProps}
-                initialCountryCode={props.countryCode}
-                initialConfigJson={props.configJson}
-              />
-            )}
-          </Stack.Screen>
-          <Stack.Screen 
-            name="PaymentMethods" 
-            component={PaymentMethodsScreen}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <HomeScreen 
+        initialCountryCode={props.countryCode}
+        initialConfigJson={props.configJson}
+      />
     </>
   );
 }
