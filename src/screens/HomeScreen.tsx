@@ -452,14 +452,6 @@ const styles = StyleSheet.create({
     flex: 1, // Equivalente a weight(1f) en Compose - toma todo el espacio disponible
     marginTop: spacing.md,
     marginHorizontal: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    overflow: 'hidden', // Para que el borderRadius funcione correctamente
   },
   paymentMethods: {
     flex: 1, // Ocupa todo el espacio del wrapper - el scroll es interno (nativo)
