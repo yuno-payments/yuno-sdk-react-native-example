@@ -58,39 +58,42 @@ class YunoService {
 
   /**
    * Inicia un flujo de pago completo
-   * Solo requiere checkoutSession
+   * Muestra todos los métodos de pago disponibles
+   * NOTA: El checkoutSession debe estar configurado antes en el SDK nativo
    */
   async startPayment(config: PaymentConfig): Promise<void> {
     console.log('💳 Starting full payment flow...');
     console.log('Config:', config);
 
-    await YunoSdk.startPayment(
-      {
-        checkoutSession: config.checkoutSession,
-      },
-      config.countryCode,
-    );
+    // startPayment solo recibe showPaymentStatus
+    // El checkoutSession debe haberse configurado previamente
+    await YunoSdk.startPayment(true);
 
     console.log('✅ Payment flow started');
   }
 
   /**
    * Inicia un flujo de pago lite
-   * Solo requiere checkoutSession
+   * Requiere checkoutSession + paymentMethodType
    */
   async startPaymentLite(config: PaymentLiteConfig): Promise<void> {
     console.log('💳 Starting payment lite flow...');
     console.log('Config:', config);
 
-    const params: any = {
-      checkoutSession: config.checkoutSession,
+    const methodSelected: any = {
       paymentMethodType: config.paymentMethodType,
     };
 
     if (config.vaultedToken) {
-      params.vaultedToken = config.vaultedToken;
+      methodSelected.vaultedToken = config.vaultedToken;
     }
 
+    const params = {
+      checkoutSession: config.checkoutSession,
+      methodSelected,
+    };
+
+    console.log('📦 Params to send:', params);
     await YunoSdk.startPaymentLite(params, config.countryCode);
     console.log('✅ Payment lite flow started');
   }
@@ -115,21 +118,27 @@ class YunoService {
 
   /**
    * Inicia un flujo de pago seamless
-   * Solo requiere checkoutSession
+   * Requiere checkoutSession + paymentMethodType
    */
   async startPaymentSeamlessLite(config: PaymentLiteConfig): Promise<void> {
     console.log('💳 Starting seamless payment flow...');
     console.log('Config:', config);
 
-    const params: any = {
-      checkoutSession: config.checkoutSession,
+    const methodSelected: any = {
       paymentMethodType: config.paymentMethodType,
     };
 
     if (config.vaultedToken) {
-      params.vaultedToken = config.vaultedToken;
+      methodSelected.vaultedToken = config.vaultedToken;
     }
 
+    const params = {
+      checkoutSession: config.checkoutSession,
+      countryCode: config.countryCode,
+      methodSelected,
+    };
+
+    console.log('📦 Params to send:', params);
     await YunoSdk.startPaymentSeamlessLite(params, config.countryCode);
     console.log('✅ Seamless payment flow started');
   }

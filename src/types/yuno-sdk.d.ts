@@ -55,15 +55,15 @@ declare module '@yuno/yuno-sdk-react-native' {
     static clearLastOneTimeToken(): Promise<void>;
     static getLastOneTimeToken(): Promise<string | null>;
     static getLastOneTimeTokenInfo(): Promise<OneTimeTokenInfo | null>;
-    static startPayment(
-      config: { checkoutSession: string },
-      countryCode: string,
-    ): Promise<void>;
+    static startPayment(showPaymentStatus: boolean): Promise<void>;
     static startPaymentLite(
       config: {
         checkoutSession: string;
-        paymentMethodType: string;
-        vaultedToken?: string;
+        methodSelected: {
+          paymentMethodType: string;
+          vaultedToken?: string;
+        };
+        showPaymentStatus?: boolean;
       },
       countryCode: string,
     ): Promise<void>;
@@ -74,8 +74,12 @@ declare module '@yuno/yuno-sdk-react-native' {
     static startPaymentSeamlessLite(
       config: {
         checkoutSession: string;
-        paymentMethodType: string;
-        vaultedToken?: string;
+        countryCode: string;
+        methodSelected: {
+          paymentMethodType: string;
+          vaultedToken?: string;
+        };
+        showPaymentStatus?: boolean;
       },
       countryCode: string,
     ): Promise<void>;
