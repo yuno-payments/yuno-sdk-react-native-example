@@ -1,5 +1,5 @@
 /**
- * Pantalla principal de la aplicación
+ * Main application screen
  */
 
 import React, {useState, useCallback, useEffect} from 'react';
@@ -15,6 +15,7 @@ import {
   StatusDisplay,
 } from '../components';
 import {colors, spacing, typography} from '../theme';
+import {useTranslation} from '../i18n';
 import type {
   PaymentConfig,
   PaymentLiteConfig,
@@ -30,7 +31,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   initialCountryCode,
   initialConfigJson,
 }) => {
-  // Estado local para configuración
+  const t = useTranslation();
+
+  // Local state for configuration
   const [countryCode, setCountryCode] = useState('CO');
   const [customerSession, setCustomerSession] = useState('');
   const [checkoutSession, setCheckoutSession] = useState('');
@@ -40,7 +43,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [isPaymentMethodSelected, setIsPaymentMethodSelected] = useState(false);
 
-  // Procesar configuración inicial del JSON nativo
+  // Process initial configuration from native JSON
   useEffect(() => {
     if (initialCountryCode) {
       console.log('🌍 Setting country code from native:', initialCountryCode);
@@ -52,13 +55,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         console.log('📋 Parsing config JSON from native...');
         const config = JSON.parse(initialConfigJson);
         
-        // Extraer showPaymentStatus del JSON
+        // Extract showPaymentStatus from JSON
         if (config.options && typeof config.options.showPaymentStatus === 'boolean') {
           console.log('✅ Setting showPaymentStatus from JSON:', config.options.showPaymentStatus);
           setShowPaymentStatus(config.options.showPaymentStatus);
         }
 
-        // Log para confirmar que tenemos los datos
+        // Log to confirm we have the data
         console.log('📦 Parsed config:', {
           country: config.country,
           language: config.language,
@@ -72,7 +75,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   }, [initialCountryCode, initialConfigJson]);
 
-  // Hook del SDK
+  // SDK Hook
   const {
     isLoading,
     paymentStatus,
@@ -87,15 +90,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     clearOTT,
   } = useYunoSDK(countryCode);
 
-  // Efecto para regresar a la vista principal cuando el flujo de pago termine
+  // Effect to return to main view when payment flow finishes
   useEffect(() => {
-    // Si estamos mostrando los métodos de pago Y recibimos un status o token, volver a la vista principal
+    // If we're showing payment methods AND we receive a status or token, return to main view
     if (showPaymentMethods && (paymentStatus || ottToken)) {
       console.log('✅ Payment flow completed, returning to main view');
       console.log('📊 Payment Status:', paymentStatus || 'N/A');
       console.log('🎫 OTT Token:', ottToken || 'N/A');
       
-      // Pequeño delay para asegurar que el SDK nativo terminó completamente
+      // Small delay to ensure native SDK has fully finished
       setTimeout(() => {
         setShowPaymentMethods(false);
         setIsPaymentMethodSelected(false);
@@ -103,30 +106,30 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   }, [showPaymentMethods, paymentStatus, ottToken]);
 
-  // Manejar el botón "atrás" de Android
+  // Handle Android "back" button
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
-        // Si estamos mostrando los métodos de pago, volver a la vista principal
+        // If we're showing payment methods, return to main view
         if (showPaymentMethods) {
           console.log('🔙 Back button pressed - Returning to main view');
           setShowPaymentMethods(false);
           setIsPaymentMethodSelected(false);
-          return true; // Prevenir comportamiento por defecto (cerrar activity)
+          return true; // Prevent default behavior (close activity)
         }
         
-        // Si no, permitir comportamiento por defecto (ir a MainActivity)
+        // Otherwise, allow default behavior (go to MainActivity)
         console.log('🔙 Back button pressed - Going to previous activity');
         return false;
       },
     );
 
-    // Cleanup: remover el listener cuando el componente se desmonte
+    // Cleanup: remove listener when component unmounts
     return () => backHandler.remove();
   }, [showPaymentMethods]);
 
-  // Validación de campos requeridos
+  // Required fields validation
   const validateRequiredFields = useCallback(
     (requireCheckout: boolean = true): boolean => {
       if (!customerSession.trim()) {
@@ -143,32 +146,32 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // Handlers
   const handleStartPayment = useCallback(() => {
     console.log('🔵 handleStartPayment called - Showing Payment Methods');
-    console.log('📋 checkoutSession:', checkoutSession || '(vacío)');
+    console.log('📋 checkoutSession:', checkoutSession || '(empty)');
     
-    // Payment solo requiere checkoutSession
+    // Payment only requires checkoutSession
     if (!checkoutSession.trim()) {
-      Alert.alert('Campo Requerido', 'Por favor ingresa el Checkout Session');
+      Alert.alert(t.payment.requiredFields, `${t.payment.pleaseEnter}: ${t.config.checkoutSession}`);
       return;
     }
 
     console.log('✅ Showing payment methods component');
     setShowPaymentMethods(true);
-  }, [checkoutSession]);
+  }, [checkoutSession, t]);
 
   const handleStartPaymentLite = useCallback(() => {
     console.log('🔵 handleStartPaymentLite called');
-    console.log('📋 checkoutSession:', checkoutSession || '(vacío)');
-    console.log('📋 paymentMethodType:', paymentMethodType || '(vacío)');
+    console.log('📋 checkoutSession:', checkoutSession || '(empty)');
+    console.log('📋 paymentMethodType:', paymentMethodType || '(empty)');
     
-    // Payment Lite requiere checkoutSession + paymentMethodType
+    // Payment Lite requires checkoutSession + paymentMethodType
     const missingFields = [];
-    if (!checkoutSession.trim()) missingFields.push('Checkout Session');
-    if (!paymentMethodType.trim()) missingFields.push('Payment Method Type');
+    if (!checkoutSession.trim()) missingFields.push(t.config.checkoutSession);
+    if (!paymentMethodType.trim()) missingFields.push(t.config.paymentMethodType);
     
     if (missingFields.length > 0) {
       Alert.alert(
-        'Campos Requeridos',
-        `Por favor ingresa: ${missingFields.join(', ')}`,
+        t.payment.requiredFields,
+        `${t.payment.pleaseEnter}: ${missingFields.join(', ')}`,
       );
       return;
     }
@@ -190,44 +193,45 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     vaultedToken,
     showPaymentStatus,
     startPaymentLite,
+    t,
   ]);
 
   const handleEnrollment = useCallback(() => {
     console.log('🔵 handleEnrollment called');
-    console.log('📋 customerSession:', customerSession || '(vacío)');
+    console.log('📋 customerSession:', customerSession || '(empty)');
     console.log('📋 showPaymentStatus (state):', showPaymentStatus);
     console.log('📋 showPaymentStatus (typeof):', typeof showPaymentStatus);
     
-    // Enrollment solo requiere customerSession
+    // Enrollment only requires customerSession
     if (!customerSession.trim()) {
-      Alert.alert('Campo Requerido', 'Por favor ingresa el Customer Session');
+      Alert.alert(t.enrollment.requiredFields, `${t.enrollment.pleaseEnter}: ${t.config.customerSession}`);
       return;
     }
 
     const config: EnrollmentConfig = {
       customerSession,
       countryCode,
-      showPaymentStatus, // Reutiliza showPaymentStatus del JSON
+      showPaymentStatus, // Reuse showPaymentStatus from JSON
     };
 
     console.log('✅ Calling enrollmentPayment with config:', JSON.stringify(config, null, 2));
     enrollmentPayment(config);
-  }, [customerSession, countryCode, showPaymentStatus, enrollmentPayment]);
+  }, [customerSession, countryCode, showPaymentStatus, enrollmentPayment, t]);
 
   const handleSeamlessPayment = useCallback(() => {
     console.log('🔵 handleSeamlessPayment called');
-    console.log('📋 checkoutSession:', checkoutSession || '(vacío)');
-    console.log('📋 paymentMethodType:', paymentMethodType || '(vacío)');
+    console.log('📋 checkoutSession:', checkoutSession || '(empty)');
+    console.log('📋 paymentMethodType:', paymentMethodType || '(empty)');
     
-    // Seamless Payment requiere checkoutSession + paymentMethodType
+    // Seamless Payment requires checkoutSession + paymentMethodType
     const missingFields = [];
-    if (!checkoutSession.trim()) missingFields.push('Checkout Session');
-    if (!paymentMethodType.trim()) missingFields.push('Payment Method Type');
+    if (!checkoutSession.trim()) missingFields.push(t.config.checkoutSession);
+    if (!paymentMethodType.trim()) missingFields.push(t.config.paymentMethodType);
     
     if (missingFields.length > 0) {
       Alert.alert(
-        'Campos Requeridos',
-        `Por favor ingresa: ${missingFields.join(', ')}`,
+        t.payment.requiredFields,
+        `${t.payment.pleaseEnter}: ${missingFields.join(', ')}`,
       );
       return;
     }
@@ -249,13 +253,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     vaultedToken,
     showPaymentStatus,
     startPaymentSeamlessLite,
+    t,
   ]);
 
   const handleContinuePayment = useCallback(() => {
     continuePayment(checkoutSession, countryCode, showPaymentStatus);
   }, [checkoutSession, countryCode, showPaymentStatus, continuePayment]);
 
-  // Handler para cuando se selecciona un método de pago
+  // Handler for when a payment method is selected
   const handlePaymentMethodSelected = useCallback(
     (event: PaymentMethodSelectedEvent) => {
       console.log('💳 Payment method selected:', event);
@@ -264,29 +269,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     []
   );
 
-  // Handler para errores en el componente de métodos de pago
+  // Handler for errors in payment methods component
   const handlePaymentMethodError = useCallback((event: PaymentMethodErrorEvent) => {
     console.error('❌ Payment method error:', event);
-    Alert.alert('Error', `No se pudieron cargar los métodos de pago: ${event.message}`, [
+    Alert.alert('Error', `Could not load payment methods: ${event.message}`, [
       {text: 'OK'},
     ]);
   }, []);
 
-  // Handler para volver del componente de métodos de pago
+  // Handler to go back from payment methods component
   const handleBackFromPaymentMethods = useCallback(() => {
     console.log('🔙 Going back from payment methods');
     setShowPaymentMethods(false);
     setIsPaymentMethodSelected(false);
   }, []);
 
-  // Handler para el botón "Pagar" (Payment Full Flow)
+  // Handler for "Pay" button (Payment Full Flow)
   const handlePayButtonPress = useCallback(() => {
     console.log('🔵 handlePayButtonPress called (Payment Full)');
     console.log('📋 checkoutSession:', checkoutSession);
     console.log('📋 countryCode:', countryCode);
     console.log('📋 showPaymentStatus:', showPaymentStatus);
 
-    // No necesitamos validar porque ya se validó al mostrar la lista
+    // No need to validate because it was already validated when showing the list
     const config: PaymentConfig = {
       checkoutSession,
       countryCode,
@@ -297,25 +302,25 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     startPayment(config);
   }, [checkoutSession, countryCode, showPaymentStatus, startPayment]);
 
-  // Si se están mostrando los métodos de pago, renderizar el componente
+  // If payment methods are being shown, render the component
   if (showPaymentMethods) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Métodos de Pago</Text>
-          <Text style={styles.subtitle}>Selecciona tu método preferido</Text>
+          <Text style={styles.title}>{t.paymentMethods.title}</Text>
+          <Text style={styles.subtitle}>{t.paymentMethods.subtitle}</Text>
         </View>
 
         <View style={styles.infoContainer}>
-          <Text style={styles.infoLabel}>Checkout Session:</Text>
+          <Text style={styles.infoLabel}>{t.paymentMethods.checkoutSession}:</Text>
           <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="middle">
             {checkoutSession}
           </Text>
-          <Text style={styles.infoLabel}>País:</Text>
+          <Text style={styles.infoLabel}>{t.paymentMethods.country}:</Text>
           <Text style={styles.infoValue}>{countryCode}</Text>
         </View>
 
-        {/* Contenedor flex que toma todo el espacio disponible */}
+        {/* Flex container that takes all available space */}
         <View style={styles.paymentMethodsWrapper}>
           <YunoPaymentMethods
             checkoutSession={checkoutSession}
@@ -331,7 +336,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             style={styles.payButton}
             onPress={handlePayButtonPress}
             activeOpacity={0.7}>
-            <Text style={styles.payButtonText}>Pagar</Text>
+            <Text style={styles.payButtonText}>{t.paymentMethods.payButton}</Text>
           </TouchableOpacity>
         )}
 
@@ -339,18 +344,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           style={styles.backButton}
           onPress={handleBackFromPaymentMethods}
           activeOpacity={0.7}>
-          <Text style={styles.backButtonText}>← Volver</Text>
+          <Text style={styles.backButtonText}>{t.paymentMethods.backButton}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
-  // Vista normal del formulario
+  // Normal form view
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Yuno SDK</Text>
-        <Text style={styles.subtitle}>React Native Example</Text>
+        <Text style={styles.title}>{t.app.title}</Text>
+        <Text style={styles.subtitle}>{t.app.subtitle}</Text>
       </View>
 
       <ScrollView
@@ -449,12 +454,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   paymentMethodsWrapper: {
-    flex: 1, // Equivalente a weight(1f) en Compose - toma todo el espacio disponible
+    flex: 1, // Equivalent to weight(1f) in Compose - takes all available space
     marginTop: spacing.md,
     marginHorizontal: spacing.md,
   },
   paymentMethods: {
-    flex: 1, // Ocupa todo el espacio del wrapper - el scroll es interno (nativo)
+    flex: 1, // Takes all wrapper space - scroll is internal (native)
   },
   payButton: {
     backgroundColor: colors.primary,
