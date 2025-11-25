@@ -7,19 +7,25 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.yunosdkreactnative.YunoSdkModule
+import org.json.JSONObject
 
 /**
  * MainActivity - Entry point for the app.
  * 
- * This activity allows the user to input their Yuno API key, then navigates to YunoActivity
+ * This activity allows the user to input their Yuno configuration JSON, then navigates to YunoActivity
  * which initializes the Yuno SDK and hosts the React Native content.
  * 
- * This pattern demonstrates how to handle dynamic API keys that are obtained after app launch
- * (e.g., from login, server, or user input).
+ * The JSON should contain:
+ * - country: Country code
+ * - language: Language code
+ * - currency: Currency code
+ * - amount: Amount
+ * - merchantKeys: { publicKey, secretKey, accountCode }
+ * - options: { showPaymentStatus, cardType, savedCardEnable }
  */
 class MainActivity : AppCompatActivity() {
 
-  private lateinit var apiKeyInput: EditText
+  private lateinit var configInput: EditText
   private lateinit var startButton: Button
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,7 +110,7 @@ class MainActivity : AppCompatActivity() {
     
     // Instructions
     val instructions = android.widget.TextView(this).apply {
-      text = "Yuno API Key:"
+      text = "Yuno Configuration JSON:"
       textSize = 14f
       setTextColor(android.graphics.Color.parseColor("#333333"))
       typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -112,13 +118,18 @@ class MainActivity : AppCompatActivity() {
     }
     cardLayout.addView(instructions)
 
-    // API Key input with styled background
-    apiKeyInput = EditText(this).apply {
-      hint = "Ingresa tu API Key"
-      textSize = 14f
+    // Config JSON input with styled background (multiline)
+    configInput = EditText(this).apply {
+      hint = "Ingresa el JSON de configuración"
+      textSize = 12f
       setTextColor(android.graphics.Color.parseColor("#333333"))
       setHintTextColor(android.graphics.Color.parseColor("#999999"))
       setPadding(32, 32, 32, 32)
+      minLines = 8
+      maxLines = 15
+      inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+      gravity = android.view.Gravity.TOP
+      setHorizontallyScrolling(false)
       background = android.graphics.drawable.GradientDrawable().apply {
         cornerRadius = 24f
         setColor(android.graphics.Color.parseColor("#F9F9F9"))
@@ -132,7 +143,7 @@ class MainActivity : AppCompatActivity() {
       }
       layoutParams = params
     }
-    cardLayout.addView(apiKeyInput)
+    cardLayout.addView(configInput)
 
     // Start button with purple background
     startButton = Button(this).apply {
@@ -192,9 +203,10 @@ class MainActivity : AppCompatActivity() {
     
     val infoText = android.widget.TextView(this).apply {
       text = "El SDK de Yuno ya está listo para usar.\n\n" +
-             "• Ingresa tu Yuno API key\n" +
+             "• Ingresa el JSON de configuración completo\n" +
+             "• Incluye country, language, merchantKeys y options\n" +
              "• Presiona Start para continuar\n" +
-             "• El SDK se inicializará automáticamente\n" +
+             "• El SDK se inicializará con tu configuración\n" +
              "• Podrás probar todas las funcionalidades"
       textSize = 13f
       setTextColor(android.graphics.Color.parseColor("#1565C0"))
@@ -219,21 +231,59 @@ class MainActivity : AppCompatActivity() {
   }
 
   private fun onStartButtonClicked() {
-    val apiKey = apiKeyInput.text.toString().trim()
+    val configJson = configInput.text.toString().trim()
     
-    if (apiKey.isEmpty()) {
-      Toast.makeText(this, "Please enter a valid Yuno API key", Toast.LENGTH_SHORT).show()
+    if (configJson.isEmpty()) {
+      Toast.makeText(this, "Please enter a valid configuration JSON", Toast.LENGTH_SHORT).show()
       return
     }
 
     try {
-      // Initialize Yuno SDK with application context (not activity context)
-      YunoSdkModule.initializeYunoSdk(applicationContext, apiKey)
+      // Parse JSON configuration
+      val json = JSONObject(configJson)
+      
+      // Extract API key from merchantKeys.publicKey
+      val merchantKeys = json.getJSONObject("merchantKeys")
+      val apiKey = merchantKeys.getString("publicKey")
+      
+      // Extract country code
+      val country = json.getString("country")
+      
+      // Extract language (optional)
+      val language = if (json.has("language")) json.getString("language") else null
+      
+      // Extract options
+      val options = json.getJSONObject("options")
+      val savedCardEnable = options.optBoolean("savedCardEnable", false)
+      val cardType = options.optString("cardType", "ONE_STEP")
+      
+      android.util.Log.d("MainActivity", "📋 Configuration parsed:")
+      android.util.Log.d("MainActivity", "  - API Key: ${apiKey.take(20)}...")
+      android.util.Log.d("MainActivity", "  - Country: $country")
+      android.util.Log.d("MainActivity", "  - Language: $language")
+      android.util.Log.d("MainActivity", "  - Card Type: $cardType")
+      android.util.Log.d("MainActivity", "  - Saved Card Enable: $savedCardEnable")
+      
+      // Initialize Yuno SDK with application context and configuration
+      YunoSdkModule.initializeYunoSdk(
+        applicationContext = applicationContext,
+        apiKey = apiKey,
+        language = language,
+        cardType = cardType,
+        savedCardEnable = savedCardEnable
+      )
       android.util.Log.d("MainActivity", "✅ Yuno SDK initialized successfully")
       
-      // Navigate to YunoActivity (callbacks will be registered there)
-      val intent = Intent(this, YunoActivity::class.java)
+      // Navigate to YunoActivity, passing the country code
+      val intent = Intent(this, YunoActivity::class.java).apply {
+        putExtra("YUNO_COUNTRY_CODE", country)
+        putExtra("YUNO_CONFIG_JSON", configJson)
+      }
       startActivity(intent)
+      
+    } catch (e: org.json.JSONException) {
+      android.util.Log.e("MainActivity", "❌ Invalid JSON format: ${e.message}", e)
+      Toast.makeText(this, "Invalid JSON format: ${e.message}", Toast.LENGTH_LONG).show()
     } catch (e: Exception) {
       android.util.Log.e("MainActivity", "❌ Failed to initialize Yuno SDK: ${e.message}", e)
       Toast.makeText(this, "Failed to initialize Yuno SDK: ${e.message}", Toast.LENGTH_LONG).show()

@@ -31,7 +31,9 @@ class YunoActivity : ReactActivity() {
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
   companion object {
-    const val EXTRA_YUNO_API_KEY = "YUNO_API_KEY"
+    const val EXTRA_YUNO_API_KEY = "YUNO_API_KEY" // Deprecated, config now passed via MainActivity
+    const val EXTRA_COUNTRY_CODE = "YUNO_COUNTRY_CODE"
+    const val EXTRA_CONFIG_JSON = "YUNO_CONFIG_JSON"
   }
 
   /**
