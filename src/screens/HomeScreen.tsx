@@ -3,11 +3,12 @@
  */
 
 import React, {useState, useCallback} from 'react';
-import {SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert} from 'react-native';
 import {useYunoSDK} from '../hooks';
 import {
   ConfigForm,
   PaymentActions,
+  EnrollmentActions,
   OTTDisplay,
   StatusDisplay,
 } from '../components';
@@ -57,7 +58,13 @@ export const HomeScreen: React.FC = () => {
 
   // Handlers
   const handleStartPayment = useCallback(() => {
-    if (!validateRequiredFields()) {
+    console.log('🔵 handleStartPayment called');
+    if (!customerSession.trim()) {
+      Alert.alert('Error', 'Por favor ingresa el Customer Session');
+      return;
+    }
+    if (!checkoutSession.trim()) {
+      Alert.alert('Error', 'Por favor ingresa el Checkout Session');
       return;
     }
 
@@ -67,11 +74,18 @@ export const HomeScreen: React.FC = () => {
       countryCode,
     };
 
+    console.log('✅ Calling startPayment with config:', config);
     startPayment(config);
-  }, [customerSession, checkoutSession, countryCode, startPayment, validateRequiredFields]);
+  }, [customerSession, checkoutSession, countryCode, startPayment]);
 
   const handleStartPaymentLite = useCallback(() => {
-    if (!validateRequiredFields()) {
+    console.log('🔵 handleStartPaymentLite called');
+    if (!customerSession.trim()) {
+      Alert.alert('Error', 'Por favor ingresa el Customer Session');
+      return;
+    }
+    if (!checkoutSession.trim()) {
+      Alert.alert('Error', 'Por favor ingresa el Checkout Session');
       return;
     }
 
@@ -83,6 +97,7 @@ export const HomeScreen: React.FC = () => {
       vaultedToken: vaultedToken || undefined,
     };
 
+    console.log('✅ Calling startPaymentLite with config:', config);
     startPaymentLite(config);
   }, [
     customerSession,
@@ -91,11 +106,12 @@ export const HomeScreen: React.FC = () => {
     paymentMethodType,
     vaultedToken,
     startPaymentLite,
-    validateRequiredFields,
   ]);
 
   const handleEnrollment = useCallback(() => {
-    if (!validateRequiredFields(false)) {
+    console.log('🔵 handleEnrollment called');
+    if (!customerSession.trim()) {
+      Alert.alert('Error', 'Por favor ingresa el Customer Session');
       return;
     }
 
@@ -104,11 +120,18 @@ export const HomeScreen: React.FC = () => {
       countryCode,
     };
 
+    console.log('✅ Calling enrollmentPayment with config:', config);
     enrollmentPayment(config);
-  }, [customerSession, countryCode, enrollmentPayment, validateRequiredFields]);
+  }, [customerSession, countryCode, enrollmentPayment]);
 
   const handleSeamlessPayment = useCallback(() => {
-    if (!validateRequiredFields()) {
+    console.log('🔵 handleSeamlessPayment called');
+    if (!customerSession.trim()) {
+      Alert.alert('Error', 'Por favor ingresa el Customer Session');
+      return;
+    }
+    if (!checkoutSession.trim()) {
+      Alert.alert('Error', 'Por favor ingresa el Checkout Session');
       return;
     }
 
@@ -120,6 +143,7 @@ export const HomeScreen: React.FC = () => {
       vaultedToken: vaultedToken || undefined,
     };
 
+    console.log('✅ Calling startPaymentSeamlessLite with config:', config);
     startPaymentSeamlessLite(config);
   }, [
     customerSession,
@@ -128,7 +152,6 @@ export const HomeScreen: React.FC = () => {
     paymentMethodType,
     vaultedToken,
     startPaymentSeamlessLite,
-    validateRequiredFields,
   ]);
 
   const handleContinuePayment = useCallback(() => {
@@ -160,8 +183,12 @@ export const HomeScreen: React.FC = () => {
         <PaymentActions
           onStartPayment={handleStartPayment}
           onStartPaymentLite={handleStartPaymentLite}
-          onEnrollment={handleEnrollment}
           onSeamlessPayment={handleSeamlessPayment}
+          loading={isLoading}
+        />
+
+        <EnrollmentActions
+          onEnrollment={handleEnrollment}
           loading={isLoading}
         />
 
