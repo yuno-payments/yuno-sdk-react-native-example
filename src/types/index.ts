@@ -22,7 +22,7 @@ export interface PaymentLiteConfig extends PaymentConfig {
 export interface EnrollmentConfig {
   customerSession: string;
   countryCode: string;
-  showEnrollmentStatus?: boolean;
+  showPaymentStatus?: boolean;
 }
 
 export interface AppState {

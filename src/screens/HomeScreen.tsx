@@ -158,6 +158,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const handleEnrollment = useCallback(() => {
     console.log('🔵 handleEnrollment called');
     console.log('📋 customerSession:', customerSession || '(vacío)');
+    console.log('📋 showPaymentStatus (state):', showPaymentStatus);
+    console.log('📋 showPaymentStatus (typeof):', typeof showPaymentStatus);
     
     // Enrollment solo requiere customerSession
     if (!customerSession.trim()) {
@@ -168,10 +170,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     const config: EnrollmentConfig = {
       customerSession,
       countryCode,
-      showEnrollmentStatus: showPaymentStatus, // Usar la misma config
+      showPaymentStatus, // Reutiliza showPaymentStatus del JSON
     };
 
-    console.log('✅ Calling enrollmentPayment with config:', config);
+    console.log('✅ Calling enrollmentPayment with config:', JSON.stringify(config, null, 2));
     enrollmentPayment(config);
   }, [customerSession, countryCode, showPaymentStatus, enrollmentPayment]);
 

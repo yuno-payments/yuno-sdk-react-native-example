@@ -101,16 +101,21 @@ class YunoService {
 
   /**
    * Inicia un flujo de enrollment
+   * Nota: Usa showPaymentStatus del JSON para el parámetro showEnrollmentStatus del SDK
    */
   async enrollmentPayment(config: EnrollmentConfig): Promise<void> {
     console.log('🔐 Starting enrollment flow...');
-    console.log('Config:', config);
+    console.log('Config:', JSON.stringify(config, null, 2));
+    
+    const showEnrollmentStatus = config.showPaymentStatus ?? true;
+    console.log('📋 showEnrollmentStatus value:', showEnrollmentStatus);
+    console.log('📋 showEnrollmentStatus typeof:', typeof showEnrollmentStatus);
 
     await YunoSdk.enrollmentPayment(
       {
         customerSession: config.customerSession,
         cardFlow: CardFlow.ONE_TIME,
-        showEnrollmentStatus: config.showEnrollmentStatus ?? true,
+        showEnrollmentStatus,
       },
       config.countryCode,
     );
