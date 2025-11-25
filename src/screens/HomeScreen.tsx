@@ -317,18 +317,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
         {/* Contenedor flex que toma todo el espacio disponible */}
         <View style={styles.paymentMethodsWrapper}>
-          <ScrollView 
-            style={styles.paymentMethodsScrollView}
-            showsVerticalScrollIndicator={true}
-            nestedScrollEnabled={true}>
-            <YunoPaymentMethods
-              checkoutSession={checkoutSession}
-              countryCode={countryCode}
-              onPaymentMethodSelected={handlePaymentMethodSelected}
-              onPaymentMethodError={handlePaymentMethodError}
-              style={styles.paymentMethods}
-            />
-          </ScrollView>
+          <YunoPaymentMethods
+            checkoutSession={checkoutSession}
+            countryCode={countryCode}
+            onPaymentMethodSelected={handlePaymentMethodSelected}
+            onPaymentMethodError={handlePaymentMethodError}
+            style={styles.paymentMethods}
+          />
         </View>
 
         {isPaymentMethodSelected && (
@@ -466,12 +461,8 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: 'hidden', // Para que el borderRadius funcione correctamente
   },
-  paymentMethodsScrollView: {
-    flex: 1, // Ocupa todo el espacio del wrapper
-  },
   paymentMethods: {
-    width: '100%',
-    minHeight: 600, // Altura mínima para que el componente nativo se renderice
+    flex: 1, // Ocupa todo el espacio del wrapper - el scroll es interno (nativo)
   },
   payButton: {
     backgroundColor: colors.primary,
