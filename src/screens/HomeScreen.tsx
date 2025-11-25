@@ -38,6 +38,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [vaultedToken, setVaultedToken] = useState('');
   const [showPaymentStatus, setShowPaymentStatus] = useState(true);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
+  const [isPaymentMethodSelected, setIsPaymentMethodSelected] = useState(false);
 
   // Procesar configuración inicial del JSON nativo
   useEffect(() => {
@@ -219,13 +220,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const handlePaymentMethodSelected = useCallback(
     (event: PaymentMethodSelectedEvent) => {
       console.log('💳 Payment method selected:', event);
-      if (event.isSelected) {
-        Alert.alert(
-          'Método de Pago Seleccionado',
-          'Has seleccionado un método de pago. El flujo de pago continuará automáticamente.',
-          [{text: 'OK'}]
-        );
-      }
+      setIsPaymentMethodSelected(event.isSelected);
     },
     []
   );
@@ -242,6 +237,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const handleBackFromPaymentMethods = useCallback(() => {
     console.log('🔙 Going back from payment methods');
     setShowPaymentMethods(false);
+    setIsPaymentMethodSelected(false);
+  }, []);
+
+  // Handler para el botón "Pagar"
+  const handlePayButtonPress = useCallback(() => {
+    console.log('💰 Pay button pressed');
+    // TODO: Implementar lógica de pago
   }, []);
 
   // Si se están mostrando los métodos de pago, renderizar el componente
@@ -262,7 +264,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <Text style={styles.infoValue}>{countryCode}</Text>
         </View>
 
-        <View style={styles.paymentMethodsContainer}>
+        <ScrollView 
+          style={styles.paymentMethodsScrollView}
+          contentContainerStyle={styles.paymentMethodsContentContainer}
+          showsVerticalScrollIndicator={true}>
           <YunoPaymentMethods
             checkoutSession={checkoutSession}
             countryCode={countryCode}
@@ -270,7 +275,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             onPaymentMethodError={handlePaymentMethodError}
             style={styles.paymentMethods}
           />
-        </View>
+        </ScrollView>
+
+        {isPaymentMethodSelected && (
+          <TouchableOpacity
+            style={styles.payButton}
+            onPress={handlePayButtonPress}
+            activeOpacity={0.7}>
+            <Text style={styles.payButtonText}>Pagar</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           style={styles.backButton}
@@ -385,21 +399,42 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '600',
   },
-  paymentMethodsContainer: {
+  paymentMethodsScrollView: {
     flex: 1,
     marginTop: spacing.md,
     marginHorizontal: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: 8,
-    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
+  paymentMethodsContentContainer: {
+    flexGrow: 1,
+  },
   paymentMethods: {
-    flex: 1,
+    minHeight: 400,
+  },
+  payButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  payButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.surface,
   },
   backButton: {
     backgroundColor: colors.surface,
