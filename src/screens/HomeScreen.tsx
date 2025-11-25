@@ -2,7 +2,7 @@
  * Pantalla principal de la aplicación
  */
 
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert} from 'react-native';
 import {useYunoSDK} from '../hooks';
 import {
@@ -19,13 +19,54 @@ import type {
   EnrollmentConfig,
 } from '../types';
 
-export const HomeScreen: React.FC = () => {
+interface HomeScreenProps {
+  initialCountryCode?: string;
+  initialConfigJson?: string;
+}
+
+export const HomeScreen: React.FC<HomeScreenProps> = ({
+  initialCountryCode,
+  initialConfigJson,
+}) => {
   // Estado local para configuración
-  const [countryCode] = useState('CO');
+  const [countryCode, setCountryCode] = useState('CO');
   const [customerSession, setCustomerSession] = useState('');
   const [checkoutSession, setCheckoutSession] = useState('');
   const [paymentMethodType, setPaymentMethodType] = useState('CARD');
   const [vaultedToken, setVaultedToken] = useState('');
+  const [showPaymentStatus, setShowPaymentStatus] = useState(true);
+
+  // Procesar configuración inicial del JSON nativo
+  useEffect(() => {
+    if (initialCountryCode) {
+      console.log('🌍 Setting country code from native:', initialCountryCode);
+      setCountryCode(initialCountryCode);
+    }
+
+    if (initialConfigJson) {
+      try {
+        console.log('📋 Parsing config JSON from native...');
+        const config = JSON.parse(initialConfigJson);
+        
+        // Extraer showPaymentStatus del JSON
+        if (config.options && typeof config.options.showPaymentStatus === 'boolean') {
+          console.log('✅ Setting showPaymentStatus from JSON:', config.options.showPaymentStatus);
+          setShowPaymentStatus(config.options.showPaymentStatus);
+        }
+
+        // Log para confirmar que tenemos los datos
+        console.log('📦 Parsed config:', {
+          country: config.country,
+          language: config.language,
+          showPaymentStatus: config.options?.showPaymentStatus,
+          cardType: config.options?.cardType,
+          savedCardEnable: config.options?.savedCardEnable,
+        });
+      } catch (error) {
+        console.error('❌ Error parsing config JSON:', error);
+      }
+    }
+  }, [initialCountryCode, initialConfigJson]);
 
   // Hook del SDK
   const {
@@ -70,11 +111,12 @@ export const HomeScreen: React.FC = () => {
     const config: PaymentConfig = {
       checkoutSession,
       countryCode,
+      showPaymentStatus,
     };
 
     console.log('✅ Calling startPayment with config:', config);
     startPayment(config);
-  }, [checkoutSession, countryCode, startPayment]);
+  }, [checkoutSession, countryCode, showPaymentStatus, startPayment]);
 
   const handleStartPaymentLite = useCallback(() => {
     console.log('🔵 handleStartPaymentLite called');
@@ -99,6 +141,7 @@ export const HomeScreen: React.FC = () => {
       countryCode,
       paymentMethodType,
       vaultedToken: vaultedToken || undefined,
+      showPaymentStatus,
     };
 
     console.log('✅ Calling startPaymentLite with config:', config);
@@ -108,6 +151,7 @@ export const HomeScreen: React.FC = () => {
     countryCode,
     paymentMethodType,
     vaultedToken,
+    showPaymentStatus,
     startPaymentLite,
   ]);
 
@@ -124,11 +168,12 @@ export const HomeScreen: React.FC = () => {
     const config: EnrollmentConfig = {
       customerSession,
       countryCode,
+      showEnrollmentStatus: showPaymentStatus, // Usar la misma config
     };
 
     console.log('✅ Calling enrollmentPayment with config:', config);
     enrollmentPayment(config);
-  }, [customerSession, countryCode, enrollmentPayment]);
+  }, [customerSession, countryCode, showPaymentStatus, enrollmentPayment]);
 
   const handleSeamlessPayment = useCallback(() => {
     console.log('🔵 handleSeamlessPayment called');
@@ -153,6 +198,7 @@ export const HomeScreen: React.FC = () => {
       countryCode,
       paymentMethodType,
       vaultedToken: vaultedToken || undefined,
+      showPaymentStatus,
     };
 
     console.log('✅ Calling startPaymentSeamlessLite with config:', config);
@@ -162,6 +208,7 @@ export const HomeScreen: React.FC = () => {
     countryCode,
     paymentMethodType,
     vaultedToken,
+    showPaymentStatus,
     startPaymentSeamlessLite,
   ]);
 

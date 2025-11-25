@@ -67,7 +67,7 @@ class YunoService {
 
     // startPayment solo recibe showPaymentStatus
     // El checkoutSession debe haberse configurado previamente
-    await YunoSdk.startPayment(true);
+    await YunoSdk.startPayment(config.showPaymentStatus ?? true);
 
     console.log('✅ Payment flow started');
   }
@@ -91,6 +91,7 @@ class YunoService {
     const params = {
       checkoutSession: config.checkoutSession,
       methodSelected,
+      showPaymentStatus: config.showPaymentStatus ?? true,
     };
 
     console.log('📦 Params to send:', params);
@@ -109,6 +110,7 @@ class YunoService {
       {
         customerSession: config.customerSession,
         cardFlow: CardFlow.ONE_TIME,
+        showEnrollmentStatus: config.showEnrollmentStatus ?? true,
       },
       config.countryCode,
     );
@@ -136,6 +138,7 @@ class YunoService {
       checkoutSession: config.checkoutSession,
       countryCode: config.countryCode,
       methodSelected,
+      showPaymentStatus: config.showPaymentStatus ?? true,
     };
 
     console.log('📦 Params to send:', params);

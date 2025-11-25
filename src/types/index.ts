@@ -11,6 +11,7 @@ import type {
 export interface PaymentConfig {
   checkoutSession: string;
   countryCode: string;
+  showPaymentStatus?: boolean;
 }
 
 export interface PaymentLiteConfig extends PaymentConfig {
@@ -21,6 +22,7 @@ export interface PaymentLiteConfig extends PaymentConfig {
 export interface EnrollmentConfig {
   customerSession: string;
   countryCode: string;
+  showEnrollmentStatus?: boolean;
 }
 
 export interface AppState {

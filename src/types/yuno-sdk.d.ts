@@ -68,7 +68,11 @@ declare module '@yuno/yuno-sdk-react-native' {
       countryCode: string,
     ): Promise<void>;
     static enrollmentPayment(
-      config: { customerSession: string; cardFlow: CardFlow },
+      config: {
+        customerSession: string;
+        cardFlow: CardFlow;
+        showEnrollmentStatus?: boolean;
+      },
       countryCode: string,
     ): Promise<void>;
     static startPaymentSeamlessLite(
