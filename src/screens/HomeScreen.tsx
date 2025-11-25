@@ -4,6 +4,7 @@
 
 import React, {useState, useCallback, useEffect} from 'react';
 import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert} from 'react-native';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useYunoSDK} from '../hooks';
 import {
   ConfigForm,
@@ -18,13 +19,17 @@ import type {
   PaymentLiteConfig,
   EnrollmentConfig,
 } from '../types';
+import type {RootStackParamList} from '../types/navigation';
 
-interface HomeScreenProps {
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+
+interface HomeScreenProps extends Props {
   initialCountryCode?: string;
   initialConfigJson?: string;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
+  navigation,
   initialCountryCode,
   initialConfigJson,
 }) => {
@@ -99,7 +104,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   // Handlers
   const handleStartPayment = useCallback(() => {
-    console.log('🔵 handleStartPayment called');
+    console.log('🔵 handleStartPayment called - Navigating to Payment Methods');
     console.log('📋 checkoutSession:', checkoutSession || '(vacío)');
     
     // Payment solo requiere checkoutSession
@@ -108,15 +113,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       return;
     }
 
-    const config: PaymentConfig = {
+    console.log('✅ Navigating to PaymentMethods screen');
+    navigation.navigate('PaymentMethods', {
       checkoutSession,
       countryCode,
-      showPaymentStatus,
-    };
-
-    console.log('✅ Calling startPayment with config:', config);
-    startPayment(config);
-  }, [checkoutSession, countryCode, showPaymentStatus, startPayment]);
+    });
+  }, [checkoutSession, countryCode, navigation]);
 
   const handleStartPaymentLite = useCallback(() => {
     console.log('🔵 handleStartPaymentLite called');
