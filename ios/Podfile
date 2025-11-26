@@ -1,5 +1,4 @@
 require_relative '../node_modules/react-native/scripts/react_native_pods'
-require_relative '../node_modules/@react-native/gradle-plugin/react_native_pods_utils'
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
@@ -20,12 +19,12 @@ target 'YunoSDKExample' do
   )
 
   # Yuno SDK
-  pod 'YunoSDK', '~> 1.0'
+  pod 'YunoSDK', '~> 2.0.0'
 
-  target 'YunoSDKExampleTests' do
-    inherit! :complete
-    # Pods for testing
-  end
+  # target 'YunoSDKExampleTests' do
+  #   inherit! :complete
+  #   # Pods for testing
+  # end
 
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
