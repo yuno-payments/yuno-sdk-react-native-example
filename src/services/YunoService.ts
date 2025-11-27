@@ -16,6 +16,56 @@ import type {
 
 class YunoService {
   /**
+   * Inicializa el SDK de Yuno con la configuración proporcionada
+   */
+  async initialize(params: {
+    apiKey: string;
+    countryCode: string;
+    yunoConfig: {
+      lang?: string;
+      cardType?: string;
+      savedCardEnable?: boolean;
+      showPaymentStatus?: boolean;
+    };
+  }): Promise<void> {
+    console.log('🚀 Initializing Yuno SDK...');
+    
+    // Map cardType string to CardFlow enum
+    let cardFlow = CardFlow.ONE_STEP;
+    if (params.yunoConfig.cardType) {
+      const cardType = params.yunoConfig.cardType.toUpperCase();
+      if (cardType === 'STEP_BY_STEP' || cardType === 'TWO_STEPS' || cardType === 'MULTI_STEP') {
+        cardFlow = CardFlow.STEP_BY_STEP;
+      }
+    }
+    
+    // Map language string to YunoLanguage enum
+    let lang = YunoLanguage.EN;
+    if (params.yunoConfig.lang) {
+      const langStr = params.yunoConfig.lang.toLowerCase();
+      if (langStr.startsWith('es')) lang = YunoLanguage.ES;
+      else if (langStr.startsWith('pt')) lang = YunoLanguage.PT;
+      else if (langStr.startsWith('fr')) lang = YunoLanguage.FR;
+      else if (langStr.startsWith('de')) lang = YunoLanguage.DE;
+      else if (langStr.startsWith('it')) lang = YunoLanguage.IT;
+      // Add more languages as needed
+    }
+    
+    await YunoSdk.initialize({
+      apiKey: params.apiKey,
+      countryCode: params.countryCode,
+      yunoConfig: {
+        lang,
+        cardFlow,
+        saveCardEnabled: params.yunoConfig.savedCardEnable ?? false,
+        keepLoader: !(params.yunoConfig.showPaymentStatus ?? true),
+      },
+    });
+    
+    console.log('✅ Yuno SDK initialized successfully');
+  }
+  
+  /**
    * Marca el SDK como inicializado (ya fue inicializado en YunoActivity)
    */
   async markAsInitialized(countryCode: string): Promise<void> {

@@ -16,7 +16,10 @@ import type {
   EnrollmentConfig,
 } from '../types';
 
-export const useYunoSDK = (initialCountryCode: string = 'CO') => {
+export const useYunoSDK = (
+  initialCountryCode: string = 'CO',
+  initialConfigJson?: string,
+) => {
   // Estado
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<string>('');
@@ -27,21 +30,61 @@ export const useYunoSDK = (initialCountryCode: string = 'CO') => {
   );
 
   // Inicialización
-  // Note: On iOS and Android, the SDK is already initialized by the native MainActivity/MainViewController
-  // before navigating to React Native. We just mark it as initialized here.
+  // When initialConfigJson is provided (from native), parse it and initialize the SDK
   useEffect(() => {
-    const markSDKReady = async () => {
+    const initSDK = async () => {
       try {
-        console.log('📱 SDK already initialized by native code, marking as ready...');
-        await yunoService.markAsInitialized(initialCountryCode);
-        console.log('✅ SDK marked as initialized with country:', initialCountryCode);
+        if (initialConfigJson) {
+          console.log('🚀 Initializing SDK from native config JSON...');
+          const config = JSON.parse(initialConfigJson);
+          
+          // Extract configuration (same structure as Android)
+          const apiKey = config.merchantKeys?.publicKey;
+          const country = config.country;
+          const language = config.language;
+          const cardType = config.options?.cardType || 'ONE_STEP';
+          const savedCardEnable = config.options?.savedCardEnable || false;
+          const showPaymentStatus = config.options?.showPaymentStatus ?? true;
+          
+          if (!apiKey || !country) {
+            console.error('❌ Missing required fields in config JSON');
+            return;
+          }
+          
+          console.log('📋 Initializing with config:', {
+            country,
+            language,
+            cardType,
+            savedCardEnable,
+            showPaymentStatus,
+          });
+          
+          // Initialize the SDK through yunoService
+          await yunoService.initialize({
+            apiKey,
+            countryCode: country,
+            yunoConfig: {
+              lang: language || 'en',
+              cardType,
+              savedCardEnable,
+              showPaymentStatus,
+            },
+          });
+          
+          console.log('✅ SDK initialized successfully from config JSON');
+        } else {
+          // Fallback: just mark as initialized with country code
+          console.log('📱 No config JSON, marking SDK as ready...');
+          await yunoService.markAsInitialized(initialCountryCode);
+          console.log('✅ SDK marked as initialized with country:', initialCountryCode);
+        }
       } catch (error) {
-        console.error('❌ Error marking SDK as initialized:', error);
+        console.error('❌ Error initializing SDK:', error);
       }
     };
 
-    markSDKReady();
-  }, [initialCountryCode]);
+    initSDK();
+  }, [initialCountryCode, initialConfigJson]);
 
   // Manejadores de eventos
   const handlePaymentStatus = useCallback((state: YunoPaymentState) => {

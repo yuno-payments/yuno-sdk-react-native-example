@@ -90,7 +90,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     startPaymentSeamlessLite,
     continuePayment,
     clearOTT,
-  } = useYunoSDK(countryCode);
+  } = useYunoSDK(countryCode, initialConfigJson);
 
   // Effect to return to main view when payment flow finishes
   useEffect(() => {
