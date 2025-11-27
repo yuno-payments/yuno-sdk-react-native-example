@@ -10,8 +10,24 @@ import type {
   OneTimeTokenInfo,
 } from '../types';
 
-const {YunoSdkModule} = NativeModules;
-const yunoEventEmitter = new NativeEventEmitter(YunoSdkModule);
+/**
+ * Lazy getter for Yuno native module
+ */
+function getYunoNative() {
+  const native = NativeModules.YunoSdk;
+  if (!native) {
+    console.warn('[useYunoEvents] YunoSdk native module is not available');
+  }
+  return native;
+}
+
+/**
+ * Lazy getter for Yuno event emitter
+ */
+function getYunoEventEmitter(): NativeEventEmitter | null {
+  const native = getYunoNative();
+  return native ? new NativeEventEmitter(native) : null;
+}
 
 interface YunoEventsCallbacks {
   onPaymentStatus?: (state: YunoPaymentState) => void;
@@ -57,6 +73,13 @@ export const useYunoEvents = (callbacks: YunoEventsCallbacks) => {
 
   useEffect(() => {
     console.log('🎧 Setting up Yuno event listeners...');
+
+    const yunoEventEmitter = getYunoEventEmitter();
+    
+    if (!yunoEventEmitter) {
+      console.error('❌ Cannot setup Yuno event listeners: native module not available');
+      return;
+    }
 
     const paymentSubscription = yunoEventEmitter.addListener(
       'YunoPaymentStatus',

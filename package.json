@@ -13,7 +13,7 @@
     "ca:login": "aws codeartifact login --tool npm --repository yuno --domain yuno --namespace @yuno --profile registry"
   },
   "dependencies": {
-    "@yuno/yuno-sdk-react-native": "^1.0.26",
+    "@yuno/yuno-sdk-react-native": "^1.0.30",
     "react": "18.2.0",
     "react-native": "0.73.0"
   },

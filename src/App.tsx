@@ -10,7 +10,7 @@
  */
 
 import React, {useEffect} from 'react';
-import {StatusBar} from 'react-native';
+import {StatusBar, NativeModules, Platform} from 'react-native';
 import {HomeScreen} from './screens';
 import {useTheme} from './hooks';
 
@@ -23,6 +23,11 @@ function App(props: AppProps): React.JSX.Element {
   const {colors, isDark} = useTheme();
 
   useEffect(() => {
+    // DEBUG: Verificar si el módulo nativo está disponible
+    console.log('🔍 Platform:', Platform.OS);
+    console.log('🔍 NativeModules.YunoSdk =>', NativeModules.YunoSdk);
+    console.log('🔍 YunoSdk methods:', NativeModules.YunoSdk ? Object.keys(NativeModules.YunoSdk) : 'UNDEFINED');
+    
     if (props.countryCode || props.configJson) {
       console.log('📦 App received initial props from native:');
       console.log('  - Country Code:', props.countryCode);
