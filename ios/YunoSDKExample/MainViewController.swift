@@ -1,13 +1,16 @@
 import UIKit
+import YunoSDK
 
 /**
  * MainViewController - Entry point for the iOS app.
  *
- * This view controller allows the user to input their Yuno configuration JSON, then navigates to React Native
- * which initializes the Yuno SDK and hosts the React Native content.
+ * This view controller allows the user to input their Yuno configuration JSON,
+ * initializes the Yuno SDK (same as Android), then navigates to React Native.
  *
- * This controller does NOT import YunoSDK directly - it only knows about the React Native bridge.
- * The React Native module (YunoSdk) handles all native SDK interactions.
+ * Similar to Android's MainActivity, this controller:
+ * 1. Parses the configuration JSON
+ * 2. Initializes the Yuno SDK with Yuno.initialize()
+ * 3. Navigates to React Native view with the configuration
  *
  * The JSON should contain:
  * - country: Country code
@@ -409,9 +412,104 @@ class MainViewController: UIViewController, UITextViewDelegate {
             return
         }
         
-        // Simply navigate to React Native with the config
-        // The initialization will happen from React Native side
-        navigateToReactNative(countryCode: "CO", configJson: configJson)
+        // Parse JSON configuration (same as Android)
+        guard let data = configJson.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            showAlert(title: "Error", message: "Invalid JSON format")
+            return
+        }
+        
+        // Extract configuration values (same structure as Android)
+        guard let merchantKeys = json["merchantKeys"] as? [String: Any],
+              let apiKey = merchantKeys["publicKey"] as? String else {
+            showAlert(title: "Error", message: "Missing API key in merchantKeys.publicKey")
+            return
+        }
+        
+        guard let country = json["country"] as? String else {
+            showAlert(title: "Error", message: "Missing country field")
+            return
+        }
+        
+        let language = json["language"] as? String
+        
+        guard let options = json["options"] as? [String: Any] else {
+            showAlert(title: "Error", message: "Missing options field")
+            return
+        }
+        
+        let savedCardEnable = options["savedCardEnable"] as? Bool ?? false
+        let cardType = options["cardType"] as? String ?? "ONE_STEP"
+        let showPaymentStatus = options["showPaymentStatus"] as? Bool ?? true
+        
+        print("📋 Configuration parsed:")
+        print("  - API Key: \(String(apiKey.prefix(20)))...")
+        print("  - Country: \(country)")
+        print("  - Language: \(language ?? "nil")")
+        print("  - Card Type: \(cardType)")
+        print("  - Saved Card Enable: \(savedCardEnable)")
+        print("  - Show Payment Status: \(showPaymentStatus)")
+        
+        // Initialize Yuno SDK (same as Android)
+        initializeYunoSDK(
+            apiKey: apiKey,
+            country: country,
+            language: language,
+            cardType: cardType,
+            savedCardEnable: savedCardEnable,
+            showPaymentStatus: showPaymentStatus,
+            configJson: configJson
+        )
+    }
+    
+    private func initializeYunoSDK(
+        apiKey: String,
+        country: String,
+        language: String?,
+        cardType: String,
+        savedCardEnable: Bool,
+        showPaymentStatus: Bool,
+        configJson: String
+    ) {
+        print("🚀 Initializing Yuno SDK from native iOS (same as Android)...")
+        print("  - API Key: \(String(apiKey.prefix(20)))...")
+        print("  - Country: \(country)")
+        print("  - Language: \(language ?? "en")")
+        print("  - Card Type: \(cardType)")
+        print("  - Saved Card Enable: \(savedCardEnable)")
+        print("  - Show Payment Status: \(showPaymentStatus)")
+        
+        // Map cardType string to Yuno.CardFormType (same as Android mapping)
+        let yunoCardFormType: Yuno.CardFormType
+        switch cardType.uppercased() {
+        case "STEP_BY_STEP", "TWO_STEPS", "MULTI_STEP":
+            yunoCardFormType = .multiStep
+        default:
+            yunoCardFormType = .oneStep
+        }
+        
+        // Create Yuno configuration
+        let yunoConfig = YunoConfig(
+            cardFormType: yunoCardFormType,
+            saveCardEnabled: savedCardEnable,
+            keepLoader: !showPaymentStatus
+        )
+        
+        // Initialize Yuno SDK (direct call, same as Android)
+        Yuno.initialize(
+            apiKey: apiKey,
+            config: yunoConfig,
+            callback: { [weak self] in
+                guard let self = self else { return }
+                
+                print("✅ Yuno SDK initialized successfully from iOS native")
+                
+                // Navigate to React Native (same as Android flow)
+                DispatchQueue.main.async {
+                    self.navigateToReactNative(countryCode: country, configJson: configJson)
+                }
+            }
+        )
     }
     
     private func navigateToReactNative(countryCode: String, configJson: String) {

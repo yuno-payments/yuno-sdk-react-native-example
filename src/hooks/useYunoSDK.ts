@@ -27,16 +27,20 @@ export const useYunoSDK = (initialCountryCode: string = 'CO') => {
   );
 
   // Inicialización
+  // Note: On iOS and Android, the SDK is already initialized by the native MainActivity/MainViewController
+  // before navigating to React Native. We just mark it as initialized here.
   useEffect(() => {
-    const initSDK = async () => {
+    const markSDKReady = async () => {
       try {
+        console.log('📱 SDK already initialized by native code, marking as ready...');
         await yunoService.markAsInitialized(initialCountryCode);
+        console.log('✅ SDK marked as initialized with country:', initialCountryCode);
       } catch (error) {
-        console.error('❌ Error initializing SDK:', error);
+        console.error('❌ Error marking SDK as initialized:', error);
       }
     };
 
-    initSDK();
+    markSDKReady();
   }, [initialCountryCode]);
 
   // Manejadores de eventos
