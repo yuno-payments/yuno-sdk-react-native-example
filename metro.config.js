@@ -2,6 +2,7 @@ const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
+const sdkPath = path.resolve(__dirname, '../yuno-sdk-react-native');
 
 /**
  * Metro configuration
@@ -15,7 +16,7 @@ const config = {
   resolver: {
     // Para resolver el SDK desde el directorio padre
     extraNodeModules: {
-      '@y.uno/yuno-sdk-react-native': path.resolve(root),
+      '@yuno/yuno-sdk-react-native': sdkPath,
     },
     nodeModulesPaths: [
       path.resolve(__dirname, 'node_modules'),

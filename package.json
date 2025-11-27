@@ -9,10 +9,11 @@
     "start": "react-native start",
     "test": "jest",
     "preinstall": "npm run ca:login",
+    "postinstall": "bash ./scripts/fix-boost-checksum.sh",
     "ca:login": "aws codeartifact login --tool npm --repository yuno --domain yuno --namespace @yuno --profile registry"
   },
   "dependencies": {
-    "@yuno/yuno-sdk-react-native": "^1.0.16",
+    "@yuno/yuno-sdk-react-native": "^1.0.24",
     "react": "18.2.0",
     "react-native": "0.73.0"
   },
