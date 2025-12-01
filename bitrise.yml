@@ -83,29 +83,6 @@ workflows:
         - workdir: "$WORKDIR"
         - command: install
     
-    - script@1:
-        title: Bundle JavaScript for Android
-        inputs:
-        - content: |
-            #!/bin/bash
-            set -ex
-            
-            echo "📦 Bundling JavaScript for Android..."
-            
-            # Create assets directory if it doesn't exist
-            mkdir -p android/app/src/main/assets
-            
-            # Bundle JavaScript
-            npx react-native bundle \
-              --platform android \
-              --dev false \
-              --entry-file index.js \
-              --bundle-output android/app/src/main/assets/index.android.bundle \
-              --assets-dest android/app/src/main/res
-            
-            echo "✅ JavaScript bundle created successfully"
-            ls -lh android/app/src/main/assets/index.android.bundle
-    
     - install-missing-android-tools@3:
         inputs:
         - gradlew_path: "$PROJECT_LOCATION/gradlew"
