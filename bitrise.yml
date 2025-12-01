@@ -244,7 +244,7 @@ workflows:
 meta:
   bitrise.io:
     stack: osx-xcode-16.4.x
-    machine_type_id: g2.mac.large
+    machine_type_id: g2-m1.8core
 app:
   envs:
   - WORKDIR: "."
