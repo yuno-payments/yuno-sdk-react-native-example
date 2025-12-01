@@ -19,6 +19,8 @@ workflows:
     steps:
     - git-clone@8: {}
     
+    - cache-pull@2: {}
+    
     - script@1:
         title: Install AWS CLI
         is_always_run: false
@@ -155,6 +157,13 @@ workflows:
         inputs:
         - deploy_path: "$BITRISE_APK_PATH"
         - is_compress: "false"
+    
+    - cache-push@2:
+        inputs:
+        - cache_paths: |
+            $HOME/.gradle/caches
+            $HOME/.gradle/wrapper
+            ./android/.gradle
   
   deploy:
     description: |
@@ -223,7 +232,7 @@ workflows:
 meta:
   bitrise.io:
     stack: osx-xcode-16.4.x
-    machine_type_id: g2.mac.large
+    machine_type_id: g2-m1.8core
 app:
   envs:
   - WORKDIR: "."
