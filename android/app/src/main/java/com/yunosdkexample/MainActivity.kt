@@ -122,6 +122,7 @@ class MainActivity : AppCompatActivity() {
 
     // Config JSON input with styled background (multiline - adapts to theme)
     configInput = EditText(this).apply {
+      contentDescription = "config-text-input"
       hint = getString(R.string.config_json_hint)
       textSize = 12f
       setTextColor(ContextCompat.getColor(this@MainActivity, R.color.input_text))
@@ -149,6 +150,7 @@ class MainActivity : AppCompatActivity() {
 
     // Start button with neutralB background (adapts to theme)
     startButton = Button(this).apply {
+      contentDescription = "button-start-sdk"
       text = getString(R.string.button_start)
       textSize = 15f
       setTextColor(ContextCompat.getColor(this@MainActivity, R.color.button_text))

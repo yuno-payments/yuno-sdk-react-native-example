@@ -23,6 +23,7 @@ export const EnrollmentActions: React.FC<EnrollmentActionsProps> = ({
   return (
     <Card title={`🔐 ${t.enrollment.title}`}>
       <Button
+        testID="button-enrollment"
         title={t.enrollment.startEnrollment}
         onPress={onEnrollment}
         variant="primary"

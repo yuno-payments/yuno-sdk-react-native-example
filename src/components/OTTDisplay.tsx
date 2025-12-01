@@ -69,6 +69,7 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
       <View style={styles.buttonContainer}>
         {checkoutSession && (
           <Button
+            testID="button-continue-payment"
             title={t.ott.continuePayment}
             onPress={onContinuePayment}
             variant="success"
@@ -78,6 +79,7 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
           />
         )}
         <Button
+          testID="button-clear-ott"
           title={t.ott.clear}
           onPress={onClear}
           variant="secondary"

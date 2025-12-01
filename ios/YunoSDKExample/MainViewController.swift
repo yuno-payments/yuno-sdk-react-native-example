@@ -172,6 +172,7 @@ class MainViewController: UIViewController, UITextViewDelegate {
         
         // Configure text view
         configTextView.translatesAutoresizingMaskIntoConstraints = false
+        configTextView.accessibilityIdentifier = "config-text-input"
         configTextView.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
         if #available(iOS 13.0, *) {
             configTextView.backgroundColor = UIColor { traitCollection in
@@ -216,6 +217,7 @@ class MainViewController: UIViewController, UITextViewDelegate {
         
         // Configure start button
         startButton.translatesAutoresizingMaskIntoConstraints = false
+        startButton.accessibilityIdentifier = "button-start-sdk"
         startButton.setTitle("Start Yuno SDK Example", for: .normal)
         startButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
         if #available(iOS 13.0, *) {
@@ -287,7 +289,7 @@ class MainViewController: UIViewController, UITextViewDelegate {
         
         // Configure footer
         footerLabel.translatesAutoresizingMaskIntoConstraints = false
-        footerLabel.text = "Yuno SDK React Native v1.0.46"
+        footerLabel.text = "Yuno SDK React Native v1.0.50"
         footerLabel.font = UIFont.systemFont(ofSize: 12)
         if #available(iOS 13.0, *) {
             footerLabel.textColor = UIColor { traitCollection in

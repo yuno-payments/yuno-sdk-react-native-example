@@ -281,6 +281,14 @@ export const useYunoSDK = (
     }
   }, []);
 
+  const clearPaymentStatus = useCallback(() => {
+    setPaymentStatus('');
+  }, []);
+
+  const clearEnrollmentStatus = useCallback(() => {
+    setEnrollmentStatus('');
+  }, []);
+
   return {
     // Estado
     isLoading,
@@ -295,6 +303,8 @@ export const useYunoSDK = (
     startPaymentSeamlessLite,
     continuePayment,
     clearOTT,
+    clearPaymentStatus,
+    clearEnrollmentStatus,
   };
 };
 

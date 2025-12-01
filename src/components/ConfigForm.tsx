@@ -33,6 +33,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
   return (
     <Card title={`⚙️ ${t.config.title}`}>
       <Input
+        testID="input-customer-session"
         label={`${t.config.customerSession} (${t.config.requiredForEnrollment})`}
         placeholder={t.config.customerSessionPlaceholder}
         value={customerSession}
@@ -42,6 +43,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       />
 
       <Input
+        testID="input-checkout-session"
         label={`${t.config.checkoutSession} (${t.config.requiredForPayment}) *`}
         placeholder={t.config.checkoutSessionPlaceholder}
         value={checkoutSession}
@@ -51,6 +53,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       />
 
       <Input
+        testID="input-payment-method-type"
         label={`${t.config.paymentMethodType} (${t.config.requiredForLite}) *`}
         placeholder={t.config.paymentMethodTypePlaceholder}
         value={paymentMethodType}
@@ -60,6 +63,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       />
 
       <Input
+        testID="input-vaulted-token"
         label={t.config.vaultedToken}
         placeholder={t.config.vaultedTokenPlaceholder}
         value={vaultedToken}

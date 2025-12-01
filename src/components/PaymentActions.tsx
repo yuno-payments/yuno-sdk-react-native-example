@@ -27,6 +27,7 @@ export const PaymentActions: React.FC<PaymentActionsProps> = ({
   return (
     <Card title={`💳 ${t.payment.title}`}>
       <Button
+        testID="button-start-payment"
         title={t.payment.startPayment}
         onPress={onStartPayment}
         variant="primary"
@@ -34,6 +35,7 @@ export const PaymentActions: React.FC<PaymentActionsProps> = ({
         style={styles.button}
       />
       <Button
+        testID="button-start-payment-lite"
         title={t.payment.startPaymentLite}
         onPress={onStartPaymentLite}
         variant="primary"
@@ -41,6 +43,7 @@ export const PaymentActions: React.FC<PaymentActionsProps> = ({
         style={styles.button}
       />
       <Button
+        testID="button-seamless-payment"
         title={t.payment.seamlessPayment}
         onPress={onSeamlessPayment}
         variant="primary"

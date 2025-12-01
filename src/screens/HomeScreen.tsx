@@ -4,7 +4,7 @@
 
 import React, {useState, useCallback, useEffect} from 'react';
 import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler} from 'react-native';
-import {YunoPaymentMethods} from '@yuno/yuno-sdk-react-native';
+import {YunoPaymentMethods, YunoSdk} from '@yuno/yuno-sdk-react-native';
 import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno/yuno-sdk-react-native';
 import {useYunoSDK, useTheme} from '../hooks';
 import {
@@ -90,6 +90,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     startPaymentSeamlessLite,
     continuePayment,
     clearOTT,
+    clearPaymentStatus,
+    clearEnrollmentStatus,
   } = useYunoSDK(countryCode, initialConfigJson);
 
   // Effect to return to main view when payment flow finishes
@@ -156,9 +158,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       return;
     }
 
+    // Clear old payment status to prevent useEffect from closing the modal with stale status
+    clearPaymentStatus();
+    clearEnrollmentStatus();
+
     console.log('✅ Showing payment methods component');
     setShowPaymentMethods(true);
-  }, [checkoutSession, t]);
+  }, [checkoutSession, t, clearPaymentStatus, clearEnrollmentStatus]);
 
   const handleStartPaymentLite = useCallback(() => {
     console.log('🔵 handleStartPaymentLite called');
@@ -325,6 +331,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         {/* Flex container that takes all available space */}
         <View style={styles.paymentMethodsWrapper}>
           <YunoPaymentMethods
+            testID="yuno-payment-methods-view"
             checkoutSession={checkoutSession}
             countryCode={countryCode}
             onPaymentMethodSelected={handlePaymentMethodSelected}
@@ -335,6 +342,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
         {isPaymentMethodSelected && (
           <TouchableOpacity
+            testID="button-pay"
             style={styles.payButton}
             onPress={handlePayButtonPress}
             activeOpacity={0.7}>
@@ -343,6 +351,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         )}
 
         <TouchableOpacity
+          testID="button-back"
           style={styles.backButton}
           onPress={handleBackFromPaymentMethods}
           activeOpacity={0.7}>
