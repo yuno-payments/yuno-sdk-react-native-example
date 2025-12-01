@@ -87,33 +87,12 @@ workflows:
         inputs:
         - gradlew_path: "$PROJECT_LOCATION/gradlew"
     
-    - script@1:
-        title: Configure Gradle Memory Settings
-        inputs:
-        - content: |
-            #!/bin/bash
-            set -ex
-            
-            echo "🔧 Configuring Gradle memory settings..."
-            
-            # Create or update gradle.properties with increased memory
-            cat >> android/gradle.properties << EOF
-            
-            # Bitrise CI Memory Settings
-            org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError
-            org.gradle.daemon=false
-            org.gradle.parallel=false
-            EOF
-            
-            echo "✅ Gradle memory configured:"
-            cat android/gradle.properties
-    
-    - gradle-runner@2:
+    - android-build@1:
         title: Build Android APK (Debug)
         inputs:
-        - gradle_file: "$PROJECT_LOCATION/build.gradle"
-        - gradle_task: assembleDebug
-        - gradlew_path: "$PROJECT_LOCATION/gradlew"
+        - project_location: "$PROJECT_LOCATION"
+        - module: "$MODULE"
+        - variant: "$VARIANT"
     
     - script@1:
         title: Verify APK was created
@@ -244,7 +223,7 @@ workflows:
 meta:
   bitrise.io:
     stack: osx-xcode-16.4.x
-    machine_type_id: g2-m1.8core
+    machine_type_id: g2.mac.large
 app:
   envs:
   - WORKDIR: "."
