@@ -145,6 +145,9 @@ export const useYunoSDK = (
   // Métodos de pago
   const startPayment = useCallback(
     async (config: PaymentConfig) => {
+      // 🧹 Clear previous status before starting new flow
+      setPaymentStatus('');
+      setEnrollmentStatus('');
       setIsLoading(true);
       try {
         await yunoService.startPayment(config);
@@ -162,6 +165,9 @@ export const useYunoSDK = (
 
   const startPaymentLite = useCallback(
     async (config: PaymentLiteConfig) => {
+      // 🧹 Clear previous status before starting new flow
+      setPaymentStatus('');
+      setEnrollmentStatus('');
       setIsLoading(true);
       try {
         await yunoService.startPaymentLite(config);
@@ -181,6 +187,9 @@ export const useYunoSDK = (
 
   const enrollmentPayment = useCallback(
     async (config: EnrollmentConfig) => {
+      // 🧹 Clear previous status before starting new flow
+      setPaymentStatus('');
+      setEnrollmentStatus('');
       setIsLoading(true);
       try {
         await yunoService.enrollmentPayment(config);
@@ -200,6 +209,9 @@ export const useYunoSDK = (
 
   const startPaymentSeamlessLite = useCallback(
     async (config: PaymentLiteConfig) => {
+      // 🧹 Clear previous status before starting new flow
+      setPaymentStatus('');
+      setEnrollmentStatus('');
       setIsLoading(true);
       try {
         await yunoService.startPaymentSeamlessLite(config);
@@ -228,6 +240,9 @@ export const useYunoSDK = (
         return;
       }
 
+      // 🧹 Clear previous status before starting new flow
+      setPaymentStatus('');
+      setEnrollmentStatus('');
       setIsLoading(true);
       try {
         await yunoService.continuePayment(checkoutSession, countryCode, showPaymentStatus);
