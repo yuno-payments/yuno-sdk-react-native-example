@@ -8,7 +8,7 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "preinstall": "npm run ca:login",
+    "preinstall": "bash -c '[ \"$CI\" = \"true\" ] && echo \"🤖 CI: Skipping profile login\" || npm run ca:login'",
     "postinstall": "bash ./scripts/fix-boost-checksum.sh",
     "ca:login": "aws codeartifact login --tool npm --repository yuno --domain yuno --namespace @yuno --profile registry"
   },
