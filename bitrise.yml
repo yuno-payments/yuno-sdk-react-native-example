@@ -87,6 +87,27 @@ workflows:
         inputs:
         - gradlew_path: "$PROJECT_LOCATION/gradlew"
     
+    - script@1:
+        title: Configure Gradle Memory Settings
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            
+            echo "🔧 Configuring Gradle memory settings..."
+            
+            # Create or update gradle.properties with increased memory
+            cat >> android/gradle.properties << EOF
+            
+            # Bitrise CI Memory Settings
+            org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError
+            org.gradle.daemon=false
+            org.gradle.parallel=false
+            EOF
+            
+            echo "✅ Gradle memory configured:"
+            cat android/gradle.properties
+    
     - gradle-runner@2:
         title: Build Android APK (Debug)
         inputs:
