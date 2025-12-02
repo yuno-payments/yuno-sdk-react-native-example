@@ -1,0 +1,258 @@
+---
+format_version: '23'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: react-native
+workflows:
+  generateQaVersion:
+    description: |
+      Generates QA Android APK and uploads to Firebase App Distribution.
+      Required Secrets:
+      - AWS_ACCESS_KEY_ID (SSO temporary credentials)
+      - AWS_SECRET_ACCESS_KEY (SSO temporary credentials)
+      - AWS_SESSION_TOKEN (SSO temporary credentials)
+      - AWS_DEFAULT_REGION (us-west-2)
+      - FIREBASE_SERVICE_ACCOUNT_JSON (Service Account JSON from Firebase Console)
+      - FIREBASE_APP_ID (Use: 1:744979953259:android:5e06daf454d662b202232e for com.yunosdkexample)
+      Optional Secrets:
+      - FIREBASE_TESTERS (comma-separated emails)
+      - FIREBASE_TESTER_GROUPS (comma-separated group names)
+    steps:
+    - git-clone@8: {}
+    
+    - cache-pull@2: {}
+    
+    - script@1:
+        title: Install AWS CLI
+        is_always_run: false
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            
+            echo "🔍 Checking for AWS CLI..."
+            if command -v aws &> /dev/null; then
+              echo "✅ AWS CLI already installed"
+              aws --version
+            else
+              echo "📦 Installing AWS CLI..."
+              curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+              sudo installer -pkg AWSCLIV2.pkg -target /
+              rm AWSCLIV2.pkg
+              echo "✅ AWS CLI installed successfully"
+              aws --version
+            fi
+    
+    - script@1:
+        title: Configure AWS CodeArtifact (SSO)
+        is_always_run: false
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            
+            echo "🔐 Configuring AWS credentials (SSO)..."
+            
+            # Verify required environment variables
+            if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$AWS_SESSION_TOKEN" ]; then
+              echo "❌ ERROR: Missing required AWS credentials"
+              echo "Please set: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN"
+              exit 1
+            fi
+            
+            # Configure AWS credentials
+            aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+            aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+            aws configure set aws_session_token "$AWS_SESSION_TOKEN"
+            aws configure set default.region "us-west-2"
+            
+            echo "✅ AWS credentials configured"
+            
+            echo "📦 Authenticating with CodeArtifact..."
+            
+            # Login to CodeArtifact
+            aws codeartifact login --tool npm \
+              --repository yuno \
+              --domain yuno \
+              --domain-owner 931412643807 \
+              --namespace @yuno \
+              --region us-west-2
+            
+            echo "✅ CodeArtifact authentication successful"
+    
+    - npm@1:
+        title: Install NPM Dependencies
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: install
+    
+    - install-missing-android-tools@3:
+        inputs:
+        - gradlew_path: "$PROJECT_LOCATION/gradlew"
+    
+    - android-build@1:
+        title: Build Android APK (Debug)
+        inputs:
+        - project_location: "$PROJECT_LOCATION"
+        - module: "$MODULE"
+        - variant: "$VARIANT"
+    
+    - script@1:
+        title: Verify APK was created
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+            
+            echo "🔍 Looking for generated APK..."
+            if [ -f "$BITRISE_APK_PATH" ]; then
+              echo "✅ APK found: $BITRISE_APK_PATH"
+              ls -lh "$BITRISE_APK_PATH"
+            else
+              echo "❌ APK not found at: $BITRISE_APK_PATH"
+              echo "Looking for APKs in android/app/build/outputs/apk/..."
+              find android/app/build/outputs/apk/ -name "*.apk" || true
+              exit 1
+            fi
+    
+    - script@1:
+        title: Prepare Firebase Service Account
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+            
+            echo "🔐 Creating Firebase service account file..."
+            
+            # Create a temporary file for the service account
+            SERVICE_ACCOUNT_FILE="$BITRISE_DEPLOY_DIR/firebase-service-account.json"
+            
+            # Write the service account JSON to file
+            echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$SERVICE_ACCOUNT_FILE"
+            
+            # Export the path for the next step
+            envman add --key FIREBASE_SERVICE_ACCOUNT_PATH --value "$SERVICE_ACCOUNT_FILE"
+            
+            echo "✅ Service account file created at: $SERVICE_ACCOUNT_FILE"
+    
+    - firebase-app-distribution@0:
+        title: Deploy to Firebase App Distribution
+        inputs:
+        - app: "$FIREBASE_APP_ID"
+        - service_credentials_file: "$FIREBASE_SERVICE_ACCOUNT_PATH"
+        - app_path: "$BITRISE_APK_PATH"
+        - release_notes: |
+            🚀 QA Build - Yuno SDK React Native Example
+            
+            📦 Build: #$BITRISE_BUILD_NUMBER
+            🌿 Branch: $BITRISE_GIT_BRANCH
+            📝 Commit: $BITRISE_GIT_COMMIT
+            👤 By: $GIT_CLONE_COMMIT_AUTHOR_NAME
+            
+            Ready for testing! 🧪
+        - testers: "$FIREBASE_TESTERS"
+        - groups: "$FIREBASE_TESTER_GROUPS"
+    
+    - deploy-to-bitrise-io@2:
+        title: Deploy APK to Bitrise Artifacts
+        inputs:
+        - deploy_path: "$BITRISE_APK_PATH"
+        - is_compress: "false"
+    
+    - cache-push@2:
+        inputs:
+        - cache_paths: |
+            $HOME/.gradle/caches
+            $HOME/.gradle/wrapper
+            ./android/.gradle
+  
+  deploy:
+    description: |
+      Tests, builds and deploys the app using *Deploy to bitrise.io* Step.
+
+      Next steps:
+      - Set up an [Apple service with API key](https://devcenter.bitrise.io/en/accounts/connecting-to-services/connecting-to-an-apple-service-with-api-key.html).
+      - Check out [Getting started with React Native apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-react-native-apps.html).
+    steps:
+    - git-clone@8: {}
+    - npm@1:
+        title: npm install
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: install
+    - npm@1:
+        title: npm test
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: test
+    - install-missing-android-tools@3:
+        inputs:
+        - gradlew_path: "$PROJECT_LOCATION/gradlew"
+    - android-build@1:
+        inputs:
+        - project_location: "$PROJECT_LOCATION"
+        - module: "$MODULE"
+        - variant: "$VARIANT"
+    - cocoapods-install@2:
+        inputs:
+        - is_cache_disabled: 'true'
+    - xcode-archive@5:
+        inputs:
+        - project_path: "$BITRISE_PROJECT_PATH"
+        - scheme: "$BITRISE_SCHEME"
+        - distribution_method: "$BITRISE_DISTRIBUTION_METHOD"
+        - configuration: Release
+        - automatic_code_signing: api-key
+    - deploy-to-bitrise-io@2: {}
+  primary:
+    description: |
+      Runs tests.
+
+      Next steps:
+      - Check out [Getting started with React Native apps](https://devcenter.bitrise.io/en/getting-started/getting-started-with-react-native-apps.html).
+    steps:
+    - git-clone@8: {}
+    - restore-npm-cache@2: {}
+    - npm@1:
+        title: npm install
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: install
+    - npm@1:
+        title: npm test
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: test
+    - save-npm-cache@1: {}
+    - deploy-to-bitrise-io@2: {}
+    triggers:
+      push:
+      - branch: main
+      pull_request:
+      - source_branch: "*"
+meta:
+  bitrise.io:
+    stack: osx-xcode-16.4.x
+    machine_type_id: g2-m1.8core
+app:
+  envs:
+  - WORKDIR: "."
+    opts:
+      is_expand: false
+  - PROJECT_LOCATION: android
+    opts:
+      is_expand: false
+  - MODULE: app
+    opts:
+      is_expand: false
+  - VARIANT: Debug
+    opts:
+      is_expand: false
+  - BITRISE_PROJECT_PATH: ios/YunoSDKExample.xcworkspace
+    opts:
+      is_expand: false
+  - BITRISE_SCHEME: YunoSDKExample
+    opts:
+      is_expand: false
+  - BITRISE_DISTRIBUTION_METHOD: ad-hoc
+    opts:
+      is_expand: false
