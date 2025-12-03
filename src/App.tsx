@@ -10,7 +10,7 @@
  */
 
 import React, {useEffect, useState} from 'react';
-import {StatusBar, NativeModules, Platform, View, TouchableOpacity, Text, StyleSheet} from 'react-native';
+import {StatusBar, NativeModules, Platform, View, TouchableOpacity, Text, StyleSheet, SafeAreaView} from 'react-native';
 import {HomeScreen, HeadlessPaymentScreen} from './screens';
 import {useTheme} from './hooks';
 
@@ -39,7 +39,7 @@ function App(props: AppProps): React.JSX.Element {
   }, [props.countryCode, props.configJson]);
 
   return (
-    <>
+    <SafeAreaView style={styles.container}>
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.headerBackground}
@@ -74,11 +74,15 @@ function App(props: AppProps): React.JSX.Element {
       ) : (
         <HeadlessPaymentScreen />
       )}
-    </>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: '#fff',
