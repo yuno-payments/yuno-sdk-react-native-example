@@ -64,6 +64,7 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
   const [enrollmentJsonText, setEnrollmentJsonText] = useState(DEFAULT_ENROLLMENT_JSON);
   const [isLoading, setIsLoading] = useState(false);
   const [ott, setOtt] = useState<string | null>(null);
+  const [vaultedToken, setVaultedToken] = useState<string | null>(null);
   const [threeDsUrl, setThreeDsUrl] = useState<string | null>(null);
   const [checkoutSession, setCheckoutSession] = useState('');
   const [countryCode, setCountryCode] = useState(initialCountryCode || 'CO');
@@ -119,7 +120,15 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
       console.log('📍 Using country code:', countryCode);
       console.log('📦 Enrollment data:', JSON.stringify(parsedData, null, 2));
       
-      // TODO: Call enrollment method when available
+      // TODO: Call enrollment headless method when available
+      // const result = await YunoSdk.createVaultedToken(parsedData, countryCode);
+      // if (result.vaultedToken) {
+      //   setVaultedToken(result.vaultedToken);
+      // } else if (result.error) {
+      //   Alert.alert('Error', `Failed to create vaulted token: ${result.error}`);
+      // }
+      
+      // Temporary: Show alert until method is implemented
       Alert.alert('Info', 'Enrollment headless flow will be implemented here');
       
     } catch (error: any) {
@@ -223,7 +232,7 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
           {isLoading ? (
             <ActivityIndicator color={colors.textInverse} />
           ) : (
-            <Text style={styles.buttonText}>Start Enrollment</Text>
+            <Text style={styles.buttonText}>Continue Enrollment</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -254,6 +263,34 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
               <TouchableOpacity
                 style={[styles.button, styles.buttonSecondary]}
                 onPress={() => setOtt(null)}
+              >
+                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Vaulted Token Dialog */}
+      {vaultedToken && (
+        <View style={styles.modal}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Vaulted Token</Text>
+            <ScrollView style={styles.modalScroll}>
+              <Text style={styles.modalText}>{vaultedToken}</Text>
+            </ScrollView>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonSecondary]}
+                onPress={() => copyToClipboard(vaultedToken)}
+                testID="copy-vaulted-token-button"
+              >
+                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Copy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonSecondary]}
+                onPress={() => setVaultedToken(null)}
+                testID="close-vaulted-token-button"
               >
                 <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Close</Text>
               </TouchableOpacity>
