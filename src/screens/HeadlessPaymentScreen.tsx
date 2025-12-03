@@ -50,38 +50,8 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
 
   const handleStartPayment = async () => {
     try {
-      // Parse JSON
+      // Parse JSON - keep snake_case names for Android native SDK
       const parsedData = JSON.parse(jsonText);
-      const tokenCollectedData: TokenCollectedData = {
-        checkoutSession: parsedData.checkout_session,
-        customerSession: parsedData.customer_session,
-        paymentMethod: {
-          type: parsedData.payment_method.type,
-          vaultedToken: parsedData.payment_method.vaulted_token,
-          card: parsedData.payment_method.card
-            ? {
-                save: parsedData.payment_method.card.save,
-                detail: parsedData.payment_method.card.detail
-                  ? {
-                      expirationMonth:
-                        parsedData.payment_method.card.detail.expiration_month,
-                      expirationYear:
-                        parsedData.payment_method.card.detail.expiration_year,
-                      number: parsedData.payment_method.card.detail.number,
-                      securityCode:
-                        parsedData.payment_method.card.detail.security_code,
-                      holderName:
-                        parsedData.payment_method.card.detail.holder_name,
-                      type: parsedData.payment_method.card.detail
-                        .type as CardType,
-                    }
-                  : undefined,
-                installment: parsedData.payment_method.card.installment,
-              }
-            : undefined,
-          customer: parsedData.payment_method.customer,
-        },
-      };
 
       // Store checkout session for later use
       setCheckoutSession(parsedData.checkout_session);
@@ -89,10 +59,12 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
       setIsLoading(true);
 
       // Generate token using headless method
+      // Pass parsedData directly as it already has correct snake_case field names
       console.log('🚀 Generating token with headless flow...');
       console.log('📍 Using country code:', countryCode);
+      console.log('📦 Token data:', JSON.stringify(parsedData, null, 2));
       const result = await YunoSdk.generateToken(
-        tokenCollectedData,
+        parsedData as any, // Cast to any since we're passing snake_case object
         parsedData.checkout_session,
         countryCode
       );
