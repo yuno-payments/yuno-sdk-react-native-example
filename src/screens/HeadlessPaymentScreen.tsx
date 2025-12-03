@@ -78,18 +78,16 @@ export default function HeadlessPaymentScreen() {
 
       setIsLoading(true);
 
-      // Generate token
-      console.log('🚀 Generating token...');
-      const result = await YunoSdk.generateToken(
-        tokenCollectedData,
-        parsedData.checkout_session,
-        'BR' // Country code
-      );
+      // Generate token using headless method
+      console.log('🚀 Generating token with headless flow...');
+      const result = await YunoSdk.generateTokenHeadless(tokenCollectedData);
 
       console.log('✅ Token generated:', result);
 
       if (result.token) {
         setOtt(result.token);
+      } else if (result.error) {
+        Alert.alert('Error', result.error);
       }
     } catch (error: any) {
       console.error('❌ Error generating token:', error);
@@ -112,10 +110,9 @@ export default function HeadlessPaymentScreen() {
       setIsLoading(true);
       setOtt(null); // Close OTT dialog
 
-      console.log('🚀 Getting 3DS challenge URL...');
-      const result = await YunoSdk.getThreeDSecureChallenge(
-        checkoutSession,
-        'BR'
+      console.log('🚀 Getting 3DS challenge URL with headless flow...');
+      const result = await YunoSdk.getThreeDSecureChallengeHeadless(
+        checkoutSession
       );
 
       console.log('✅ 3DS Challenge result:', result);
