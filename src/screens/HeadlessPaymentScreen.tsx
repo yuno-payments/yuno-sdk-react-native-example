@@ -126,7 +126,10 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+      >
         <Text style={styles.title}>Headless Payment</Text>
 
         <Text style={styles.label}>Headless JSON:</Text>
@@ -167,20 +170,20 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
                 onPress={() => copyToClipboard(ott)}
                 testID="copy-ott-button"
               >
-                <Text style={styles.buttonText}>Copy</Text>
+                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Copy</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.button}
+                style={[styles.button, styles.buttonSecondary]}
                 onPress={handleContinuePayment}
                 testID="continue-payment-button"
               >
-                <Text style={styles.buttonText}>Continue</Text>
+                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Continue</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.buttonSecondary]}
                 onPress={() => setOtt(null)}
               >
-                <Text style={styles.buttonText}>Close</Text>
+                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Close</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -201,13 +204,13 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
                 onPress={() => copyToClipboard(threeDsUrl)}
                 testID="copy-3ds-url-button"
               >
-                <Text style={styles.buttonText}>Copy</Text>
+                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Copy</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.buttonSecondary]}
                 onPress={() => setThreeDsUrl(null)}
               >
-                <Text style={styles.buttonText}>Close</Text>
+                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Close</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -216,7 +219,7 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
 
       {isLoading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.textInverse} />
           <Text style={styles.loadingText}>Processing...</Text>
         </View>
       )}
@@ -232,6 +235,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   scrollView: {
     flex: 1,
     padding: spacing.md,
+  },
+  scrollViewContent: {
+    paddingBottom: spacing.xl,
   },
   title: {
     fontSize: 20,
@@ -259,7 +265,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.textPrimary,
   },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.text, // neutralB (black in light, white in dark)
     padding: spacing.md,
     borderRadius: 8,
     alignItems: 'center',
@@ -275,12 +281,17 @@ const createStyles = (colors: any) => StyleSheet.create({
     opacity: 0.6,
   },
   buttonSecondary: {
-    backgroundColor: colors.text,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   buttonText: {
-    color: colors.textInverse,
+    color: colors.textInverse, // neutralW (white in light, black in dark)
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  buttonTextSecondary: {
+    color: colors.text, // neutralB (black in light, white in dark)
   },
   modal: {
     position: 'absolute',
