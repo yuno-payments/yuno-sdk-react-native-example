@@ -15,11 +15,11 @@ target 'YunoSDKExample' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  # Note: YunoSDK dependency is managed by the @yuno/yuno-sdk-react-native module
+  # Note: YunoSDK dependency is managed by the @yuno-payments/yuno-sdk-react-native module
   # It's specified in yuno-sdk-react-native/ios/YunoSdk.podspec
   
   # Manually add YunoSdk React Native module
-  pod 'YunoSdk', :path => '../node_modules/@yuno/yuno-sdk-react-native'
+  pod 'YunoSdk', :path => '../node_modules/@yuno-payments/yuno-sdk-react-native'
 
   # target 'YunoSDKExampleTests' do
   #   inherit! :complete
@@ -28,7 +28,7 @@ target 'YunoSDKExample' do
 
   post_install do |installer|
     # Create YunoSdk.podspec.json to fix Podfile.lock generation
-    system("pod ipc spec ../node_modules/@yuno/yuno-sdk-react-native/YunoSdk.podspec > Pods/Local\\ Podspecs/YunoSdk.podspec.json")
+    system("pod ipc spec ../node_modules/@yuno-payments/yuno-sdk-react-native/YunoSdk.podspec > Pods/Local\\ Podspecs/YunoSdk.podspec.json")
     
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(

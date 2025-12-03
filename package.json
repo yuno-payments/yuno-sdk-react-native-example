@@ -8,12 +8,10 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "preinstall": "bash -c '[ \"$CI\" = \"true\" ] && echo \"🤖 CI: Skipping profile login\" || npm run ca:login'",
-    "postinstall": "bash ./scripts/fix-boost-checksum.sh",
-    "ca:login": "aws codeartifact login --tool npm --repository yuno --domain yuno --namespace @yuno --profile registry"
+    "postinstall": "bash ./scripts/fix-boost-checksum.sh"
   },
   "dependencies": {
-    "@yuno/yuno-sdk-react-native": "^1.0.53",
+    "@yuno-payments/yuno-sdk-react-native": "1.0.18",
     "react": "18.2.0",
     "react-native": "0.73.0"
   },

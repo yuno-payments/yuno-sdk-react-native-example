@@ -4,8 +4,8 @@
 
 import React, {useState, useCallback, useEffect} from 'react';
 import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler} from 'react-native';
-import {YunoPaymentMethods, YunoSdk} from '@yuno/yuno-sdk-react-native';
-import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno/yuno-sdk-react-native';
+import {YunoPaymentMethods, YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
+import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno-payments/yuno-sdk-react-native';
 import {useYunoSDK, useTheme} from '../hooks';
 import {
   ConfigForm,
@@ -373,6 +373,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
+          <OTTDisplay
+          token={ottToken}
+          tokenInfo={ottTokenInfo}
+          checkoutSession={checkoutSession}
+          onContinuePayment={handleContinuePayment}
+          onClear={clearOTT}
+          loading={isLoading}
+        />
+
+        <StatusDisplay
+          paymentStatus={paymentStatus}
+          enrollmentStatus={enrollmentStatus}
+        />
         <ConfigForm
           customerSession={customerSession}
           checkoutSession={checkoutSession}
@@ -394,20 +407,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <EnrollmentActions
           onEnrollment={handleEnrollment}
           loading={isLoading}
-        />
-
-        <OTTDisplay
-          token={ottToken}
-          tokenInfo={ottTokenInfo}
-          checkoutSession={checkoutSession}
-          onContinuePayment={handleContinuePayment}
-          onClear={clearOTT}
-          loading={isLoading}
-        />
-
-        <StatusDisplay
-          paymentStatus={paymentStatus}
-          enrollmentStatus={enrollmentStatus}
         />
       </ScrollView>
     </SafeAreaView>
