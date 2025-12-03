@@ -72,7 +72,9 @@ function App(props: AppProps): React.JSX.Element {
           initialConfigJson={props.configJson}
         />
       ) : (
-        <HeadlessPaymentScreen />
+        <HeadlessPaymentScreen 
+          initialCountryCode={props.countryCode}
+        />
       )}
     </SafeAreaView>
   );

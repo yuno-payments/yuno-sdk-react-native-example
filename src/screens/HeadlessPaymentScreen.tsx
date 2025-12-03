@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { YunoSdk, CardType } from '@yuno-payments/yuno-sdk-react-native';
 import type { TokenCollectedData } from '@yuno-payments/yuno-sdk-react-native';
+import { useTheme } from '../hooks';
+import { spacing } from '../theme';
 
 const DEFAULT_JSON = `{
   "checkout_session": "73ed16c5-4481-4dce-af42-404b68e21027",
@@ -31,12 +33,20 @@ const DEFAULT_JSON = `{
   }
 }`;
 
-export default function HeadlessPaymentScreen() {
+interface HeadlessPaymentScreenProps {
+  initialCountryCode?: string;
+}
+
+export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPaymentScreenProps) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+  
   const [jsonText, setJsonText] = useState(DEFAULT_JSON);
   const [isLoading, setIsLoading] = useState(false);
   const [ott, setOtt] = useState<string | null>(null);
   const [threeDsUrl, setThreeDsUrl] = useState<string | null>(null);
   const [checkoutSession, setCheckoutSession] = useState('');
+  const [countryCode, setCountryCode] = useState(initialCountryCode || 'CO');
 
   const handleStartPayment = async () => {
     try {
@@ -80,7 +90,12 @@ export default function HeadlessPaymentScreen() {
 
       // Generate token using headless method
       console.log('🚀 Generating token with headless flow...');
-      const result = await YunoSdk.generateTokenHeadless(tokenCollectedData);
+      console.log('📍 Using country code:', countryCode);
+      const result = await YunoSdk.generateToken(
+        tokenCollectedData,
+        parsedData.checkout_session,
+        countryCode
+      );
 
       console.log('✅ Token generated:', result);
 
@@ -111,8 +126,10 @@ export default function HeadlessPaymentScreen() {
       setOtt(null); // Close OTT dialog
 
       console.log('🚀 Getting 3DS challenge URL with headless flow...');
-      const result = await YunoSdk.getThreeDSecureChallengeHeadless(
-        checkoutSession
+      console.log('📍 Using country code:', countryCode);
+      const result = await YunoSdk.getThreeDSecureChallenge(
+        checkoutSession,
+        countryCode
       );
 
       console.log('✅ 3DS Challenge result:', result);
@@ -157,7 +174,7 @@ export default function HeadlessPaymentScreen() {
           testID="start-payment-button"
         >
           {isLoading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.textInverse} />
           ) : (
             <Text style={styles.buttonText}>Start Payment</Text>
           )}
@@ -227,7 +244,7 @@ export default function HeadlessPaymentScreen() {
 
       {isLoading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#00A86B" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Processing...</Text>
         </View>
       )}
@@ -235,54 +252,61 @@ export default function HeadlessPaymentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
-    padding: 16,
+    padding: spacing.md,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
+    marginBottom: spacing.md,
+    color: colors.textPrimary,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 8,
-    color: '#666',
+    marginBottom: spacing.sm,
+    color: colors.textSecondary,
   },
   textInput: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 8,
-    padding: 12,
+    padding: spacing.md,
     minHeight: 300,
     borderWidth: 1,
-    borderColor: '#ddd',
-    marginBottom: 16,
+    borderColor: colors.border,
+    marginBottom: spacing.md,
     fontFamily: 'monospace',
     fontSize: 12,
     textAlignVertical: 'top',
+    color: colors.textPrimary,
   },
   button: {
-    backgroundColor: '#00A86B',
-    padding: 16,
+    backgroundColor: colors.primary,
+    padding: spacing.md,
     borderRadius: 8,
     alignItems: 'center',
-    marginVertical: 8,
+    marginVertical: spacing.sm,
+    shadowColor: colors.elevation,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: colors.disabled,
+    opacity: 0.6,
   },
   buttonSecondary: {
-    backgroundColor: '#666',
+    backgroundColor: colors.text,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.textInverse,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -295,32 +319,37 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: spacing.lg,
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 12,
-    padding: 20,
+    padding: spacing.lg,
     width: '100%',
     maxHeight: '80%',
+    shadowColor: colors.elevation,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
+    marginBottom: spacing.md,
+    color: colors.textPrimary,
   },
   modalScroll: {
     maxHeight: 200,
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   modalText: {
     fontFamily: 'monospace',
     fontSize: 12,
-    color: '#666',
+    color: colors.textSecondary,
   },
   modalButtons: {
-    gap: 8,
+    gap: spacing.sm,
   },
   loadingOverlay: {
     position: 'absolute',
@@ -333,8 +362,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#fff',
-    marginTop: 16,
+    color: colors.textInverse,
+    marginTop: spacing.md,
     fontSize: 16,
   },
 });
