@@ -9,11 +9,10 @@ workflows:
       Uses public npm registry (@yuno-payments/yuno-sdk-react-native).
       
       Required Secrets:
-      - FIREBASE_SERVICE_ACCOUNT_JSON (Service Account JSON from Firebase Console)
+      - FIREBASE_TOKEN (Firebase CLI token - get it via: firebase login:ci)
       - FIREBASE_APP_ID (Use: 1:744979953259:android:5e06daf454d662b202232e for com.yunosdkexample)
       
       Optional Secrets:
-      - FIREBASE_TESTERS (comma-separated emails)
       - FIREBASE_TESTER_GROUPS (comma-separated group names)
     steps:
     - git-clone@8: {}
@@ -55,31 +54,11 @@ workflows:
               exit 1
             fi
     
-    - script@1:
-        title: Prepare Firebase Service Account
-        inputs:
-        - content: |
-            #!/bin/bash
-            set -e
-            
-            echo "🔐 Creating Firebase service account file..."
-            
-            # Create a temporary file for the service account
-            SERVICE_ACCOUNT_FILE="$BITRISE_DEPLOY_DIR/firebase-service-account.json"
-            
-            # Write the service account JSON to file
-            echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$SERVICE_ACCOUNT_FILE"
-            
-            # Export the path for the next step
-            envman add --key FIREBASE_SERVICE_ACCOUNT_PATH --value "$SERVICE_ACCOUNT_FILE"
-            
-            echo "✅ Service account file created at: $SERVICE_ACCOUNT_FILE"
-    
     - firebase-app-distribution@0:
         title: Deploy to Firebase App Distribution
         inputs:
+        - firebase_token: "$FIREBASE_TOKEN"
         - app: "$FIREBASE_APP_ID"
-        - service_credentials_file: "$FIREBASE_SERVICE_ACCOUNT_PATH"
         - app_path: "$BITRISE_APK_PATH"
         - release_notes: |
             🚀 QA Build - Yuno SDK React Native Example
@@ -90,7 +69,6 @@ workflows:
             👤 By: $GIT_CLONE_COMMIT_AUTHOR_NAME
             
             Ready for testing! 🧪
-        - testers: "$FIREBASE_TESTERS"
         - groups: "$FIREBASE_TESTER_GROUPS"
     
     - deploy-to-bitrise-io@2:
