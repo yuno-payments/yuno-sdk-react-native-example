@@ -11,7 +11,7 @@
     "postinstall": "bash ./scripts/fix-boost-checksum.sh"
   },
   "dependencies": {
-    "@yuno-payments/yuno-sdk-react-native": "1.0.17-rc.11",
+    "@yuno-payments/yuno-sdk-react-native": "1.0.17-rc.12",
     "react": "18.2.0",
     "react-native": "0.73.0"
   },
