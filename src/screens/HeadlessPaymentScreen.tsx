@@ -14,13 +14,32 @@ import type { TokenCollectedData } from '@yuno-payments/yuno-sdk-react-native';
 import { useTheme } from '../hooks';
 import { spacing } from '../theme';
 
-const DEFAULT_JSON = `{
+const DEFAULT_PAYMENT_JSON = `{
   "checkout_session": "73ed16c5-4481-4dce-af42-404b68e21027",
   "payment_method": {
     "type": "CARD",
     "vaulted_token": null,
     "card": {
       "save": false,
+      "detail": {
+        "expiration_month": 11,
+        "expiration_year": 25,
+        "number": "4000000000001091",
+        "security_code": "123",
+        "holder_name": "JOHN DOE",
+        "type": "CREDIT"
+      }
+    }
+  }
+}`;
+
+const DEFAULT_ENROLLMENT_JSON = `{
+  "customer_session": "73ed16c5-4481-4dce-af42-404b68e21027",
+  "payment_method": {
+    "type": "CARD",
+    "vaulted_token": null,
+    "card": {
+      "save": true,
       "detail": {
         "expiration_month": 11,
         "expiration_year": 25,
@@ -41,7 +60,8 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
   const { colors } = useTheme();
   const styles = createStyles(colors);
   
-  const [jsonText, setJsonText] = useState(DEFAULT_JSON);
+  const [paymentJsonText, setPaymentJsonText] = useState(DEFAULT_PAYMENT_JSON);
+  const [enrollmentJsonText, setEnrollmentJsonText] = useState(DEFAULT_ENROLLMENT_JSON);
   const [isLoading, setIsLoading] = useState(false);
   const [ott, setOtt] = useState<string | null>(null);
   const [threeDsUrl, setThreeDsUrl] = useState<string | null>(null);
@@ -51,7 +71,7 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
   const handleStartPayment = async () => {
     try {
       // Parse JSON - keep snake_case names for Android native SDK
-      const parsedData = JSON.parse(jsonText);
+      const parsedData = JSON.parse(paymentJsonText);
 
       // Store checkout session for later use
       setCheckoutSession(parsedData.checkout_session);
@@ -81,6 +101,32 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
       Alert.alert(
         'Error',
         error.message || 'Failed to generate token. Check the console for details.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStartEnrollment = async () => {
+    try {
+      // Parse JSON - keep snake_case names for Android native SDK
+      const parsedData = JSON.parse(enrollmentJsonText);
+
+      setIsLoading(true);
+
+      // Start enrollment using headless method
+      console.log('🚀 Starting enrollment with headless flow...');
+      console.log('📍 Using country code:', countryCode);
+      console.log('📦 Enrollment data:', JSON.stringify(parsedData, null, 2));
+      
+      // TODO: Call enrollment method when available
+      Alert.alert('Info', 'Enrollment headless flow will be implemented here');
+      
+    } catch (error: any) {
+      console.error('❌ Error in enrollment:', error);
+      Alert.alert(
+        'Error',
+        error.message || 'Failed to start enrollment. Check the console for details.'
       );
     } finally {
       setIsLoading(false);
@@ -132,26 +178,52 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
       >
         <Text style={styles.title}>Headless Payment</Text>
 
-        <Text style={styles.label}>Headless JSON:</Text>
+        <Text style={styles.label}>Payment JSON:</Text>
         <TextInput
           style={styles.textInput}
-          value={jsonText}
-          onChangeText={setJsonText}
+          value={paymentJsonText}
+          onChangeText={setPaymentJsonText}
           multiline
           placeholder="Enter payment data JSON"
-          testID="headless-json-input"
+          testID="headless-payment-json-input"
         />
 
         <TouchableOpacity
-          style={[styles.button, !jsonText && styles.buttonDisabled]}
+          style={[styles.button, !paymentJsonText && styles.buttonDisabled]}
           onPress={handleStartPayment}
-          disabled={!jsonText || isLoading}
+          disabled={!paymentJsonText || isLoading}
           testID="start-payment-button"
         >
           {isLoading ? (
             <ActivityIndicator color={colors.textInverse} />
           ) : (
             <Text style={styles.buttonText}>Start Payment</Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Enrollment Section */}
+        <Text style={[styles.title, styles.sectionTitle]}>Headless Enrollment</Text>
+
+        <Text style={styles.label}>Enrollment JSON:</Text>
+        <TextInput
+          style={styles.textInput}
+          value={enrollmentJsonText}
+          onChangeText={setEnrollmentJsonText}
+          multiline
+          placeholder="Enter enrollment data JSON"
+          testID="headless-enrollment-json-input"
+        />
+
+        <TouchableOpacity
+          style={[styles.button, !enrollmentJsonText && styles.buttonDisabled]}
+          onPress={handleStartEnrollment}
+          disabled={!enrollmentJsonText || isLoading}
+          testID="start-enrollment-button"
+        >
+          {isLoading ? (
+            <ActivityIndicator color={colors.textInverse} />
+          ) : (
+            <Text style={styles.buttonText}>Start Enrollment</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -244,6 +316,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: spacing.md,
     color: colors.textPrimary,
+  },
+  sectionTitle: {
+    marginTop: spacing.xl,
   },
   label: {
     fontSize: 14,
