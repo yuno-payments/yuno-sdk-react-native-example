@@ -7,7 +7,7 @@ import {
   YunoSdk,
   YunoLanguage,
   CardFlow,
-} from '@yuno/yuno-sdk-react-native';
+} from '@yuno-payments/yuno-sdk-react-native';
 import type {
   PaymentConfig,
   PaymentLiteConfig,

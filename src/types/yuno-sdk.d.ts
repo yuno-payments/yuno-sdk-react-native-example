@@ -2,7 +2,7 @@
  * Declaración de tipos para el Yuno SDK desde CodeArtifact
  */
 
-declare module '@yuno/yuno-sdk-react-native' {
+declare module '@yuno-payments/yuno-sdk-react-native' {
   export interface YunoPaymentState {
     status: string;
     type?: string;

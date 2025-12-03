@@ -4,8 +4,8 @@
 
 import React, {useState, useCallback, useEffect} from 'react';
 import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler} from 'react-native';
-import {YunoPaymentMethods, YunoSdk} from '@yuno/yuno-sdk-react-native';
-import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno/yuno-sdk-react-native';
+import {YunoPaymentMethods, YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
+import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno-payments/yuno-sdk-react-native';
 import {useYunoSDK, useTheme} from '../hooks';
 import {
   ConfigForm,
