@@ -34,19 +34,35 @@ const DEFAULT_PAYMENT_JSON = `{
 }`;
 
 const DEFAULT_ENROLLMENT_JSON = `{
-  "customer_session": "73ed16c5-4481-4dce-af42-404b68e21027",
+  "customer_session": "4cad3fa7-82b0-4337-9e7a-a187d50289b0",
   "payment_method": {
     "type": "CARD",
-    "vaulted_token": null,
     "card": {
-      "save": true,
+      "save": false,
       "detail": {
         "expiration_month": 11,
         "expiration_year": 25,
-        "number": "4000000000001091",
-        "security_code": "123",
-        "holder_name": "JOHN DOE",
+        "number": "4111111111111111",
+        "security_code": "999",
+        "holder_name": "PEPITO",
         "type": "CREDIT"
+      }
+    },
+    "customer": {
+      "id": "customer123",
+      "merchant_customer_id": "merchant123",
+      "first_name": "Pepito",
+      "last_name": "Pérez",
+      "gender": "MALE",
+      "date_of_birth": "1990-01-01",
+      "email": "pepito@example.com",
+      "country": "ES",
+      "nationality": "ES",
+      "created_at": "2023-01-01T00:00:00Z",
+      "updated_at": "2023-01-02T00:00:00Z",
+      "document": {
+        "document_number": "1100221287",
+        "document_type": "CC"
       }
     }
   }
@@ -120,16 +136,19 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
       console.log('📍 Using country code:', countryCode);
       console.log('📦 Enrollment data:', JSON.stringify(parsedData, null, 2));
       
-      // TODO: Call enrollment headless method when available
-      // const result = await YunoSdk.createVaultedToken(parsedData, countryCode);
-      // if (result.vaultedToken) {
-      //   setVaultedToken(result.vaultedToken);
-      // } else if (result.error) {
-      //   Alert.alert('Error', `Failed to create vaulted token: ${result.error}`);
-      // }
-      
-      // Temporary: Show alert until method is implemented
-      Alert.alert('Info', 'Enrollment headless flow will be implemented here');
+      const result = await YunoSdk.continueEnrollment(
+        parsedData, // Pass parsedData directly (snake_case)
+        parsedData.customer_session,
+        countryCode
+      );
+
+      console.log('✅ Enrollment result:', result);
+
+      if (result.vaultedToken) {
+        setVaultedToken(result.vaultedToken);
+      } else if (result.error) {
+        Alert.alert('Error', `Failed to create vaulted token: ${result.error}`);
+      }
       
     } catch (error: any) {
       console.error('❌ Error in enrollment:', error);
