@@ -185,7 +185,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
+			shellScript = "set -e\n\n# Ensure REACT_NATIVE_PATH is set\nif [ -z \"$REACT_NATIVE_PATH\" ]; then\n  export REACT_NATIVE_PATH=\"${PODS_ROOT}/../../node_modules/react-native\"\nfi\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n# Check if scripts exist\nif [ ! -f \"$WITH_ENVIRONMENT\" ]; then\n  echo \"Error: with-environment.sh not found at $WITH_ENVIRONMENT\"\n  exit 1\nfi\n\nif [ ! -f \"$REACT_NATIVE_XCODE\" ]; then\n  echo \"Error: react-native-xcode.sh not found at $REACT_NATIVE_XCODE\"\n  exit 1\nfi\n\n# Execute the bundling script\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
 		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
