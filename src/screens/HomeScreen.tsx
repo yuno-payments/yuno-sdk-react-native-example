@@ -373,6 +373,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
+          <OTTDisplay
+          token={ottToken}
+          tokenInfo={ottTokenInfo}
+          checkoutSession={checkoutSession}
+          onContinuePayment={handleContinuePayment}
+          onClear={clearOTT}
+          loading={isLoading}
+        />
+
+        <StatusDisplay
+          paymentStatus={paymentStatus}
+          enrollmentStatus={enrollmentStatus}
+        />
         <ConfigForm
           customerSession={customerSession}
           checkoutSession={checkoutSession}
@@ -394,20 +407,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <EnrollmentActions
           onEnrollment={handleEnrollment}
           loading={isLoading}
-        />
-
-        <OTTDisplay
-          token={ottToken}
-          tokenInfo={ottTokenInfo}
-          checkoutSession={checkoutSession}
-          onContinuePayment={handleContinuePayment}
-          onClear={clearOTT}
-          loading={isLoading}
-        />
-
-        <StatusDisplay
-          paymentStatus={paymentStatus}
-          enrollmentStatus={enrollmentStatus}
         />
       </ScrollView>
     </SafeAreaView>
