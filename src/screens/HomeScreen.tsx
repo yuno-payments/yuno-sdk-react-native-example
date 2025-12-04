@@ -373,7 +373,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
-          <OTTDisplay
+        <OTTDisplay
           token={ottToken}
           tokenInfo={ottTokenInfo}
           checkoutSession={checkoutSession}
@@ -386,6 +386,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           paymentStatus={paymentStatus}
           enrollmentStatus={enrollmentStatus}
         />
+
         <ConfigForm
           customerSession={customerSession}
           checkoutSession={checkoutSession}

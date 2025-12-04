@@ -34,7 +34,8 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
   const styles = createStyles(colors);
 
   if (!token) {
-    return null;
+    // Return empty View to maintain position in layout
+    return <View />;
   }
 
   return (
