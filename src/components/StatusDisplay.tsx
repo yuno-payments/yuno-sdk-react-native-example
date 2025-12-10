@@ -20,7 +20,8 @@ export const StatusDisplay: React.FC<StatusDisplayProps> = ({
   const t = useTranslation();
 
   if (!paymentStatus && !enrollmentStatus) {
-    return null;
+    // Return empty View to maintain position in layout
+    return <View />;
   }
 
   return (

@@ -289,7 +289,7 @@ class MainViewController: UIViewController, UITextViewDelegate {
         
         // Configure footer
         footerLabel.translatesAutoresizingMaskIntoConstraints = false
-        footerLabel.text = "Yuno SDK React Native v1.0.53"
+        footerLabel.text = "Yuno SDK React Native v1.0.19"
         footerLabel.font = UIFont.systemFont(ofSize: 12)
         if #available(iOS 13.0, *) {
             footerLabel.textColor = UIColor { traitCollection in

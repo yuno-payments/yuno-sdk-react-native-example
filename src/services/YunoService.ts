@@ -5,7 +5,6 @@
 
 import {
   YunoSdk,
-  YunoLanguage,
   CardFlow,
 } from '@yuno-payments/yuno-sdk-react-native';
 import type {
@@ -22,7 +21,7 @@ class YunoService {
     apiKey: string;
     countryCode: string;
     yunoConfig: {
-      lang?: string;
+      language?: string;
       cardType?: string;
       savedCardEnable?: boolean;
       showPaymentStatus?: boolean;
@@ -38,24 +37,15 @@ class YunoService {
         cardFlow = CardFlow.STEP_BY_STEP;
       }
     }
+
+    console.log('LANGUAGE:', params.yunoConfig.language);
     
-    // Map language string to YunoLanguage enum
-    let lang = YunoLanguage.EN;
-    if (params.yunoConfig.lang) {
-      const langStr = params.yunoConfig.lang.toLowerCase();
-      if (langStr.startsWith('es')) lang = YunoLanguage.ES;
-      else if (langStr.startsWith('pt')) lang = YunoLanguage.PT;
-      else if (langStr.startsWith('fr')) lang = YunoLanguage.FR;
-      else if (langStr.startsWith('de')) lang = YunoLanguage.DE;
-      else if (langStr.startsWith('it')) lang = YunoLanguage.IT;
-      // Add more languages as needed
-    }
-    
+    // Pass language as string directly - the SDK will handle the mapping
     await YunoSdk.initialize({
       apiKey: params.apiKey,
       countryCode: params.countryCode,
       yunoConfig: {
-        lang,
+        language: params.yunoConfig.language || 'en',
         cardFlow,
         saveCardEnabled: params.yunoConfig.savedCardEnable ?? false,
         keepLoader: !(params.yunoConfig.showPaymentStatus ?? true),
