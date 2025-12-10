@@ -64,7 +64,7 @@ export const useYunoSDK = (
             apiKey,
             countryCode: country,
             yunoConfig: {
-              lang: language || 'en',
+              language: language || 'en',
               cardType,
               savedCardEnable,
               showPaymentStatus,

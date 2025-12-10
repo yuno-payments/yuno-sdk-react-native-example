@@ -22,7 +22,7 @@ class YunoService {
     apiKey: string;
     countryCode: string;
     yunoConfig: {
-      lang?: string;
+      language?: string;
       cardType?: string;
       savedCardEnable?: boolean;
       showPaymentStatus?: boolean;
@@ -40,14 +40,14 @@ class YunoService {
     }
     
     // Map language string to YunoLanguage enum
-    let lang = YunoLanguage.EN;
-    if (params.yunoConfig.lang) {
-      const langStr = params.yunoConfig.lang.toLowerCase();
-      if (langStr.startsWith('es')) lang = YunoLanguage.ES;
-      else if (langStr.startsWith('pt')) lang = YunoLanguage.PT;
-      else if (langStr.startsWith('fr')) lang = YunoLanguage.FR;
-      else if (langStr.startsWith('de')) lang = YunoLanguage.DE;
-      else if (langStr.startsWith('it')) lang = YunoLanguage.IT;
+    let language = YunoLanguage.EN;
+    if (params.yunoConfig.language) {
+      const langStr = params.yunoConfig.language.toLowerCase();
+      if (langStr.startsWith('es')) language = YunoLanguage.ES;
+      else if (langStr.startsWith('pt')) language = YunoLanguage.PT;
+      else if (langStr.startsWith('fr')) language = YunoLanguage.FR;
+      else if (langStr.startsWith('de')) language = YunoLanguage.DE;
+      else if (langStr.startsWith('it')) language = YunoLanguage.IT;
       // Add more languages as needed
     }
     
@@ -55,7 +55,7 @@ class YunoService {
       apiKey: params.apiKey,
       countryCode: params.countryCode,
       yunoConfig: {
-        lang,
+        language,
         cardFlow,
         saveCardEnabled: params.yunoConfig.savedCardEnable ?? false,
         keepLoader: !(params.yunoConfig.showPaymentStatus ?? true),
