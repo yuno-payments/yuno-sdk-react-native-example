@@ -4,6 +4,7 @@
 
 import {useState, useCallback, useEffect} from 'react';
 import {Alert} from 'react-native';
+import {YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
 import {yunoService} from '../services/YunoService';
 import {useYunoEvents} from './useYunoEvents';
 import {useAppStateForeground} from './useAppStateForeground';

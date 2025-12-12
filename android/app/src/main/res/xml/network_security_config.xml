@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <!-- 
-        ⚠️ CONFIGURACIÓN PARA TESTING CON PROXYMAN ⚠️
+        ⚠️ CONFIGURACIÓN PARA TESTING CON PROXYMAN/LAMBDATEST ⚠️
         
         Esta configuración permite interceptar tráfico HTTPS en builds de RELEASE
-        para testing con Proxyman.
+        para testing con Proxyman y Lambdatest.
         
         🚨 NO USAR EN PRODUCCIÓN REAL 🚨
         Esta configuración es INSEGURA para apps en producción porque permite
@@ -12,26 +12,41 @@
         
         Solo usar para:
         - Testing interno con Proxyman
+        - Testing automatizado en Lambdatest
         - QA y debugging
         - Desarrollo
     -->
     
     <!-- 
         Configuración base: Se aplica a TODAS las builds (debug y release)
-        Permite certificados de usuario para que Proxyman funcione en release builds
+        Permite certificados de usuario para que Proxyman/Lambdatest funcione
     -->
-    <base-config cleartextTrafficPermitted="false">
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <!-- Confía en certificados del sistema -->
             <certificates src="system" />
-            <!-- ⚠️ Confía en certificados de usuario (NECESARIO para Proxyman en release) -->
+            <!-- ⚠️ Confía en certificados de usuario (NECESARIO para proxy en release) -->
             <certificates src="user" />
         </trust-anchors>
     </base-config>
     
     <!-- 
+        Dominios de Yuno - Configuración específica para evitar problemas de SSL
+        cuando se usa proxy MITM en entornos de testing
+    -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">y.uno</domain>
+        <domain includeSubdomains="true">api.y.uno</domain>
+        <domain includeSubdomains="true">api-staging.y.uno</domain>
+        <domain includeSubdomains="true">api-sandbox.y.uno</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </domain-config>
+    
+    <!-- 
         Configuración para DEBUG
-        Redundante con base-config, pero mantiene consistencia
     -->
     <debug-overrides>
         <trust-anchors>
