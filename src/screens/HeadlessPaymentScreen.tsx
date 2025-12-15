@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { YunoSdk, CardType } from '@yuno-payments/yuno-sdk-react-native';
 import type { TokenCollectedData } from '@yuno-payments/yuno-sdk-react-native';
 import { useTheme } from '../hooks';
@@ -180,11 +181,7 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
 
       console.log('✅ 3DS Challenge result:', result);
 
-      if (result.type === 'URL') {
-        setThreeDsUrl(result.data);
-      } else {
-        Alert.alert('Error', result.data);
-      }
+      setThreeDsUrl(result.data);
     } catch (error: any) {
       console.error('❌ Error getting 3DS challenge:', error);
       Alert.alert('Error', error.message || 'Failed to get 3DS challenge URL');
@@ -194,8 +191,7 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
   };
 
   const copyToClipboard = (text: string) => {
-    // In a real app, you'd use Clipboard API
-    Alert.alert('Copy', text);
+    Clipboard.setString(text);
   };
 
   return (

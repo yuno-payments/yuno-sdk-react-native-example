@@ -101,6 +101,62 @@ declare module '@yuno-payments/yuno-sdk-react-native' {
     CANCELLED_BY_USER = 'CANCELLED_BY_USER',
   }
 
+  export enum CardType {
+    CREDIT = 'CREDIT',
+    DEBIT = 'DEBIT',
+  }
+
+  export interface Detail {
+    expirationMonth?: number;
+    expirationYear?: number;
+    number?: string;
+    securityCode?: string;
+    holderName?: string;
+    type?: CardType | string;
+  }
+
+  export interface CardData {
+    save?: boolean;
+    detail: Detail;
+  }
+
+  export interface PaymentMethod {
+    type: string;
+    vaultedToken?: string | null;
+    card?: CardData;
+  }
+
+  export interface TokenCollectedData {
+    checkoutSession?: string;
+    customerSession?: string;
+    paymentMethod: PaymentMethod;
+  }
+
+  export interface ThreeDSecureChallengeResponse {
+    type: string;
+    data: string;
+  }
+
+  export interface HeadlessTokenResponse {
+    token?: string;
+    error?: string;
+  }
+
+  export interface EnrollmentMethod {
+    type: string;
+    card: CardData;
+  }
+
+  export interface EnrollmentCollectedData {
+    customerSession: string;
+    paymentMethod: EnrollmentMethod;
+  }
+
+  export interface HeadlessEnrollmentResponse {
+    vaultedToken?: string;
+    error?: string;
+  }
+
   export interface YunoConfig {
     language?: string;
     cardFlow?: CardFlow;
@@ -173,6 +229,22 @@ declare module '@yuno-payments/yuno-sdk-react-native' {
     static onEnrollmentStatus(listener: (state: YunoEnrollmentState) => void): { remove: () => void };
     static onOneTimeToken(listener: (token: string) => void): { remove: () => void };
     static onOneTimeTokenInfo(listener: (tokenInfo: OneTimeTokenInfo) => void): { remove: () => void };
+
+    // Headless methods
+    static generateToken(
+      tokenCollectedData: TokenCollectedData,
+      checkoutSession: string,
+      countryCode?: string,
+    ): Promise<HeadlessTokenResponse>;
+    static getThreeDSecureChallenge(
+      checkoutSession: string,
+      countryCode?: string,
+    ): Promise<ThreeDSecureChallengeResponse>;
+    static continueEnrollment(
+      enrollmentCollectedData: EnrollmentCollectedData,
+      customerSession: string,
+      countryCode?: string,
+    ): Promise<HeadlessEnrollmentResponse>;
   }
 
   export const YunoPaymentMethods: React.FC<{

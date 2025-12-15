@@ -4,6 +4,7 @@
 
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import {Card} from './Card';
 import {InfoRow} from './InfoRow';
 import {Button} from './Button';
@@ -32,6 +33,10 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
   const t = useTranslation();
   const {colors} = useTheme();
   const styles = createStyles(colors);
+
+  const handleCopyToken = () => {
+    Clipboard.setString(token);
+  };
 
   if (!token) {
     // Return empty View to maintain position in layout
@@ -79,6 +84,14 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
             style={styles.button}
           />
         )}
+        <Button
+          testID="button-copy-ott"
+          title="Copy"
+          onPress={handleCopyToken}
+          variant="primary"
+          disabled={loading}
+          style={styles.button}
+        />
         <Button
           testID="button-clear-ott"
           title={t.ott.clear}
