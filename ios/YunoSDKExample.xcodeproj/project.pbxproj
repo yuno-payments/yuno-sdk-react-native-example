@@ -265,7 +265,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = 6FHH4JXB2X;
 				ENABLE_BITCODE = NO;
@@ -275,7 +275,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.21;
+				MARKETING_VERSION = 1.0.22;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -297,7 +297,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = 6FHH4JXB2X;
 				INFOPLIST_FILE = YunoSDKExample/Info.plist;
@@ -306,7 +306,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.21;
+				MARKETING_VERSION = 1.0.22;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
