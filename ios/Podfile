@@ -49,6 +49,12 @@ target 'YunoSDKExample' do
         # Ensure Swift is properly configured
         config.build_settings['SWIFT_VERSION'] = '5.0'
         config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
+        
+        # Fix for Hermes dSYM generation
+        if target.name == 'hermes-engine' || target.name.include?('hermes')
+          config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
+          config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
+        end
       end
     end
     
@@ -60,6 +66,13 @@ target 'YunoSDKExample' do
           config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
           config.build_settings['SWIFT_OBJC_BRIDGING_HEADER'] = ''
           config.build_settings['DEFINES_MODULE'] = 'YES'
+          
+          # Ensure dSYM generation for Release builds
+          if config.name == 'Release'
+            config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
+            config.build_settings['STRIP_INSTALLED_PRODUCT'] = 'YES'
+            config.build_settings['COPY_PHASE_STRIP'] = 'NO'
+          end
         end
       end
     end
