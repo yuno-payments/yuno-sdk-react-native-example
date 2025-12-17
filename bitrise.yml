@@ -150,7 +150,7 @@ workflows:
         - command: install
     
     - script@1:
-        title: Run postinstall script
+        title: Run postinstall script and setup Node.js
         inputs:
         - content: |
             #!/bin/bash
@@ -158,6 +158,27 @@ workflows:
             echo "Running postinstall script..."
             bash ./scripts/fix-boost-checksum.sh || true
             echo "✅ Postinstall completed"
+            
+            # Ensure Node.js is available for Xcode build phases
+            echo "Setting up Node.js for Xcode..."
+            NODE_PATH=$(command -v node || which node || echo "")
+            if [ -z "$NODE_PATH" ]; then
+              echo "⚠️ Node.js not found in PATH, trying common locations..."
+              if [ -f "/usr/local/bin/node" ]; then
+                export PATH="/usr/local/bin:$PATH"
+              elif [ -f "/opt/homebrew/bin/node" ]; then
+                export PATH="/opt/homebrew/bin:$PATH"
+              fi
+            fi
+            
+            # Verify Node.js is available
+            if command -v node >/dev/null 2>&1; then
+              echo "✅ Node.js found: $(command -v node)"
+              echo "✅ Node.js version: $(node --version)"
+            else
+              echo "❌ Node.js not found!"
+              exit 1
+            fi
     
     - cocoapods-install@2:
         title: Install CocoaPods
@@ -169,6 +190,7 @@ workflows:
         title: Install Certificates and Profiles
         inputs:
         - connection_type: 'automatic'
+        - distribution_type: 'app-store'
     
     - xcode-archive@5:
         title: Create iOS Archive and Export IPA
@@ -178,6 +200,7 @@ workflows:
         - distribution_method: app-store
         - configuration: Release
         - automatic_code_signing: api-key
+        - team_id: "6FHH4JXB2X"
         - export_options_plist_content: |
             <?xml version="1.0" encoding="UTF-8"?>
             <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -309,5 +332,8 @@ app:
     opts:
       is_expand: false
   - BITRISE_DISTRIBUTION_METHOD: app-store
+    opts:
+      is_expand: false
+  - BITRISE_APPLE_DEVELOPER_TEAM_ID: 6FHH4JXB2X
     opts:
       is_expand: false
