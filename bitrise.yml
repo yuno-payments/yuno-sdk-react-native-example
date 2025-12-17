@@ -171,19 +171,13 @@ workflows:
         - connection_type: 'automatic'
     
     - xcode-archive@5:
-        title: Create iOS Archive
+        title: Create iOS Archive and Export IPA
         inputs:
         - project_path: "$BITRISE_PROJECT_PATH"
         - scheme: "$BITRISE_SCHEME"
         - distribution_method: app-store
         - configuration: Release
         - automatic_code_signing: api-key
-    
-    - xcode-export@1:
-        title: Export IPA for TestFlight
-        inputs:
-        - archive_path: "$BITRISE_XCARCHIVE_PATH"
-        - export_method: app-store
         - export_options_plist_content: |
             <?xml version="1.0" encoding="UTF-8"?>
             <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -202,23 +196,51 @@ workflows:
             </dict>
             </plist>
     
-    - app-store-connect-deploy@0:
+    - script@1:
         title: Upload to TestFlight
         inputs:
-        - ipa_path: "$BITRISE_IPA_PATH"
-        - submit_for_beta_review: 'false'
-        - beta_groups: ''
-        - notify_external_testers: 'false'
-        - release_notes: |
-            🚀 Automated Build - Yuno SDK Example
+        - content: |
+            #!/bin/bash
+            set -e
             
-            📦 Build Number: $BITRISE_BUILD_NUMBER
-            🌿 Branch: $BITRISE_GIT_BRANCH
-            📝 Commit: ${BITRISE_GIT_COMMIT:0:7}
-            👤 Author: $GIT_CLONE_COMMIT_AUTHOR_NAME
-            📅 Date: $(date +"%Y-%m-%d %H:%M:%S")
+            echo "📤 Uploading IPA to TestFlight..."
             
-            Automatically deployed to TestFlight via Bitrise CI/CD 🎉
+            if [ -z "$BITRISE_IPA_PATH" ]; then
+              echo "❌ BITRISE_IPA_PATH not found"
+              exit 1
+            fi
+            
+            if [ ! -f "$BITRISE_IPA_PATH" ]; then
+              echo "❌ IPA file not found at: $BITRISE_IPA_PATH"
+              echo "Searching for IPA files..."
+              find . -name "*.ipa" -type f 2>/dev/null || true
+              exit 1
+            fi
+            
+            echo "✅ IPA found: $BITRISE_IPA_PATH"
+            ls -lh "$BITRISE_IPA_PATH"
+            
+            # Upload using xcrun altool
+            # Bitrise automatically provides credentials when Apple Service is connected
+            echo "Uploading to App Store Connect..."
+            xcrun altool --upload-app \
+              --type ios \
+              --file "$BITRISE_IPA_PATH" \
+              --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+              --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+              --verbose || {
+              echo "❌ Upload failed"
+              echo ""
+              echo "Troubleshooting:"
+              echo "1. Verify Apple Service is connected in Bitrise Settings > Connected services"
+              echo "2. Check that APP_STORE_CONNECT_API_KEY_ID and APP_STORE_CONNECT_ISSUER_ID are set"
+              echo "3. Verify the API Key has App Manager or Admin permissions"
+              echo ""
+              echo "IPA is available in artifacts for manual upload: $BITRISE_IPA_PATH"
+              exit 1
+            }
+            
+            echo "✅ IPA uploaded to TestFlight successfully!"
     
     - deploy-to-bitrise-io@2:
         title: Deploy IPA to Bitrise Artifacts
@@ -234,8 +256,8 @@ workflows:
             ios/Pods
     triggers:
       tag:
-        pattern: v*
-        is_pull_request_allowed: false
+      - name:
+          regex: "^v[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z]+)?-[0-9]+-DEV$"
   primary:
     description: |
       Runs tests.
