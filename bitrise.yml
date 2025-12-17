@@ -122,6 +122,120 @@ workflows:
         - configuration: Release
         - automatic_code_signing: api-key
     - deploy-to-bitrise-io@2: {}
+  
+  testflight-deploy:
+    description: |
+      Builds iOS app and automatically uploads to TestFlight.
+      
+      Requirements:
+      - Apple Developer Connection configured with API Key in Bitrise
+      - App created in App Store Connect
+      - Bundle ID must match: org.reactjs.native.example.YunoSDKExample
+      
+      This workflow will:
+      1. Install dependencies
+      2. Install CocoaPods
+      3. Create iOS archive
+      4. Export .ipa
+      5. Upload to TestFlight automatically
+    steps:
+    - git-clone@8: {}
+    
+    - cache-pull@2: {}
+    
+    - npm@1:
+        title: Install NPM Dependencies
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: install
+    
+    - script@1:
+        title: Run postinstall script
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+            echo "Running postinstall script..."
+            bash ./scripts/fix-boost-checksum.sh || true
+            echo "✅ Postinstall completed"
+    
+    - cocoapods-install@2:
+        title: Install CocoaPods
+        inputs:
+        - podfile_path: ios/Podfile
+        - is_cache_disabled: 'false'
+    
+    - certificate-and-profile-installer@1:
+        title: Install Certificates and Profiles
+        inputs:
+        - connection_type: 'automatic'
+    
+    - xcode-archive@5:
+        title: Create iOS Archive
+        inputs:
+        - project_path: "$BITRISE_PROJECT_PATH"
+        - scheme: "$BITRISE_SCHEME"
+        - distribution_method: app-store
+        - configuration: Release
+        - automatic_code_signing: api-key
+    
+    - xcode-export@1:
+        title: Export IPA for TestFlight
+        inputs:
+        - archive_path: "$BITRISE_XCARCHIVE_PATH"
+        - export_method: app-store
+        - export_options_plist_content: |
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+                <key>method</key>
+                <string>app-store</string>
+                <key>uploadSymbols</key>
+                <true/>
+                <key>uploadBitcode</key>
+                <false/>
+                <key>compileBitcode</key>
+                <false/>
+                <key>signingStyle</key>
+                <string>automatic</string>
+            </dict>
+            </plist>
+    
+    - app-store-connect-deploy@0:
+        title: Upload to TestFlight
+        inputs:
+        - ipa_path: "$BITRISE_IPA_PATH"
+        - submit_for_beta_review: 'false'
+        - beta_groups: ''
+        - notify_external_testers: 'false'
+        - release_notes: |
+            🚀 Automated Build - Yuno SDK Example
+            
+            📦 Build Number: $BITRISE_BUILD_NUMBER
+            🌿 Branch: $BITRISE_GIT_BRANCH
+            📝 Commit: ${BITRISE_GIT_COMMIT:0:7}
+            👤 Author: $GIT_CLONE_COMMIT_AUTHOR_NAME
+            📅 Date: $(date +"%Y-%m-%d %H:%M:%S")
+            
+            Automatically deployed to TestFlight via Bitrise CI/CD 🎉
+    
+    - deploy-to-bitrise-io@2:
+        title: Deploy IPA to Bitrise Artifacts
+        inputs:
+        - deploy_path: "$BITRISE_IPA_PATH"
+        - is_compress: "false"
+    
+    - cache-push@2:
+        inputs:
+        - cache_paths: |
+            $HOME/.npm
+            $HOME/.cocoapods
+            ios/Pods
+    triggers:
+      tag:
+        pattern: v*
+        is_pull_request_allowed: false
   primary:
     description: |
       Runs tests.
@@ -172,6 +286,6 @@ app:
   - BITRISE_SCHEME: YunoSDKExample
     opts:
       is_expand: false
-  - BITRISE_DISTRIBUTION_METHOD: ad-hoc
+  - BITRISE_DISTRIBUTION_METHOD: app-store
     opts:
       is_expand: false
