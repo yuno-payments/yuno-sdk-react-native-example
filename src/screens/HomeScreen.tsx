@@ -395,7 +395,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        contentInsetAdjustmentBehavior="automatic">
         <OTTDisplay
           token={ottToken}
           tokenInfo={ottTokenInfo}

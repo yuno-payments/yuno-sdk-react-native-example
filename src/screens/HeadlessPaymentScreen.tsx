@@ -199,6 +199,9 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollViewContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        contentInsetAdjustmentBehavior="automatic"
       >
         <Text style={styles.title}>Headless Payment</Text>
 

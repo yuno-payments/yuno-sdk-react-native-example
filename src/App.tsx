@@ -10,7 +10,7 @@
  */
 
 import React, {useEffect, useState} from 'react';
-import {StatusBar, NativeModules, Platform, View, TouchableOpacity, Text, StyleSheet, SafeAreaView} from 'react-native';
+import {StatusBar, NativeModules, Platform, View, TouchableOpacity, Text, StyleSheet, SafeAreaView, KeyboardAvoidingView} from 'react-native';
 import {HomeScreen, HeadlessPaymentScreen} from './screens';
 import {useTheme} from './hooks';
 
@@ -65,17 +65,23 @@ function App(props: AppProps): React.JSX.Element {
         </TouchableOpacity>
       </View>
 
-      {/* Screen Content */}
-      {currentScreen === 'home' ? (
-        <HomeScreen 
-          initialCountryCode={props.countryCode}
-          initialConfigJson={props.configJson}
-        />
-      ) : (
-        <HeadlessPaymentScreen 
-          initialCountryCode={props.countryCode}
-        />
-      )}
+      {/* Screen Content with KeyboardAvoidingView */}
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        {currentScreen === 'home' ? (
+          <HomeScreen 
+            initialCountryCode={props.countryCode}
+            initialConfigJson={props.configJson}
+          />
+        ) : (
+          <HeadlessPaymentScreen 
+            initialCountryCode={props.countryCode}
+          />
+        )}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -84,6 +90,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  keyboardView: {
+    flex: 1,
   },
   tabBar: {
     flexDirection: 'row',
