@@ -186,6 +186,54 @@ workflows:
         - podfile_path: ios/Podfile
         - is_cache_disabled: 'false'
     
+    - script@1:
+        title: Verify React Native setup
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+            echo "🔍 Verifying React Native setup..."
+            
+            # Verify Node.js
+            if ! command -v node >/dev/null 2>&1; then
+              echo "❌ Node.js not found!"
+              exit 1
+            fi
+            echo "✅ Node.js: $(command -v node) ($(node --version))"
+            
+            # Verify React Native is installed
+            REACT_NATIVE_PATH="ios/Pods/../../node_modules/react-native"
+            if [ ! -d "$REACT_NATIVE_PATH" ]; then
+              echo "❌ React Native not found at $REACT_NATIVE_PATH"
+              exit 1
+            fi
+            echo "✅ React Native found at: $REACT_NATIVE_PATH"
+            
+            # Verify scripts exist
+            WITH_ENV="$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh"
+            RN_XCODE="$REACT_NATIVE_PATH/scripts/react-native-xcode.sh"
+            
+            if [ ! -f "$WITH_ENV" ]; then
+              echo "❌ with-environment.sh not found at $WITH_ENV"
+              exit 1
+            fi
+            echo "✅ with-environment.sh found"
+            
+            if [ ! -f "$RN_XCODE" ]; then
+              echo "❌ react-native-xcode.sh not found at $RN_XCODE"
+              exit 1
+            fi
+            echo "✅ react-native-xcode.sh found"
+            
+            # Verify .xcode.env files
+            if [ -f "ios/.xcode.env" ]; then
+              echo "✅ .xcode.env exists"
+            else
+              echo "⚠️ .xcode.env not found (may be okay)"
+            fi
+            
+            echo "✅ All React Native setup verified!"
+    
     - certificate-and-profile-installer@1:
         title: Install Certificates and Profiles
         inputs:
