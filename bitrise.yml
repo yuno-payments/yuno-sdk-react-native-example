@@ -122,6 +122,99 @@ workflows:
         - configuration: Release
         - automatic_code_signing: api-key
     - deploy-to-bitrise-io@2: {}
+  build-ipa:
+    description: |
+      Builds iOS app and generates IPA file using Fastlane.
+      
+      Simple workflow:
+      1. Clone repository
+      2. Install dependencies (NPM + CocoaPods)
+      3. Setup Node.js for React Native
+      4. Install Fastlane
+      5. Build and export IPA with Fastlane
+      6. Deploy IPA to Bitrise artifacts
+    steps:
+    - git-clone@8: {}
+    
+    - cache-pull@2: {}
+    
+    - npm@1:
+        title: Install NPM Dependencies
+        inputs:
+        - workdir: "$WORKDIR"
+        - command: install
+    
+    - script@1:
+        title: Setup Node.js for Xcode
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+            NODE_PATH=$(command -v node || echo "/opt/homebrew/bin/node")
+            mkdir -p ios
+            echo "export NODE_BINARY=\"$NODE_PATH\"" > ios/.xcode.env
+            envman add --key NODE_OPTIONS --value "--max-old-space-size=4096"
+            bash ./scripts/fix-boost-checksum.sh || true
+    
+    - cocoapods-install@2:
+        title: Install CocoaPods
+        inputs:
+        - podfile_path: ios/Podfile
+    
+    - script@1:
+        title: Install Fastlane
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+            cd ios
+            gem install bundler
+            bundle install
+    
+    - script@1:
+        title: Build IPA with Fastlane
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+            cd ios
+            bundle exec fastlane build_ipa
+            IPA=$(find ./build -name "*.ipa" | head -1)
+            cp "$IPA" "$BITRISE_DEPLOY_DIR/YunoSDKExample.ipa"
+            envman add --key BITRISE_IPA_PATH --value "$BITRISE_DEPLOY_DIR/YunoSDKExample.ipa"
+
+    # Step 11: Deploy IPA to Bitrise Artifacts
+    - deploy-to-bitrise-io@2:
+        title: Deploy IPA to Bitrise Artifacts
+        inputs:
+        - deploy_path: "$BITRISE_IPA_PATH"
+        - is_compress: 'false'
+
+    # Step 12: Push cache
+    - cache-push@2:
+        inputs:
+        - cache_paths: |
+            $HOME/.npm
+            $HOME/.cocoapods
+            ios/Pods
+
+    meta:
+      bitrise.io:
+        stack: osx-xcode-16.2.x
+
+    envs:
+    - APP_STORE_CONNECT_API_KEY_ID: 5GK9MR375D
+      opts:
+        is_expand: false
+    - APP_STORE_CONNECT_ISSUER_ID: fd7f4eef-7bb0-411c-a5f1-06e70c7f6463
+      opts:
+        is_expand: false
+
+    triggers:
+      tag:
+      - name:
+          regex: "^v[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z]+)?-[0-9]+-DEV$"
+
   primary:
     description: |
       Runs tests.

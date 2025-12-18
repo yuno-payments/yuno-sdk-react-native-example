@@ -1,0 +1,4 @@
+app_identifier("org.reactjs.native.example.YunoSDKExample")
+apple_id("") # Optional: your Apple ID
+team_id("6FHH4JXB2X")
+

@@ -1,0 +1,38 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and export IPA for App Store"
+  lane :build_ipa do
+    # Install CocoaPods dependencies
+    cocoapods
+    
+    # Increment build number (optional)
+    # increment_build_number(xcodeproj: "YunoSDKExample.xcodeproj")
+    
+    # Build archive
+    build_app(
+      workspace: "YunoSDKExample.xcworkspace",
+      scheme: "YunoSDKExample",
+      configuration: "Release",
+      export_method: "app-store",
+      export_options: {
+        method: "app-store",
+        uploadSymbols: true,
+        uploadBitcode: false,
+        compileBitcode: false,
+        signingStyle: "automatic",
+        teamID: "6FHH4JXB2X"
+      },
+      output_directory: "./build",
+      output_name: "YunoSDKExample.ipa",
+      skip_codesigning: false,
+      skip_package_ipa: false,
+      skip_archive: false,
+      skip_waiting_for_build_processing: true
+    )
+    
+    # The IPA will be in ./build/YunoSDKExample.ipa
+    UI.success("✅ IPA created successfully!")
+  end
+end
+
