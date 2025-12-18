@@ -62,15 +62,18 @@ platform :ios do
     )
   end
 
-  desc "Sign app (ASC + certificates)"
-  lane :sign_sdk do
+  desc "Sign app for TestFlight (ASC + App Store certificates)"
+  lane :sign_sdk_testflight do
     get_asc_key_information
 
     get_app_certificates(
       app_bundle: ENV["APP_BUNDLE"],
       dist_type: "appstore"
     )
+  end
 
+  desc "Sign app for device farm (Development certificates)"
+  lane :sign_sdk_farm do
     get_app_certificates(
       app_bundle: ENV["APP_BUNDLE"],
       dist_type: "development"
@@ -85,7 +88,7 @@ platform :ios do
 
   desc "Upload a new build to TestFlight)"
   lane :upload_to_testflight_version do
-    sign_sdk
+    sign_sdk_testflight
     fetch_and_increment_build_number
     prepare_ios
 
@@ -109,7 +112,7 @@ platform :ios do
 
   desc "Build an IPA for device farms and upload it"
   lane :build_farm_version do
-    sign_sdk
+    sign_sdk_farm
     prepare_ios
 
     output_name = "SDK-iOS-React-native.ipa"
