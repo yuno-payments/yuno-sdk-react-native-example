@@ -151,11 +151,7 @@ export const useYunoSDK = (
       setEnrollmentStatus('');
       
       // 🧹 Clear native payment status to prevent stale status from previous flows
-      try {
-        await YunoSdk.clearLastPaymentStatus();
-      } catch (error) {
-        console.warn('[useYunoSDK] Failed to clear last payment status:', error);
-      }
+      await yunoService.clearLastPaymentStatus();
       
       setIsLoading(true);
       try {

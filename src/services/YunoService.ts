@@ -15,6 +15,73 @@ import type {
 } from '../types';
 
 class YunoService {
+  private isInitialized: boolean = false;
+  private lastCallTime: number = 0;
+  private readonly THROTTLE_MS = 500; // Prevenir llamadas simultáneas
+
+  /**
+   * Delay utility
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Retry utility with exponential backoff
+   */
+  private async withRetry<T>(
+    fn: () => Promise<T>,
+    maxRetries: number = 3,
+    initialDelay: number = 100
+  ): Promise<T> {
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (error: any) {
+        lastError = error;
+        if (attempt < maxRetries - 1) {
+          const delayMs = initialDelay * Math.pow(2, attempt);
+          console.warn(`⚠️ Retry attempt ${attempt + 1}/${maxRetries} after ${delayMs}ms`);
+          await this.delay(delayMs);
+        }
+      }
+    }
+    
+    throw lastError || new Error('Unknown error in withRetry');
+  }
+
+  /**
+   * Throttle para prevenir llamadas simultáneas
+   */
+  private async throttle(): Promise<void> {
+    const now = Date.now();
+    const timeSinceLastCall = now - this.lastCallTime;
+    
+    if (timeSinceLastCall < this.THROTTLE_MS) {
+      const waitTime = this.THROTTLE_MS - timeSinceLastCall;
+      console.log(`⏳ Throttling: waiting ${waitTime}ms before next call`);
+      await this.delay(waitTime);
+    }
+    
+    this.lastCallTime = Date.now();
+  }
+
+  /**
+   * Asegura que el SDK esté inicializado antes de llamar métodos
+   */
+  private async ensureInitialized(): Promise<void> {
+    if (!this.isInitialized) {
+      console.warn('⚠️ SDK not initialized, waiting 200ms...');
+      await this.delay(200);
+      // Verificar nuevamente después del delay
+      if (!this.isInitialized) {
+        throw new Error('SDK must be initialized before calling payment methods');
+      }
+    }
+  }
+
   /**
    * Inicializa el SDK de Yuno con la configuración proporcionada
    */
@@ -41,18 +108,21 @@ class YunoService {
 
     console.log('LANGUAGE:', params.yunoConfig.language);
     
-    // Pass language as string directly - the SDK will handle the mapping
-    await YunoSdk.initialize({
-      apiKey: params.apiKey,
-      countryCode: params.countryCode,
-      yunoConfig: {
-        language: params.yunoConfig.language || 'en',
-        cardFlow,
-        saveCardEnabled: params.yunoConfig.savedCardEnable ?? false,
-        keepLoader: !(params.yunoConfig.showPaymentStatus ?? true),
-      },
+    await this.withRetry(async () => {
+      // Pass language as string directly - the SDK will handle the mapping
+      await YunoSdk.initialize({
+        apiKey: params.apiKey,
+        countryCode: params.countryCode,
+        yunoConfig: {
+          language: params.yunoConfig.language || 'en',
+          cardFlow,
+          saveCardEnabled: params.yunoConfig.savedCardEnable ?? false,
+          keepLoader: !(params.yunoConfig.showPaymentStatus ?? true),
+        },
+      });
     });
     
+    this.isInitialized = true;
     console.log('✅ Yuno SDK initialized successfully');
   }
   
@@ -61,7 +131,10 @@ class YunoService {
    */
   async markAsInitialized(countryCode: string): Promise<void> {
     console.log('✅ Marking SDK as initialized...');
-    YunoSdk.markAsInitialized(countryCode, YunoLanguage.ES);
+    await this.withRetry(async () => {
+      YunoSdk.markAsInitialized(countryCode, YunoLanguage.ES);
+    });
+    this.isInitialized = true;
     console.log('✅ SDK marked as initialized');
   }
 
@@ -70,7 +143,9 @@ class YunoService {
    */
   async clearLastOTT(): Promise<void> {
     console.log('🧹 Clearing last OTT...');
-    await YunoSdk.clearLastOneTimeToken();
+    await this.withRetry(async () => {
+      await YunoSdk.clearLastOneTimeToken();
+    });
     console.log('✅ Last OTT cleared');
   }
 
@@ -79,7 +154,9 @@ class YunoService {
    */
   async getLastOTT(): Promise<string | null> {
     console.log('💾 Retrieving last OTT...');
-    const ott = await YunoSdk.getLastOneTimeToken();
+    const ott = await this.withRetry(async () => {
+      return await YunoSdk.getLastOneTimeToken();
+    });
     console.log('💾 Retrieved OTT:', ott || 'null');
     return ott;
   }
@@ -89,7 +166,9 @@ class YunoService {
    */
   async getLastOTTInfo() {
     console.log('💾 Retrieving last OTT Info...');
-    const ottInfo = await YunoSdk.getLastOneTimeTokenInfo();
+    const ottInfo = await this.withRetry(async () => {
+      return await YunoSdk.getLastOneTimeTokenInfo();
+    });
     console.log('💾 Retrieved OTT Info:', ottInfo ? 'YES' : 'NO');
     if (ottInfo) {
       console.log('📋 OTT Info details:', JSON.stringify(ottInfo, null, 2));
@@ -106,9 +185,17 @@ class YunoService {
     console.log('💳 Starting full payment flow...');
     console.log('Config:', config);
 
-    // startPayment solo recibe showPaymentStatus
-    // El checkoutSession debe haberse configurado previamente
-    await YunoSdk.startPayment(config.showPaymentStatus ?? true);
+    await this.ensureInitialized();
+    await this.throttle();
+    
+    // Pequeño delay antes de llamar al SDK nativo
+    await this.delay(100);
+
+    await this.withRetry(async () => {
+      // startPayment solo recibe showPaymentStatus
+      // El checkoutSession debe haberse configurado previamente
+      await YunoSdk.startPayment(config.showPaymentStatus ?? true);
+    });
 
     console.log('✅ Payment flow started');
   }
@@ -120,6 +207,12 @@ class YunoService {
   async startPaymentLite(config: PaymentLiteConfig): Promise<void> {
     console.log('💳 Starting payment lite flow...');
     console.log('Config:', config);
+
+    await this.ensureInitialized();
+    await this.throttle();
+    
+    // Pequeño delay antes de llamar al SDK nativo
+    await this.delay(100);
 
     const methodSelected: any = {
       paymentMethodType: config.paymentMethodType,
@@ -136,7 +229,11 @@ class YunoService {
     };
 
     console.log('📦 Params to send:', params);
-    await YunoSdk.startPaymentLite(params, config.countryCode);
+    
+    await this.withRetry(async () => {
+      await YunoSdk.startPaymentLite(params, config.countryCode);
+    });
+    
     console.log('✅ Payment lite flow started');
   }
 
@@ -148,14 +245,20 @@ class YunoService {
     console.log('🔐 Starting enrollment flow...');
     console.log('Config:', JSON.stringify(config, null, 2));
     
+    await this.ensureInitialized();
+    await this.throttle();
+    await this.delay(100);
+    
     const showPaymentStatus = config.showPaymentStatus ?? true;
     console.log('📋 showPaymentStatus value:', showPaymentStatus);
     console.log('📋 showPaymentStatus typeof:', typeof showPaymentStatus);
 
-    await YunoSdk.enrollmentPayment({
-      customerSession: config.customerSession,
-      countryCode: config.countryCode,
-      showPaymentStatus,
+    await this.withRetry(async () => {
+      await YunoSdk.enrollmentPayment({
+        customerSession: config.customerSession,
+        countryCode: config.countryCode,
+        showPaymentStatus,
+      });
     });
 
     console.log('✅ Enrollment flow started');
@@ -169,6 +272,10 @@ class YunoService {
     console.log('💳 Starting seamless payment flow...');
     console.log('Config:', config);
 
+    await this.ensureInitialized();
+    await this.throttle();
+    await this.delay(100);
+
     const methodSelected: any = {
       paymentMethodType: config.paymentMethodType,
     };
@@ -185,7 +292,11 @@ class YunoService {
     };
 
     console.log('📦 Params to send:', params);
-    await YunoSdk.startPaymentSeamlessLite(params);
+    
+    await this.withRetry(async () => {
+      await YunoSdk.startPaymentSeamlessLite(params);
+    });
+    
     console.log('✅ Seamless payment flow started');
   }
 
@@ -203,8 +314,28 @@ class YunoService {
     console.log('Country Code:', countryCode);
     console.log('Show Payment Status:', showPaymentStatus);
 
-    await YunoSdk.continuePayment(checkoutSession, countryCode, showPaymentStatus);
+    await this.ensureInitialized();
+    await this.throttle();
+    await this.delay(100);
+
+    await this.withRetry(async () => {
+      await YunoSdk.continuePayment(checkoutSession, countryCode, showPaymentStatus);
+    });
+    
     console.log('✅ Continue payment called');
+  }
+
+  /**
+   * Limpia el estado del último pago
+   */
+  async clearLastPaymentStatus(): Promise<void> {
+    try {
+      await this.withRetry(async () => {
+        await YunoSdk.clearLastPaymentStatus();
+      });
+    } catch (error) {
+      console.warn('⚠️ Failed to clear last payment status:', error);
+    }
   }
 }
 
