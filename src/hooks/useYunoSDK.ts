@@ -115,7 +115,13 @@ export const useYunoSDK = (
   // Recuperar OTT cuando la app vuelve al foreground
   const handleForeground = useCallback(async () => {
     try {
+      console.log('📱 [useYunoSDK] Recuperando OTT en foreground...');
       const lastOtt = await yunoService.getLastOTT();
+      
+      // ⏱️ Delay entre llamadas async consecutivas para evitar problemas de inicialización
+      console.log('⏱️  [useYunoSDK] Esperando 100ms antes de getLastOTTInfo()...');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const lastOttInfo = await yunoService.getLastOTTInfo();
 
       if (lastOtt && lastOtt !== ottToken) {
@@ -152,13 +158,23 @@ export const useYunoSDK = (
       
       // 🧹 Clear native payment status to prevent stale status from previous flows
       try {
+        console.log('🧹 [useYunoSDK] Limpiando último estado de pago...');
         await YunoSdk.clearLastPaymentStatus();
+        console.log('✅ [useYunoSDK] Estado de pago limpiado');
+        
+        // ⏱️ Delay crítico: Dar tiempo al SDK para que termine de limpiar antes de iniciar nuevo pago
+        // Esto previene race conditions y problemas de inicialización de cancellables
+        console.log('⏱️  [useYunoSDK] Esperando 200ms después de clearLastPaymentStatus...');
+        await new Promise(resolve => setTimeout(resolve, 200));
       } catch (error) {
         console.warn('[useYunoSDK] Failed to clear last payment status:', error);
+        // Aún así agregamos un delay para dar tiempo al SDK
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
       
       setIsLoading(true);
       try {
+        console.log('🚀 [useYunoSDK] Llamando a yunoService.startPayment()...');
         await yunoService.startPayment(config);
       } catch (error: any) {
         Alert.alert(

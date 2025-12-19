@@ -22,6 +22,35 @@ const config = {
       path.resolve(__dirname, 'node_modules'),
       path.resolve(root, 'node_modules'),
     ],
+    // Excluir archivos y directorios grandes que causan ERR_FS_FILE_TOO_LARGE
+    blockList: [
+      /.*\/\.git\/.*/,
+      /.*\/build\/.*/,
+      /.*\/DerivedData\/.*/,
+      /.*\/\.gradle\/.*/,
+      /.*\/Pods\/.*\.(framework|xcframework)/,
+      /.*\.(dSYM|ipa|app|xcarchive|zip|tar|gz|dmg|pkg|iso)$/,
+      /.*\/node_modules\/.*\.(tar|gz|zip|dmg|pkg|iso)$/,
+      /.*\/Documents\/.*/,  // Excluir Documents que tiene el zip grande
+      /.*\/\.Trash\/.*/,  // Excluir .Trash para evitar errores de permisos
+    ],
+    // Usar blacklistRE para mayor compatibilidad
+    blacklistRE: /(.*\/\.git\/.*|.*\/build\/.*|.*\/DerivedData\/.*|.*\/\.gradle\/.*|.*\/Documents\/.*|.*\/\.Trash\/.*|.*\.(dSYM|ipa|app|xcarchive|zip|tar|gz|dmg|pkg|iso)$)/i,
+  },
+  
+  watcher: {
+    // Ignorar directorios grandes durante el watch
+    ignored: [
+      /.*\/\.git\/.*/,
+      /.*\/build\/.*/,
+      /.*\/DerivedData\/.*/,
+      /.*\/\.gradle\/.*/,
+      /.*\/Pods\/.*/,
+      /.*\/node_modules\/.*/,
+      /.*\.(dSYM|ipa|app|xcarchive|zip|tar|gz|dmg|pkg|iso)$/,
+      /.*\/Documents\/.*/,  // Excluir Documents
+      /.*\/\.Trash\/.*/,  // Excluir .Trash para evitar errores de permisos
+    ],
   },
 };
 
