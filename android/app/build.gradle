@@ -90,7 +90,7 @@ def getSDKVersion = { ->
             return sdkVersion.replaceAll(/[\^~]/, "")
         }
     }
-    return "1.0.24" // Fallback
+    return "1.0.25" // Fallback
 }
 
 def sdkVersion = getSDKVersion()
