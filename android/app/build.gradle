@@ -79,6 +79,22 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
+// Leer la versión del SDK desde package.json
+def getSDKVersion = { ->
+    def packageJsonFile = file("../../package.json")
+    if (packageJsonFile.exists()) {
+        def packageJson = new groovy.json.JsonSlurper().parseText(packageJsonFile.text)
+        def sdkVersion = packageJson.dependencies?."@yuno-payments/yuno-sdk-react-native"
+        if (sdkVersion) {
+            // Remover prefijos ^ o ~ si existen
+            return sdkVersion.replaceAll(/[\^~]/, "")
+        }
+    }
+    return "1.0.25" // Fallback
+}
+
+def sdkVersion = getSDKVersion()
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -90,7 +106,13 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0.24"
+        versionName sdkVersion
+        
+        // Agregar la versión del SDK como BuildConfig field
+        buildConfigField "String", "YUNO_SDK_VERSION", "\"${sdkVersion}\""
+        
+        // Agregar como resValue para usar en strings.xml
+        resValue "string", "yuno_sdk_version", sdkVersion
     }
     buildFeatures {
         buildConfig = true

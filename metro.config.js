@@ -3,6 +3,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const sdkPath = path.resolve(__dirname, '../yuno-sdk-react-native');
+const projectRoot = __dirname;
 
 /**
  * Metro configuration
@@ -11,7 +12,21 @@ const sdkPath = path.resolve(__dirname, '../yuno-sdk-react-native');
  * @type {import('metro-config').MetroConfig}
  */
 const config = {
-  watchFolders: [root],
+  // Solo monitorear el directorio del proyecto actual
+  watchFolders: [projectRoot],
+  
+  // Excluir directorios innecesarios del escaneo
+  blockList: [
+    /.*\/node_modules\/.*/,
+    /.*\/\.git\/.*/,
+    /.*\/ios\/build\/.*/,
+    /.*\/ios\/Pods\/.*/,
+    /.*\/android\/build\/.*/,
+    /.*\/android\/\.gradle\/.*/,
+    /.*\/\.DS_Store\/.*/,
+    /.*\/\.idea\/.*/,
+    /.*\/\.vscode\/.*/,
+  ],
 
   resolver: {
     // Para resolver el SDK desde el directorio padre

@@ -289,7 +289,7 @@ class MainViewController: UIViewController, UITextViewDelegate {
         
         // Configure footer
         footerLabel.translatesAutoresizingMaskIntoConstraints = false
-        footerLabel.text = "Yuno SDK React Native v1.0.19"
+        footerLabel.text = getSDKVersion()
         footerLabel.font = UIFont.systemFont(ofSize: 12)
         if #available(iOS 13.0, *) {
             footerLabel.textColor = UIColor { traitCollection in
@@ -501,6 +501,21 @@ class MainViewController: UIViewController, UITextViewDelegate {
                 textView.textColor = UIColor(red: 0.57, green: 0.58, blue: 0.61, alpha: 1.0)
             }
         }
+    }
+    
+    // MARK: - Helper Methods
+    /**
+     * Obtiene la versión del SDK desde Info.plist
+     */
+    private func getSDKVersion() -> String {
+        // Leer desde Info.plist
+        if let sdkVersion = Bundle.main.infoDictionary?["YunoSDKVersion"] as? String,
+           !sdkVersion.isEmpty {
+            return "Yuno SDK React Native v\(sdkVersion)"
+        }
+        
+        // Fallback: usar versión por defecto
+        return "Yuno SDK React Native v1.0.25"
     }
     
     deinit {
