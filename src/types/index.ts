@@ -6,7 +6,7 @@ import type {
   YunoPaymentState,
   YunoEnrollmentState,
   OneTimeTokenInfo,
-} from '@yuno/yuno-sdk-react-native';
+} from '@yuno-payments/yuno-sdk-react-native';
 
 export interface PaymentConfig {
   checkoutSession: string;

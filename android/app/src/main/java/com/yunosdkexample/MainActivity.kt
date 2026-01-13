@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.yunosdkexample.BuildConfig
 import com.yunosdkreactnative.YunoSdkModule
 import org.json.JSONObject
 
@@ -216,8 +217,17 @@ class MainActivity : AppCompatActivity() {
     layout.addView(infoCard)
     
     // Footer with SDK version (adapts to theme)
+    // Leer la versión del SDK desde BuildConfig o resValue
+    val sdkVersion = try {
+      // Intentar leer desde BuildConfig primero
+      BuildConfig.YUNO_SDK_VERSION
+    } catch (e: Exception) {
+      // Fallback: leer desde resources
+      resources.getString(R.string.yuno_sdk_version)
+    }
+    
     val footer = android.widget.TextView(this).apply {
-      text = getString(R.string.footer_version)
+      text = getString(R.string.footer_version, sdkVersion)
       textSize = 12f
       setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_tertiary))
       gravity = android.view.Gravity.CENTER

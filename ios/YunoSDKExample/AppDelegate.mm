@@ -4,19 +4,20 @@
 #import <React/RCTRootView.h>
 #import "YunoSDKExample-Swift.h"
 
-@implementation AppDelegate {
-  RCTBridge *_bridge;
-}
+@implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  // Initialize the React Native bridge but don't show it yet
-  _bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+  // Set up React Native module name and initial props
+  self.moduleName = @"YunoSDKExample";
+  self.initialProps = @{};
   
-  // Create window
+  // Let RCTAppDelegate initialize React Native (required for New Architecture)
+  [super application:application didFinishLaunchingWithOptions:launchOptions];
+  
+  // Override window with native MainViewController as root
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   
-  // Start with MainViewController (native screen)
   MainViewController *mainViewController = [[MainViewController alloc] init];
   UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:mainViewController];
   navigationController.navigationBarHidden = YES;
@@ -29,15 +30,21 @@
 
 - (void)navigateToReactNativeWithCountryCode:(NSString *)countryCode configJson:(NSString *)configJson
 {
-  // Create React Native root view with initial props
+  // Create initial props with the configuration
   NSDictionary *initialProps = @{
-    @"countryCode": countryCode,
-    @"configJson": configJson
+    @"countryCode": countryCode ?: @"",
+    @"configJson": configJson ?: @""
   };
   
-  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:_bridge
-                                                    moduleName:@"YunoSDKExample"
-                                             initialProperties:initialProps];
+  // Create React Native root view using RCTAppDelegate's rootViewFactory
+  UIView *rootView = [self.rootViewFactory viewWithModuleName:self.moduleName
+                                            initialProperties:initialProps
+                                                launchOptions:nil];
+  
+  if (rootView == nil) {
+    NSLog(@"Error: Could not create React Native root view");
+    return;
+  }
   
   rootView.backgroundColor = [UIColor whiteColor];
   
@@ -51,6 +58,11 @@
 }
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
+{
+  return [self bundleURL];
+}
+
+- (NSURL *)bundleURL
 {
 #if DEBUG
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];

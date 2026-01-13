@@ -2,10 +2,10 @@
  * Main application screen
  */
 
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useEffect, useRef} from 'react';
 import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler} from 'react-native';
-import {YunoPaymentMethods, YunoSdk} from '@yuno/yuno-sdk-react-native';
-import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno/yuno-sdk-react-native';
+import {YunoPaymentMethods, YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
+import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno-payments/yuno-sdk-react-native';
 import {useYunoSDK, useTheme} from '../hooks';
 import {
   ConfigForm,
@@ -34,6 +34,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const t = useTranslation();
   const {colors} = useTheme();
   const styles = createStyles(colors);
+
+  // Ref for ScrollView to enable auto-scroll
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Local state for configuration
   const [countryCode, setCountryCode] = useState('CO');
@@ -132,6 +135,25 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     // Cleanup: remove listener when component unmounts
     return () => backHandler.remove();
   }, [showPaymentMethods]);
+
+  // Auto-scroll to top when OTT or Status components become visible
+  useEffect(() => {
+    // Check if we have OTT token or any status to display
+    const hasOTT = ottToken && ottToken.trim().length > 0;
+    const hasPaymentStatus = paymentStatus && paymentStatus.trim().length > 0;
+    const hasEnrollmentStatus = enrollmentStatus && enrollmentStatus.trim().length > 0;
+    
+    if (hasOTT || hasPaymentStatus || hasEnrollmentStatus) {
+      console.log('📜 Auto-scrolling to top to show OTT/Status');
+      // Small delay to ensure the components are rendered
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({
+          y: 0,
+          animated: true,
+        });
+      }, 100);
+    }
+  }, [ottToken, paymentStatus, enrollmentStatus]);
 
   // Required fields validation
   const validateRequiredFields = useCallback(
@@ -370,9 +392,27 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        contentInsetAdjustmentBehavior="automatic">
+        <OTTDisplay
+          token={ottToken}
+          tokenInfo={ottTokenInfo}
+          checkoutSession={checkoutSession}
+          onContinuePayment={handleContinuePayment}
+          onClear={clearOTT}
+          loading={isLoading}
+        />
+
+        <StatusDisplay
+          paymentStatus={paymentStatus}
+          enrollmentStatus={enrollmentStatus}
+        />
+
         <ConfigForm
           customerSession={customerSession}
           checkoutSession={checkoutSession}
@@ -394,20 +434,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <EnrollmentActions
           onEnrollment={handleEnrollment}
           loading={isLoading}
-        />
-
-        <OTTDisplay
-          token={ottToken}
-          tokenInfo={ottTokenInfo}
-          checkoutSession={checkoutSession}
-          onContinuePayment={handleContinuePayment}
-          onClear={clearOTT}
-          loading={isLoading}
-        />
-
-        <StatusDisplay
-          paymentStatus={paymentStatus}
-          enrollmentStatus={enrollmentStatus}
         />
       </ScrollView>
     </SafeAreaView>
