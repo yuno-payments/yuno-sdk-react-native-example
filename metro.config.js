@@ -1,9 +1,4 @@
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
-const path = require('path');
-
-const root = path.resolve(__dirname, '..');
-const sdkPath = path.resolve(__dirname, '../yuno-sdk-react-native');
-const projectRoot = __dirname;
 
 /**
  * Metro configuration
@@ -11,34 +6,6 @@ const projectRoot = __dirname;
  *
  * @type {import('metro-config').MetroConfig}
  */
-const config = {
-  // Solo monitorear el directorio del proyecto actual
-  watchFolders: [projectRoot],
-  
-  // Excluir directorios innecesarios del escaneo
-  blockList: [
-    /.*\/node_modules\/.*/,
-    /.*\/\.git\/.*/,
-    /.*\/ios\/build\/.*/,
-    /.*\/ios\/Pods\/.*/,
-    /.*\/android\/build\/.*/,
-    /.*\/android\/\.gradle\/.*/,
-    /.*\/\.DS_Store\/.*/,
-    /.*\/\.idea\/.*/,
-    /.*\/\.vscode\/.*/,
-  ],
-
-  resolver: {
-    // Para resolver el SDK desde el directorio padre
-    extraNodeModules: {
-      '@yuno/yuno-sdk-react-native': sdkPath,
-    },
-    nodeModulesPaths: [
-      path.resolve(__dirname, 'node_modules'),
-      path.resolve(root, 'node_modules'),
-    ],
-  },
-};
+const config = {};
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);
-

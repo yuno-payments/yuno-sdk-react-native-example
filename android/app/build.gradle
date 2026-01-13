@@ -101,6 +101,10 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    
+    // Autolinking dependencies
+    implementation project(':yuno-payments_yuno-sdk-react-native')
+    implementation project(':react-native-clipboard_clipboard')
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
