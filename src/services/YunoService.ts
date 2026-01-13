@@ -5,9 +5,9 @@
 
 import {
   YunoSdk,
-  YunoLanguage,
   CardFlow,
-} from '@yuno/yuno-sdk-react-native';
+  YunoLanguage,
+} from '@yuno-payments/yuno-sdk-react-native';
 import type {
   PaymentConfig,
   PaymentLiteConfig,
@@ -22,7 +22,7 @@ class YunoService {
     apiKey: string;
     countryCode: string;
     yunoConfig: {
-      lang?: string;
+      language?: string;
       cardType?: string;
       savedCardEnable?: boolean;
       showPaymentStatus?: boolean;
@@ -38,24 +38,15 @@ class YunoService {
         cardFlow = CardFlow.STEP_BY_STEP;
       }
     }
+
+    console.log('LANGUAGE:', params.yunoConfig.language);
     
-    // Map language string to YunoLanguage enum
-    let lang = YunoLanguage.EN;
-    if (params.yunoConfig.lang) {
-      const langStr = params.yunoConfig.lang.toLowerCase();
-      if (langStr.startsWith('es')) lang = YunoLanguage.ES;
-      else if (langStr.startsWith('pt')) lang = YunoLanguage.PT;
-      else if (langStr.startsWith('fr')) lang = YunoLanguage.FR;
-      else if (langStr.startsWith('de')) lang = YunoLanguage.DE;
-      else if (langStr.startsWith('it')) lang = YunoLanguage.IT;
-      // Add more languages as needed
-    }
-    
+    // Pass language as string directly - the SDK will handle the mapping
     await YunoSdk.initialize({
       apiKey: params.apiKey,
       countryCode: params.countryCode,
       yunoConfig: {
-        lang,
+        language: params.yunoConfig.language || 'en',
         cardFlow,
         saveCardEnabled: params.yunoConfig.savedCardEnable ?? false,
         keepLoader: !(params.yunoConfig.showPaymentStatus ?? true),
@@ -151,24 +142,21 @@ class YunoService {
 
   /**
    * Inicia un flujo de enrollment
-   * Nota: Usa showPaymentStatus del JSON para el parámetro showEnrollmentStatus del SDK
+   * Nota: Usa showPaymentStatus del JSON para el parámetro showPaymentStatus del SDK
    */
   async enrollmentPayment(config: EnrollmentConfig): Promise<void> {
     console.log('🔐 Starting enrollment flow...');
     console.log('Config:', JSON.stringify(config, null, 2));
     
-    const showEnrollmentStatus = config.showPaymentStatus ?? true;
-    console.log('📋 showEnrollmentStatus value:', showEnrollmentStatus);
-    console.log('📋 showEnrollmentStatus typeof:', typeof showEnrollmentStatus);
+    const showPaymentStatus = config.showPaymentStatus ?? true;
+    console.log('📋 showPaymentStatus value:', showPaymentStatus);
+    console.log('📋 showPaymentStatus typeof:', typeof showPaymentStatus);
 
-    await YunoSdk.enrollmentPayment(
-      {
-        customerSession: config.customerSession,
-        cardFlow: CardFlow.ONE_TIME,
-        showEnrollmentStatus,
-      },
-      config.countryCode,
-    );
+    await YunoSdk.enrollmentPayment({
+      customerSession: config.customerSession,
+      countryCode: config.countryCode,
+      showPaymentStatus,
+    });
 
     console.log('✅ Enrollment flow started');
   }
@@ -197,7 +185,7 @@ class YunoService {
     };
 
     console.log('📦 Params to send:', params);
-    await YunoSdk.startPaymentSeamlessLite(params, config.countryCode);
+    await YunoSdk.startPaymentSeamlessLite(params);
     console.log('✅ Seamless payment flow started');
   }
 

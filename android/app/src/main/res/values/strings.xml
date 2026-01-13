@@ -14,7 +14,7 @@
     <string name="info_text">The Yuno SDK is ready to use.\n\n• Enter the complete configuration JSON\n• Include country, language, merchantKeys and options\n• Press Start to continue\n• The SDK will initialize with your configuration\n• You will be able to test all functionalities</string>
     
     <!-- Footer -->
-    <string name="footer_version">Yuno SDK React Native v1.0.14</string>
+    <string name="footer_version">Yuno SDK React Native v%1$s</string>
     
     <!-- Toast Messages -->
     <string name="error_empty_json">Please enter a valid configuration JSON</string>
