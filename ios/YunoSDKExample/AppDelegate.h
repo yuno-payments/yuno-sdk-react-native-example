@@ -6,4 +6,3 @@
 - (void)navigateToReactNativeWithCountryCode:(NSString *)countryCode configJson:(NSString *)configJson NS_SWIFT_NAME(navigateToReactNative(withCountryCode:configJson:));
 
 @end
-

@@ -515,7 +515,7 @@ class MainViewController: UIViewController, UITextViewDelegate {
         }
         
         // Fallback: usar versión por defecto
-        return "Yuno SDK React Native v1.0.25"
+        return "Yuno SDK React Native v1.0.29"
     }
     
     deinit {
