@@ -13,6 +13,7 @@ interface PaymentActionsProps {
   onStartPayment: () => void;
   onStartPaymentLite: () => void;
   onSeamlessPayment: () => void;
+  onPaymentRender: () => void;
   loading?: boolean;
 }
 
@@ -20,6 +21,7 @@ export const PaymentActions: React.FC<PaymentActionsProps> = ({
   onStartPayment,
   onStartPaymentLite,
   onSeamlessPayment,
+  onPaymentRender,
   loading = false,
 }) => {
   const t = useTranslation();
@@ -46,6 +48,14 @@ export const PaymentActions: React.FC<PaymentActionsProps> = ({
         testID="button-seamless-payment"
         title={t.payment.seamlessPayment}
         onPress={onSeamlessPayment}
+        variant="primary"
+        disabled={loading}
+        style={styles.button}
+      />
+      <Button
+        testID="button-payment-render"
+        title={t.payment.paymentRender}
+        onPress={onPaymentRender}
         variant="primary"
         disabled={loading}
         style={styles.button}

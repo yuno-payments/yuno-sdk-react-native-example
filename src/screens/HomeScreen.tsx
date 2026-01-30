@@ -3,9 +3,9 @@
  */
 
 import React, {useState, useCallback, useEffect, useRef} from 'react';
-import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler} from 'react-native';
+import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler, ActivityIndicator} from 'react-native';
 import {YunoPaymentMethods, YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
-import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno-payments/yuno-sdk-react-native';
+import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent, PaymentRenderArguments} from '@yuno-payments/yuno-sdk-react-native';
 import {useYunoSDK, useTheme} from '../hooks';
 import {
   ConfigForm,
@@ -47,6 +47,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showPaymentStatus, setShowPaymentStatus] = useState(true);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [isPaymentMethodSelected, setIsPaymentMethodSelected] = useState(false);
+
+  // Payment Render state
+  const [isPaymentRenderLoading, setIsPaymentRenderLoading] = useState(false);
+  const [paymentRenderToken, setPaymentRenderToken] = useState<string | null>(null);
+  const [paymentRenderResult, setPaymentRenderResult] = useState<string | null>(null);
 
   // Process initial configuration from native JSON
   useEffect(() => {
@@ -154,6 +159,42 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       }, 100);
     }
   }, [ottToken, paymentStatus, enrollmentStatus]);
+
+  // Payment Render event listeners
+  useEffect(() => {
+    console.log('🔌 Setting up Payment Render event listeners...');
+
+    const tokenSubscription = YunoSdk.onPaymentRenderToken((token: string) => {
+      console.log('🎫 Payment Render Token received:', token.substring(0, 30) + '...');
+      setPaymentRenderToken(token);
+      setIsPaymentRenderLoading(false);
+      
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({y: 0, animated: true});
+      }, 100);
+    });
+
+    const resultSubscription = YunoSdk.onPaymentRenderResult((result: string) => {
+      console.log('📊 Payment Render Result:', result);
+      setPaymentRenderResult(result);
+      setIsPaymentRenderLoading(false);
+      setPaymentRenderToken(null);
+
+      if (result === 'SUCCEEDED' || result === 'succeeded') {
+        Alert.alert('Success', 'Payment completed successfully!');
+      } else if (result === 'FAILED' || result === 'fail') {
+        Alert.alert('Error', 'Payment failed. Please try again.');
+      } else if (result === 'CANCELLED' || result === 'userCancelled') {
+        Alert.alert('Cancelled', 'Payment was cancelled.');
+      }
+    });
+
+    return () => {
+      console.log('🔌 Cleaning up Payment Render event listeners...');
+      tokenSubscription.remove();
+      resultSubscription.remove();
+    };
+  }, []);
 
   // Required fields validation
   const validateRequiredFields = useCallback(
@@ -290,6 +331,81 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     continuePayment(checkoutSession, countryCode, showPaymentStatus);
   }, [checkoutSession, countryCode, showPaymentStatus, continuePayment]);
 
+  // Handler for Payment Render
+  const handlePaymentRender = useCallback(async () => {
+    console.log('🔵 handlePaymentRender called');
+    console.log('📋 checkoutSession:', checkoutSession || '(empty)');
+    console.log('📋 paymentMethodType:', paymentMethodType || '(empty)');
+    
+    // Payment Render requires checkoutSession + paymentMethodType
+    const missingFields: string[] = [];
+    if (!checkoutSession.trim()) missingFields.push(t.config.checkoutSession);
+    if (!paymentMethodType.trim()) missingFields.push(t.config.paymentMethodType);
+    
+    if (missingFields.length > 0) {
+      Alert.alert(
+        t.payment.requiredFields,
+        `${t.payment.pleaseEnter}: ${missingFields.join(', ')}`,
+      );
+      return;
+    }
+
+    try {
+      setIsPaymentRenderLoading(true);
+      setPaymentRenderToken(null);
+      setPaymentRenderResult(null);
+
+      const params: PaymentRenderArguments = {
+        checkoutSession,
+        countryCode,
+        paymentMethodType,
+        vaultedToken: vaultedToken.trim() || null,
+      };
+
+      console.log('✅ Starting Payment Render Flow with params:', params);
+
+      // Step 1: Start the payment render flow
+      const response = await YunoSdk.startPaymentRenderFlow(params);
+      console.log('✅ startPaymentRenderFlow response:', response);
+
+      if (response.success) {
+        console.log('✅ Payment render flow started, showing form...');
+
+        // Step 2: Show the payment form
+        const formResponse = await YunoSdk.showPaymentForm();
+        console.log('✅ showPaymentForm response:', formResponse);
+      } else {
+        throw new Error('Failed to start payment render flow');
+      }
+    } catch (error: any) {
+      console.error('❌ Payment Render error:', error);
+      Alert.alert('Error', error.message || 'Failed to start payment render flow');
+      setIsPaymentRenderLoading(false);
+    }
+  }, [checkoutSession, countryCode, paymentMethodType, vaultedToken, t]);
+
+  // Handler to continue Payment Render after token received
+  const handleContinuePaymentRender = useCallback(async () => {
+    try {
+      setIsPaymentRenderLoading(true);
+      console.log('🔄 Continuing payment render flow...');
+
+      const result = await YunoSdk.continuePaymentRender();
+      console.log('✅ continuePaymentRender response:', result);
+    } catch (error: any) {
+      console.error('❌ Continue payment render error:', error);
+      Alert.alert('Error', error.message || 'Failed to continue payment');
+      setIsPaymentRenderLoading(false);
+    }
+  }, []);
+
+  // Handler to clear Payment Render state
+  const handleClearPaymentRender = useCallback(() => {
+    setPaymentRenderToken(null);
+    setPaymentRenderResult(null);
+    setIsPaymentRenderLoading(false);
+  }, []);
+
   // Handler for when a payment method is selected
   const handlePaymentMethodSelected = useCallback(
     (event: PaymentMethodSelectedEvent) => {
@@ -413,6 +529,54 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           enrollmentStatus={enrollmentStatus}
         />
 
+        {/* Payment Render Token Display */}
+        {paymentRenderToken && (
+          <View style={styles.paymentRenderCard}>
+            <Text style={styles.paymentRenderTitle}>🎫 Payment Render Token</Text>
+            <Text style={styles.paymentRenderToken} selectable numberOfLines={3}>
+              {paymentRenderToken}
+            </Text>
+            <Text style={styles.paymentRenderHint}>
+              Send this token to your backend to create the payment
+            </Text>
+            <TouchableOpacity
+              style={styles.continueRenderButton}
+              onPress={handleContinuePaymentRender}
+              disabled={isPaymentRenderLoading}
+              activeOpacity={0.7}>
+              {isPaymentRenderLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.continueRenderButtonText}>Continue Payment</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.clearRenderButton}
+              onPress={handleClearPaymentRender}
+              activeOpacity={0.7}>
+              <Text style={styles.clearRenderButtonText}>Clear</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Payment Render Result Display */}
+        {paymentRenderResult && !paymentRenderToken && (
+          <View style={[
+            styles.paymentRenderResultCard,
+            paymentRenderResult.toLowerCase() === 'succeeded' && styles.resultSuccess,
+            (paymentRenderResult.toLowerCase() === 'fail' || paymentRenderResult.toLowerCase() === 'failed') && styles.resultError,
+          ]}>
+            <Text style={styles.paymentRenderResultTitle}>Payment Render Result</Text>
+            <Text style={styles.paymentRenderResultValue}>{paymentRenderResult}</Text>
+            <TouchableOpacity
+              style={styles.clearRenderButton}
+              onPress={handleClearPaymentRender}
+              activeOpacity={0.7}>
+              <Text style={styles.clearRenderButtonText}>Clear</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <ConfigForm
           customerSession={customerSession}
           checkoutSession={checkoutSession}
@@ -428,7 +592,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           onStartPayment={handleStartPayment}
           onStartPaymentLite={handleStartPaymentLite}
           onSeamlessPayment={handleSeamlessPayment}
-          loading={isLoading}
+          onPaymentRender={handlePaymentRender}
+          loading={isLoading || isPaymentRenderLoading}
         />
 
         <EnrollmentActions
@@ -539,6 +704,88 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,                // neutralB (black in light, white in dark)
+  },
+  // Payment Render styles
+  paymentRenderCard: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.success,
+  },
+  paymentRenderTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.success,
+    marginBottom: spacing.sm,
+  },
+  paymentRenderToken: {
+    fontFamily: 'monospace',
+    fontSize: 11,
+    color: colors.textPrimary,
+    backgroundColor: colors.surface,
+    padding: spacing.sm,
+    borderRadius: 8,
+    marginBottom: spacing.sm,
+  },
+  paymentRenderHint: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
+  },
+  continueRenderButton: {
+    backgroundColor: colors.success,
+    paddingVertical: spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  continueRenderButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  clearRenderButton: {
+    backgroundColor: colors.surface,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  clearRenderButtonText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  paymentRenderResultCard: {
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  resultSuccess: {
+    backgroundColor: '#E8F5E9',
+    borderColor: colors.success,
+  },
+  resultError: {
+    backgroundColor: '#FFEBEE',
+    borderColor: colors.error,
+  },
+  paymentRenderResultTitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  paymentRenderResultValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
   },
 });
 

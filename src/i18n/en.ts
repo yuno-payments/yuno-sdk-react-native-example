@@ -40,6 +40,7 @@ export const en = {
     startPayment: 'Start Payment (Full Flow)',
     startPaymentLite: 'Start Payment Lite',
     seamlessPayment: 'Seamless Payment',
+    paymentRender: 'Payment Render',
     requiredFields: 'Required Fields',
     pleaseEnter: 'Please enter',
   },

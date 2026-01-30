@@ -157,6 +157,29 @@ declare module '@yuno-payments/yuno-sdk-react-native' {
     error?: string;
   }
 
+  // Payment Render Types
+  export interface PaymentRenderArguments {
+    checkoutSession: string;
+    countryCode: string;
+    paymentMethodType: string;
+    vaultedToken?: string | null;
+  }
+
+  export interface PaymentRenderResponse {
+    success: boolean;
+    ott?: string;
+    status?: string;
+    error?: string;
+  }
+
+  export interface PaymentRenderResult {
+    result: string;
+  }
+
+  export interface PaymentRenderTokenEvent {
+    token: string;
+  }
+
   export interface YunoConfig {
     language?: string;
     cardFlow?: CardFlow;
@@ -245,6 +268,20 @@ declare module '@yuno-payments/yuno-sdk-react-native' {
       customerSession: string,
       countryCode?: string,
     ): Promise<HeadlessEnrollmentResponse>;
+
+    // Payment Render methods
+    static startPaymentRenderFlow(
+      params: PaymentRenderArguments
+    ): Promise<PaymentRenderResponse>;
+    static showPaymentForm(): Promise<PaymentRenderResponse>;
+    static submitPaymentForm(): Promise<PaymentRenderResponse>;
+    static continuePaymentRender(): Promise<PaymentRenderResponse>;
+    static onPaymentRenderResult(
+      listener: (result: string) => void
+    ): { remove: () => void };
+    static onPaymentRenderToken(
+      listener: (token: string) => void
+    ): { remove: () => void };
   }
 
   export const YunoPaymentMethods: React.FC<{
