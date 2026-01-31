@@ -1,12 +1,10 @@
 /**
- * Enrollment actions component
+ * Modern enrollment actions component
  */
 
 import React from 'react';
-import {StyleSheet} from 'react-native';
 import {Card} from './Card';
 import {Button} from './Button';
-import {spacing} from '../theme';
 import {useTranslation} from '../i18n';
 
 interface EnrollmentActionsProps {
@@ -21,22 +19,15 @@ export const EnrollmentActions: React.FC<EnrollmentActionsProps> = ({
   const t = useTranslation();
 
   return (
-    <Card title={`🔐 ${t.enrollment.title}`}>
+    <Card title="Save Payment Method" icon="🔐" subtitle="Enroll cards for faster checkout">
       <Button
         testID="button-enrollment"
-        title={t.enrollment.startEnrollment}
+        title="Start Enrollment"
+        icon="➕"
         onPress={onEnrollment}
-        variant="primary"
+        variant="success"
         disabled={loading}
-        style={styles.button}
       />
     </Card>
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    marginBottom: spacing.sm,
-  },
-});
-
