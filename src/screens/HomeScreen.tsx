@@ -16,6 +16,7 @@ import {
 } from '../components';
 import {spacing, typography} from '../theme';
 import {useTranslation} from '../i18n';
+import {yunoApiService} from '../services/YunoApiService';
 import type {
   PaymentConfig,
   PaymentLiteConfig,
@@ -53,9 +54,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [paymentRenderToken, setPaymentRenderToken] = useState<string | null>(null);
   const [paymentRenderResult, setPaymentRenderResult] = useState<string | null>(null);
   
-  // Checkout view state
-  const [showCheckoutView, setShowCheckoutView] = useState(false);
-  const [selectedMethodInCheckout, setSelectedMethodInCheckout] = useState<string | null>(null);
+
+  // Session generation state
+  const [isGeneratingCustomerSession, setIsGeneratingCustomerSession] = useState(false);
+  const [isGeneratingCheckoutSession, setIsGeneratingCheckoutSession] = useState(false);
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [apiKeysConfigured, setApiKeysConfigured] = useState(false);
 
   // Process initial configuration from native JSON
   useEffect(() => {
@@ -73,6 +77,36 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         if (config.options && typeof config.options.showPaymentStatus === 'boolean') {
           console.log('✅ Setting showPaymentStatus from JSON:', config.options.showPaymentStatus);
           setShowPaymentStatus(config.options.showPaymentStatus);
+        }
+
+        // Configure API service with merchant keys from JSON
+        console.log('🔍 Looking for merchant keys in config:', JSON.stringify(config.merchantKeys, null, 2));
+        console.log('🔍 AccountId in config:', config.accountId);
+        
+        if (config.merchantKeys) {
+          const publicKey = config.merchantKeys.publicKey;
+          // Support both privateKey and secretKey
+          const privateKey = config.merchantKeys.privateKey || config.merchantKeys.secretKey;
+          // Support accountId, accountCode, or top-level accountId
+          const accountId = config.merchantKeys.accountId || config.merchantKeys.accountCode || config.accountId || config.accountCode;
+          
+          console.log('🔑 Found keys:');
+          console.log('  - publicKey exists:', !!publicKey);
+          console.log('  - privateKey/secretKey exists:', !!privateKey);
+          console.log('  - accountId/accountCode:', accountId);
+          
+          if (publicKey && privateKey && accountId) {
+            console.log('🔑 Configuring API service with merchant keys from JSON');
+            yunoApiService.setKeys(publicKey, privateKey, accountId);
+            setApiKeysConfigured(true);
+          } else {
+            console.warn('⚠️ Missing keys in merchantKeys');
+            console.warn('  - publicKey:', !!publicKey);
+            console.warn('  - privateKey/secretKey:', !!privateKey);
+            console.warn('  - accountId/accountCode:', !!accountId);
+          }
+        } else {
+          console.warn('⚠️ No merchantKeys found in config JSON');
         }
 
         // Log to confirm we have the data
@@ -336,34 +370,25 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   }, [checkoutSession, countryCode, showPaymentStatus, continuePayment]);
 
   // Handler for Payment Render - Opens checkout view
-  const handlePaymentRender = useCallback(() => {
-    console.log('🔵 handlePaymentRender called - Opening checkout view');
+  const handlePaymentRender = useCallback(async () => {
+    console.log('🔵 handlePaymentRender called - Starting render flow with modal');
     
-    // Only requires checkoutSession
-    if (!checkoutSession.trim()) {
+    // Requires checkoutSession and paymentMethodType
+    const missingFields: string[] = [];
+    if (!checkoutSession.trim()) missingFields.push(t.config.checkoutSession);
+    if (!paymentMethodType.trim()) missingFields.push(t.config.paymentMethodType);
+    
+    if (missingFields.length > 0) {
       Alert.alert(
         t.payment.requiredFields,
-        `${t.payment.pleaseEnter}: ${t.config.checkoutSession}`,
+        `${t.payment.pleaseEnter}: ${missingFields.join(', ')}`,
       );
       return;
     }
 
-    // Reset state and show checkout view
+    // Reset state
     setPaymentRenderToken(null);
     setPaymentRenderResult(null);
-    setSelectedMethodInCheckout(null);
-    setShowCheckoutView(true);
-  }, [checkoutSession, t]);
-
-  // Handler to pay in checkout view (uses configured paymentMethodType)
-  const handleCheckoutPay = useCallback(async () => {
-    console.log('🔵 Pay button pressed in checkout');
-    
-    if (!paymentMethodType.trim()) {
-      Alert.alert('Error', 'Please configure a payment method type first');
-      return;
-    }
-    
     setIsPaymentRenderLoading(true);
 
     try {
@@ -395,16 +420,97 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       Alert.alert('Error', error.message || 'Failed to start payment render flow');
       setIsPaymentRenderLoading(false);
     }
-  }, [checkoutSession, countryCode, paymentMethodType, vaultedToken]);
+  }, [checkoutSession, countryCode, paymentMethodType, vaultedToken, t]);
 
-  // Handler to go back from checkout view
-  const handleBackFromCheckout = useCallback(() => {
-    console.log('🔙 Going back from checkout view');
-    setShowCheckoutView(false);
-    setSelectedMethodInCheckout(null);
-    setPaymentRenderToken(null);
-    setPaymentRenderResult(null);
-  }, []);
+  // Helper to ensure customer exists
+  const ensureCustomerExists = useCallback(async (): Promise<string> => {
+    if (customerId) {
+      return customerId;
+    }
+    
+    console.log('🔵 Creating new customer...');
+    const customer = await yunoApiService.createCustomer({
+      country: countryCode || 'CO',
+      document: {
+        documentType: 'CC',
+        documentNumber: '123456789',
+      },
+    });
+    
+    console.log('✅ Customer created:', customer.id);
+    setCustomerId(customer.id);
+    return customer.id;
+  }, [customerId, countryCode]);
+
+  // Generate checkout session (creates customer if needed)
+  const handleGenerateCheckoutSession = useCallback(async () => {
+    if (!yunoApiService.isConfigured()) {
+      Alert.alert(
+        'API Keys Required',
+        'To generate sessions, the JSON config must include:\n\n' +
+        '• merchantKeys.publicKey\n' +
+        '• merchantKeys.privateKey\n' +
+        '• merchantKeys.accountId (or accountId)'
+      );
+      return;
+    }
+
+    console.log('🔵 Generating checkout session...');
+    console.log('🔑 Current API keys:', yunoApiService.getKeys());
+    setIsGeneratingCheckoutSession(true);
+
+    try {
+      const custId = await ensureCustomerExists();
+      
+      const result = await yunoApiService.createCheckoutSession({
+        customerId: custId,
+        country: countryCode || 'CO',
+      });
+      
+      console.log('✅ Checkout session generated:', result);
+      setCheckoutSession(result.checkout_session);
+    } catch (error: any) {
+      console.error('❌ Error generating checkout session:', error);
+      Alert.alert('Error', error.message || 'Failed to generate checkout session');
+    } finally {
+      setIsGeneratingCheckoutSession(false);
+    }
+  }, [ensureCustomerExists, countryCode]);
+
+  // Generate customer session (creates customer if needed)
+  const handleGenerateCustomerSession = useCallback(async () => {
+    if (!yunoApiService.isConfigured()) {
+      Alert.alert(
+        'API Keys Required',
+        'To generate sessions, the JSON config must include:\n\n' +
+        '• merchantKeys.publicKey\n' +
+        '• merchantKeys.privateKey\n' +
+        '• merchantKeys.accountId (or accountId)'
+      );
+      return;
+    }
+
+    console.log('🔵 Generating customer session...');
+    setIsGeneratingCustomerSession(true);
+
+    try {
+      const custId = await ensureCustomerExists();
+      
+      const result = await yunoApiService.createCustomerSession({
+        customerId: custId,
+        country: countryCode || 'CO',
+      });
+      
+      console.log('✅ Customer session generated:', result);
+      setCustomerSession(result.customer_session);
+    } catch (error: any) {
+      console.error('❌ Error generating customer session:', error);
+      Alert.alert('Error', error.message || 'Failed to generate customer session');
+    } finally {
+      setIsGeneratingCustomerSession(false);
+    }
+  }, [ensureCustomerExists, countryCode]);
+
 
   // Handler to continue Payment Render after token received
   const handleContinuePaymentRender = useCallback(async () => {
@@ -471,103 +577,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   }, [checkoutSession, countryCode, showPaymentStatus, startPayment]);
 
   // If checkout view is being shown (Payment Render with embedded payment methods)
-  if (showCheckoutView) {
-    return (
-      <SafeAreaView style={styles.container}>
-        {/* Checkout Header */}
-        <View style={styles.checkoutHeader}>
-          <TouchableOpacity onPress={handleBackFromCheckout} style={styles.backArrowButton}>
-            <Text style={styles.backArrowText}>{'←'}</Text>
-          </TouchableOpacity>
-          <Text style={styles.checkoutHeaderTitle}>Checkout</Text>
-          <View style={styles.backArrowButton} />
-        </View>
-
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.checkoutContent}
-          showsVerticalScrollIndicator={false}>
-          
-          {/* Order Summary Card */}
-          <View style={styles.orderSummaryCard}>
-            <Text style={styles.orderSummaryTitle}>Order Summary</Text>
-            <View style={styles.orderRow}>
-              <Text style={styles.orderLabel}>Product</Text>
-              <Text style={styles.orderValue}>$99.00</Text>
-            </View>
-            <View style={styles.orderRow}>
-              <Text style={styles.orderLabel}>Shipping</Text>
-              <Text style={styles.orderValue}>$5.00</Text>
-            </View>
-            <View style={styles.orderDivider} />
-            <View style={styles.orderRow}>
-              <Text style={styles.orderTotalLabel}>Total</Text>
-              <Text style={styles.orderTotalValue}>$104.00</Text>
-            </View>
-          </View>
-
-          {/* Payment Method Section */}
-          <Text style={styles.checkoutSectionTitle}>Payment Method</Text>
-          
-          {/* Payment Method Card */}
-          <View style={styles.paymentMethodCard}>
-            <View style={styles.paymentMethodInfo}>
-              <Text style={styles.paymentMethodIcon}>💳</Text>
-              <View style={styles.paymentMethodDetails}>
-                <Text style={styles.paymentMethodType}>{paymentMethodType || 'CARD'}</Text>
-                {vaultedToken.trim() ? (
-                  <Text style={styles.paymentMethodSubtext} numberOfLines={1}>
-                    Token: {vaultedToken.substring(0, 20)}...
-                  </Text>
-                ) : (
-                  <Text style={styles.paymentMethodSubtext}>New payment method</Text>
-                )}
-              </View>
-            </View>
-          </View>
-
-          {/* Pay Button */}
-          <TouchableOpacity
-            style={[
-              styles.checkoutPayButton,
-              isPaymentRenderLoading && styles.checkoutPayButtonDisabled,
-            ]}
-            onPress={handleCheckoutPay}
-            disabled={isPaymentRenderLoading}
-            activeOpacity={0.8}>
-            {isPaymentRenderLoading ? (
-              <View style={styles.checkoutPayButtonContent}>
-                <ActivityIndicator color="#FFFFFF" size="small" />
-                <Text style={styles.checkoutPayButtonText}>Processing...</Text>
-              </View>
-            ) : (
-              <Text style={styles.checkoutPayButtonText}>Pay $104.00</Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Payment Result Display */}
-          {paymentRenderResult && (
-            <View style={[
-              styles.checkoutResultCard,
-              paymentRenderResult.toLowerCase() === 'succeeded' && styles.resultSuccess,
-            ]}>
-              <Text style={styles.checkoutResultTitle}>Payment Result</Text>
-              <Text style={styles.checkoutResultText}>{paymentRenderResult}</Text>
-            </View>
-          )}
-
-          {/* Security Info */}
-          <View style={styles.securityInfoContainer}>
-            <Text style={styles.securityIcon}>🔒</Text>
-            <Text style={styles.securityText}>
-              Your payment is secure and encrypted
-            </Text>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
-
   // If payment methods are being shown, render the component
   if (showPaymentMethods) {
     return (
@@ -706,6 +715,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           onCheckoutSessionChange={setCheckoutSession}
           onPaymentMethodTypeChange={setPaymentMethodType}
           onVaultedTokenChange={setVaultedToken}
+          onGenerateCustomerSession={handleGenerateCustomerSession}
+          onGenerateCheckoutSession={handleGenerateCheckoutSession}
+          isGeneratingCustomerSession={isGeneratingCustomerSession}
+          isGeneratingCheckoutSession={isGeneratingCheckoutSession}
+          canGenerateSessions={apiKeysConfigured}
         />
 
         <PaymentActions
@@ -1027,6 +1041,35 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
   },
   paymentMethodSubtext: {
     fontSize: 14,
+    color: colors.textSecondary,
+  },
+  embeddedFormContainer: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: spacing.lg,
+    minHeight: 350,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  embeddedForm: {
+    flex: 1,
+    minHeight: 350,
+  },
+  formLoadingContainer: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 200,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  formLoadingText: {
+    marginTop: spacing.md,
+    fontSize: 15,
     color: colors.textSecondary,
   },
   checkoutPayButton: {
