@@ -292,4 +292,29 @@ declare module '@yuno-payments/yuno-sdk-react-native' {
     style?: any;
     testID?: string;
   }>;
+
+  // Payment Form Events
+  export interface PaymentFormReadyEvent {
+    ready: boolean;
+  }
+
+  export interface PaymentFormSubmitEvent {
+    submitted: boolean;
+  }
+
+  export interface PaymentFormErrorEvent {
+    message: string;
+  }
+
+  // Embedded Payment Form Component
+  export const YunoPaymentForm: React.FC<{
+    checkoutSession: string;
+    countryCode: string;
+    paymentMethodType: string;
+    vaultedToken?: string | null;
+    onReady?: (event: PaymentFormReadyEvent) => void;
+    onSubmit?: (event: PaymentFormSubmitEvent) => void;
+    onError?: (event: PaymentFormErrorEvent) => void;
+    style?: any;
+  }>;
 }

@@ -52,6 +52,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [isPaymentRenderLoading, setIsPaymentRenderLoading] = useState(false);
   const [paymentRenderToken, setPaymentRenderToken] = useState<string | null>(null);
   const [paymentRenderResult, setPaymentRenderResult] = useState<string | null>(null);
+  
+  // Checkout view state
+  const [showCheckoutView, setShowCheckoutView] = useState(false);
+  const [selectedMethodInCheckout, setSelectedMethodInCheckout] = useState<string | null>(null);
 
   // Process initial configuration from native JSON
   useEffect(() => {
@@ -331,30 +335,38 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     continuePayment(checkoutSession, countryCode, showPaymentStatus);
   }, [checkoutSession, countryCode, showPaymentStatus, continuePayment]);
 
-  // Handler for Payment Render
-  const handlePaymentRender = useCallback(async () => {
-    console.log('🔵 handlePaymentRender called');
-    console.log('📋 checkoutSession:', checkoutSession || '(empty)');
-    console.log('📋 paymentMethodType:', paymentMethodType || '(empty)');
+  // Handler for Payment Render - Opens checkout view
+  const handlePaymentRender = useCallback(() => {
+    console.log('🔵 handlePaymentRender called - Opening checkout view');
     
-    // Payment Render requires checkoutSession + paymentMethodType
-    const missingFields: string[] = [];
-    if (!checkoutSession.trim()) missingFields.push(t.config.checkoutSession);
-    if (!paymentMethodType.trim()) missingFields.push(t.config.paymentMethodType);
-    
-    if (missingFields.length > 0) {
+    // Only requires checkoutSession
+    if (!checkoutSession.trim()) {
       Alert.alert(
         t.payment.requiredFields,
-        `${t.payment.pleaseEnter}: ${missingFields.join(', ')}`,
+        `${t.payment.pleaseEnter}: ${t.config.checkoutSession}`,
       );
       return;
     }
 
-    try {
-      setIsPaymentRenderLoading(true);
-      setPaymentRenderToken(null);
-      setPaymentRenderResult(null);
+    // Reset state and show checkout view
+    setPaymentRenderToken(null);
+    setPaymentRenderResult(null);
+    setSelectedMethodInCheckout(null);
+    setShowCheckoutView(true);
+  }, [checkoutSession, t]);
 
+  // Handler to pay in checkout view (uses configured paymentMethodType)
+  const handleCheckoutPay = useCallback(async () => {
+    console.log('🔵 Pay button pressed in checkout');
+    
+    if (!paymentMethodType.trim()) {
+      Alert.alert('Error', 'Please configure a payment method type first');
+      return;
+    }
+    
+    setIsPaymentRenderLoading(true);
+
+    try {
       const params: PaymentRenderArguments = {
         checkoutSession,
         countryCode,
@@ -369,11 +381,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       console.log('✅ startPaymentRenderFlow response:', response);
 
       if (response.success) {
-        console.log('✅ Payment render flow started, showing form...');
-
-        // Step 2: Show the payment form
-        const formResponse = await YunoSdk.showPaymentForm();
-        console.log('✅ showPaymentForm response:', formResponse);
+        console.log('✅ Payment render flow started, showing payment form modal');
+        
+        // Step 2: Show the payment form as modal
+        const formResult = await YunoSdk.showPaymentForm();
+        console.log('✅ showPaymentForm response:', formResult);
+        setIsPaymentRenderLoading(false);
       } else {
         throw new Error('Failed to start payment render flow');
       }
@@ -382,7 +395,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       Alert.alert('Error', error.message || 'Failed to start payment render flow');
       setIsPaymentRenderLoading(false);
     }
-  }, [checkoutSession, countryCode, paymentMethodType, vaultedToken, t]);
+  }, [checkoutSession, countryCode, paymentMethodType, vaultedToken]);
+
+  // Handler to go back from checkout view
+  const handleBackFromCheckout = useCallback(() => {
+    console.log('🔙 Going back from checkout view');
+    setShowCheckoutView(false);
+    setSelectedMethodInCheckout(null);
+    setPaymentRenderToken(null);
+    setPaymentRenderResult(null);
+  }, []);
 
   // Handler to continue Payment Render after token received
   const handleContinuePaymentRender = useCallback(async () => {
@@ -447,6 +469,104 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     console.log('✅ Calling startPayment with config:', config);
     startPayment(config);
   }, [checkoutSession, countryCode, showPaymentStatus, startPayment]);
+
+  // If checkout view is being shown (Payment Render with embedded payment methods)
+  if (showCheckoutView) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {/* Checkout Header */}
+        <View style={styles.checkoutHeader}>
+          <TouchableOpacity onPress={handleBackFromCheckout} style={styles.backArrowButton}>
+            <Text style={styles.backArrowText}>{'←'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.checkoutHeaderTitle}>Checkout</Text>
+          <View style={styles.backArrowButton} />
+        </View>
+
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.checkoutContent}
+          showsVerticalScrollIndicator={false}>
+          
+          {/* Order Summary Card */}
+          <View style={styles.orderSummaryCard}>
+            <Text style={styles.orderSummaryTitle}>Order Summary</Text>
+            <View style={styles.orderRow}>
+              <Text style={styles.orderLabel}>Product</Text>
+              <Text style={styles.orderValue}>$99.00</Text>
+            </View>
+            <View style={styles.orderRow}>
+              <Text style={styles.orderLabel}>Shipping</Text>
+              <Text style={styles.orderValue}>$5.00</Text>
+            </View>
+            <View style={styles.orderDivider} />
+            <View style={styles.orderRow}>
+              <Text style={styles.orderTotalLabel}>Total</Text>
+              <Text style={styles.orderTotalValue}>$104.00</Text>
+            </View>
+          </View>
+
+          {/* Payment Method Section */}
+          <Text style={styles.checkoutSectionTitle}>Payment Method</Text>
+          
+          {/* Payment Method Card */}
+          <View style={styles.paymentMethodCard}>
+            <View style={styles.paymentMethodInfo}>
+              <Text style={styles.paymentMethodIcon}>💳</Text>
+              <View style={styles.paymentMethodDetails}>
+                <Text style={styles.paymentMethodType}>{paymentMethodType || 'CARD'}</Text>
+                {vaultedToken.trim() ? (
+                  <Text style={styles.paymentMethodSubtext} numberOfLines={1}>
+                    Token: {vaultedToken.substring(0, 20)}...
+                  </Text>
+                ) : (
+                  <Text style={styles.paymentMethodSubtext}>New payment method</Text>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Pay Button */}
+          <TouchableOpacity
+            style={[
+              styles.checkoutPayButton,
+              isPaymentRenderLoading && styles.checkoutPayButtonDisabled,
+            ]}
+            onPress={handleCheckoutPay}
+            disabled={isPaymentRenderLoading}
+            activeOpacity={0.8}>
+            {isPaymentRenderLoading ? (
+              <View style={styles.checkoutPayButtonContent}>
+                <ActivityIndicator color="#FFFFFF" size="small" />
+                <Text style={styles.checkoutPayButtonText}>Processing...</Text>
+              </View>
+            ) : (
+              <Text style={styles.checkoutPayButtonText}>Pay $104.00</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Payment Result Display */}
+          {paymentRenderResult && (
+            <View style={[
+              styles.checkoutResultCard,
+              paymentRenderResult.toLowerCase() === 'succeeded' && styles.resultSuccess,
+            ]}>
+              <Text style={styles.checkoutResultTitle}>Payment Result</Text>
+              <Text style={styles.checkoutResultText}>{paymentRenderResult}</Text>
+            </View>
+          )}
+
+          {/* Security Info */}
+          <View style={styles.securityInfoContainer}>
+            <Text style={styles.securityIcon}>🔒</Text>
+            <Text style={styles.securityText}>
+              Your payment is secure and encrypted
+            </Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   // If payment methods are being shown, render the component
   if (showPaymentMethods) {
@@ -786,6 +906,190 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
     fontWeight: '700',
     color: colors.textPrimary,
     marginBottom: spacing.md,
+  },
+  
+  // Checkout View Styles
+  checkoutHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.headerBackground,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  backArrowButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backArrowText: {
+    fontSize: 24,
+    color: colors.primary1,
+    fontWeight: '600',
+  },
+  checkoutHeaderTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.headerText,
+  },
+  checkoutContent: {
+    padding: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  orderSummaryCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    shadowColor: colors.elevation,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  orderSummaryTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
+  orderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  orderLabel: {
+    fontSize: 15,
+    color: colors.textSecondary,
+  },
+  orderValue: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  orderDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.md,
+  },
+  orderTotalLabel: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  orderTotalValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.primary1,
+  },
+  checkoutSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.md,
+    marginLeft: spacing.xs,
+  },
+  paymentMethodCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    shadowColor: colors.elevation,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  paymentMethodInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  paymentMethodIcon: {
+    fontSize: 32,
+    marginRight: spacing.md,
+  },
+  paymentMethodDetails: {
+    flex: 1,
+  },
+  paymentMethodType: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  paymentMethodSubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  checkoutPayButton: {
+    backgroundColor: colors.primary1,
+    borderRadius: 14,
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+    shadowColor: colors.primary1,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  checkoutPayButtonDisabled: {
+    backgroundColor: colors.textSecondary,
+    shadowOpacity: 0.1,
+  },
+  checkoutPayButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  checkoutPayButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  checkoutResultCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: spacing.lg,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  checkoutResultTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+  checkoutResultText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  securityInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  securityIcon: {
+    fontSize: 16,
+    marginRight: spacing.sm,
+  },
+  securityText: {
+    fontSize: 13,
+    color: colors.textSecondary,
   },
 });
 
