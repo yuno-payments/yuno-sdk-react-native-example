@@ -3,9 +3,11 @@
  */
 
 import React, {useState, useCallback, useEffect, useRef} from 'react';
-import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler, ActivityIndicator} from 'react-native';
-import {YunoPaymentMethods, YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
+import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler, ActivityIndicator, Dimensions} from 'react-native';
+import {YunoPaymentMethods, YunoSdk, YunoPaymentForm} from '@yuno-payments/yuno-sdk-react-native';
 import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent, PaymentRenderArguments} from '@yuno-payments/yuno-sdk-react-native';
+
+const {height: SCREEN_HEIGHT} = Dimensions.get('window');
 import {useYunoSDK, useTheme} from '../hooks';
 import {
   ConfigForm,
@@ -54,6 +56,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [paymentRenderToken, setPaymentRenderToken] = useState<string | null>(null);
   const [paymentRenderResult, setPaymentRenderResult] = useState<string | null>(null);
   
+  // Embedded Checkout state
+  const [showEmbeddedCheckout, setShowEmbeddedCheckout] = useState(false);
+  const [isRenderFlowReady, setIsRenderFlowReady] = useState(false);
+  
+  // Order details for checkout display
+  const [orderAmount, setOrderAmount] = useState(19);
+  const [orderCurrency, setOrderCurrency] = useState('COP');
 
   // Session generation state
   const [isGeneratingCustomerSession, setIsGeneratingCustomerSession] = useState(false);
@@ -77,6 +86,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         if (config.options && typeof config.options.showPaymentStatus === 'boolean') {
           console.log('✅ Setting showPaymentStatus from JSON:', config.options.showPaymentStatus);
           setShowPaymentStatus(config.options.showPaymentStatus);
+        }
+        
+        // Extract amount and currency from JSON
+        if (config.amount) {
+          setOrderAmount(config.amount);
+        }
+        if (config.currency) {
+          setOrderCurrency(config.currency);
         }
 
         // Configure API service with merchant keys from JSON
@@ -207,6 +224,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       setPaymentRenderToken(token);
       setIsPaymentRenderLoading(false);
       
+      // Close embedded checkout
+      setShowEmbeddedCheckout(false);
+      setIsRenderFlowReady(false);
+      
       setTimeout(() => {
         scrollViewRef.current?.scrollTo({y: 0, animated: true});
       }, 100);
@@ -217,6 +238,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       setPaymentRenderResult(result);
       setIsPaymentRenderLoading(false);
       setPaymentRenderToken(null);
+      
+      // Close embedded checkout
+      setShowEmbeddedCheckout(false);
+      setIsRenderFlowReady(false);
 
       if (result === 'SUCCEEDED' || result === 'succeeded') {
         Alert.alert('Success', 'Payment completed successfully!');
@@ -369,9 +394,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     continuePayment(checkoutSession, countryCode, showPaymentStatus);
   }, [checkoutSession, countryCode, showPaymentStatus, continuePayment]);
 
-  // Handler for Payment Render - Opens checkout view
+  // Handler for Payment Render - Opens embedded checkout view
   const handlePaymentRender = useCallback(async () => {
-    console.log('🔵 handlePaymentRender called - Starting render flow with modal');
+    console.log('🔵 handlePaymentRender called - Starting render flow with embedded checkout');
     
     // Requires checkoutSession and paymentMethodType
     const missingFields: string[] = [];
@@ -406,11 +431,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       console.log('✅ startPaymentRenderFlow response:', response);
 
       if (response.success) {
-        console.log('✅ Payment render flow started, showing payment form modal');
-        
-        // Step 2: Show the payment form as modal
-        const formResult = await YunoSdk.showPaymentForm();
-        console.log('✅ showPaymentForm response:', formResult);
+        console.log('✅ Payment render flow started, showing embedded checkout');
+        setIsRenderFlowReady(true);
+        setShowEmbeddedCheckout(true);
         setIsPaymentRenderLoading(false);
       } else {
         throw new Error('Failed to start payment render flow');
@@ -421,6 +444,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       setIsPaymentRenderLoading(false);
     }
   }, [checkoutSession, countryCode, paymentMethodType, vaultedToken, t]);
+
+  // Handle form ready event
+  const handleFormReady = useCallback(() => {
+    console.log('✅ Payment form is ready');
+  }, []);
+
+  // Handle form submit event  
+  const handleFormSubmit = useCallback(() => {
+    console.log('📤 Payment form submitted');
+  }, []);
+
+  // Handle form error event
+  const handleFormError = useCallback((event: {message: string}) => {
+    console.error('❌ Payment form error:', event.message);
+    Alert.alert('Form Error', event.message);
+    setShowEmbeddedCheckout(false);
+    setIsRenderFlowReady(false);
+  }, []);
+
+  // Handle close embedded checkout
+  const handleCloseEmbeddedCheckout = useCallback(() => {
+    console.log('🔙 Closing embedded checkout');
+    setShowEmbeddedCheckout(false);
+    setIsRenderFlowReady(false);
+  }, []);
 
   // Helper to ensure customer exists
   const ensureCustomerExists = useCallback(async (): Promise<string> => {
@@ -624,6 +672,119 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           activeOpacity={0.7}>
           <Text style={styles.backButtonText}>{t.paymentMethods.backButton}</Text>
         </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  // Embedded Checkout view for Payment Render - Simulated E-commerce Checkout
+  if (showEmbeddedCheckout && isRenderFlowReady) {
+    return (
+      <SafeAreaView style={styles.checkoutContainer}>
+        {/* Checkout Header */}
+        <View style={styles.checkoutHeader}>
+          <TouchableOpacity
+            onPress={handleCloseEmbeddedCheckout}
+            style={styles.closeButton}
+            activeOpacity={0.7}>
+            <Text style={styles.closeButtonText}>←</Text>
+          </TouchableOpacity>
+          <View style={styles.checkoutHeaderCenter}>
+            <Text style={styles.checkoutTitle}>Checkout</Text>
+          </View>
+          <View style={styles.closeButton}>
+            <Text style={styles.stepIndicator}>2/2</Text>
+          </View>
+        </View>
+
+        <ScrollView 
+          style={styles.checkoutScrollView}
+          contentContainerStyle={styles.checkoutScrollContent}
+          showsVerticalScrollIndicator={false}>
+          
+          {/* Order Summary Card */}
+          <View style={styles.orderSummaryCard}>
+            <View style={styles.orderHeader}>
+              <Text style={styles.orderHeaderTitle}>Order Summary</Text>
+              <Text style={styles.orderHeaderSubtitle}>1 item</Text>
+            </View>
+            
+            {/* Product Item */}
+            <View style={styles.productItem}>
+              <View style={styles.productImage}>
+                <Text style={styles.productEmoji}>📦</Text>
+              </View>
+              <View style={styles.productDetails}>
+                <Text style={styles.productName}>Premium Subscription</Text>
+                <Text style={styles.productDescription}>Monthly plan - Auto-renewal</Text>
+              </View>
+              <Text style={styles.productPrice}>${orderAmount.toLocaleString()}</Text>
+            </View>
+            
+            {/* Divider */}
+            <View style={styles.divider} />
+            
+            {/* Price Breakdown */}
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Subtotal</Text>
+              <Text style={styles.priceValue}>${orderAmount.toLocaleString()}</Text>
+            </View>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Tax (0%)</Text>
+              <Text style={styles.priceValue}>$0</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.priceRow}>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalValue}>${orderAmount.toLocaleString()} {orderCurrency}</Text>
+            </View>
+          </View>
+
+          {/* Payment Method Section */}
+          <View style={styles.paymentSection}>
+            <View style={styles.paymentSectionHeader}>
+              <Text style={styles.paymentSectionTitle}>💳 Payment Method</Text>
+              <View style={styles.secureTag}>
+                <Text style={styles.secureTagText}>🔒 Secure</Text>
+              </View>
+            </View>
+            
+            {/* Embedded Payment Form */}
+            <View style={styles.paymentFormWrapper}>
+              <YunoPaymentForm
+                checkoutSession={checkoutSession}
+                countryCode={countryCode}
+                paymentMethodType={paymentMethodType}
+                vaultedToken={vaultedToken || null}
+                onReady={handleFormReady}
+                onSubmit={handleFormSubmit}
+                onError={handleFormError}
+                style={styles.embeddedForm}
+              />
+            </View>
+          </View>
+
+          {/* Trust Badges */}
+          <View style={styles.trustBadges}>
+            <View style={styles.trustBadge}>
+              <Text style={styles.trustIcon}>🔐</Text>
+              <Text style={styles.trustText}>256-bit SSL</Text>
+            </View>
+            <View style={styles.trustBadge}>
+              <Text style={styles.trustIcon}>✓</Text>
+              <Text style={styles.trustText}>PCI Compliant</Text>
+            </View>
+            <View style={styles.trustBadge}>
+              <Text style={styles.trustIcon}>🛡️</Text>
+              <Text style={styles.trustText}>Secure Payment</Text>
+            </View>
+          </View>
+
+          {/* Powered By */}
+          <View style={styles.poweredBy}>
+            <Text style={styles.poweredByText}>Powered by</Text>
+            <Text style={styles.poweredByLogo}>YUNO</Text>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -953,62 +1114,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
     padding: spacing.md,
     paddingBottom: spacing.xl,
   },
-  orderSummaryCard: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    shadowColor: colors.elevation,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  orderSummaryTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  orderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  orderLabel: {
-    fontSize: 15,
-    color: colors.textSecondary,
-  },
-  orderValue: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.text,
-  },
-  orderDivider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.md,
-  },
-  orderTotalLabel: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  orderTotalValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.primary1,
-  },
-  checkoutSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.md,
-    marginLeft: spacing.xs,
-  },
   paymentMethodCard: {
     backgroundColor: colors.card,
     borderRadius: 16,
@@ -1055,6 +1160,192 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
   embeddedForm: {
     flex: 1,
     minHeight: 350,
+  },
+  // Checkout Container Styles
+  checkoutContainer: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+  },
+  checkoutScrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  stepIndicator: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  // Order Summary Card
+  orderSummaryCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  orderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  orderHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  orderHeaderSubtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  productItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  productImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  productEmoji: {
+    fontSize: 28,
+  },
+  productDetails: {
+    flex: 1,
+  },
+  productName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  productDescription: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  productPrice: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.borderLight,
+    marginVertical: 14,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  priceLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  priceValue: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  totalValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.primary1,
+  },
+  // Payment Section
+  paymentSection: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  paymentSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  paymentSectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  secureTag: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  secureTagText: {
+    fontSize: 12,
+    color: '#2E7D32',
+    fontWeight: '600',
+  },
+  paymentFormWrapper: {
+    backgroundColor: '#FAFBFC',
+    borderRadius: 12,
+    overflow: 'hidden',
+    minHeight: 300,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  // Trust Badges
+  trustBadges: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 24,
+    paddingHorizontal: 8,
+  },
+  trustBadge: {
+    alignItems: 'center',
+  },
+  trustIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  trustText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  // Powered By
+  poweredBy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  poweredByText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginRight: 6,
+  },
+  poweredByLogo: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.primary1,
+    letterSpacing: 1,
   },
   formLoadingContainer: {
     backgroundColor: colors.card,
@@ -1133,6 +1424,107 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
   securityText: {
     fontSize: 13,
     color: colors.textSecondary,
+  },
+  
+  // Embedded Checkout Styles
+  closeButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  checkoutHeaderCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  checkoutTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  checkoutSubtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  formContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  formLoading: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+    zIndex: 10,
+  },
+  paymentForm: {
+    flex: 1,
+    minHeight: SCREEN_HEIGHT * 0.5,
+  },
+  hidden: {
+    opacity: 0,
+  },
+  checkoutFooter: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.card,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+  },
+  checkoutScrollView: {
+    flex: 1,
+  },
+  checkoutCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  checkoutCardTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  checkoutCardValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  checkoutCardValueSmall: {
+    fontSize: 12,
+    fontFamily: 'monospace',
+    color: colors.textSecondary,
+  },
+  securityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: colors.secondary2,
+    borderRadius: 8,
+  },
+  securityBadgeIcon: {
+    fontSize: 16,
+    marginRight: spacing.sm,
+  },
+  securityBadgeText: {
+    fontSize: 13,
+    color: colors.tertiary1,
+    fontWeight: '500',
   },
 });
 
