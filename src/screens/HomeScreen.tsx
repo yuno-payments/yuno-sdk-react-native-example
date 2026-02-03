@@ -215,22 +215,80 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   }, [ottToken, paymentStatus, enrollmentStatus]);
 
+  // Refs for payment data (needed for event listeners)
+  const checkoutSessionRef = useRef(checkoutSession);
+  const customerIdRef = useRef(customerId);
+  const orderAmountRef = useRef(orderAmount);
+  const orderCurrencyRef = useRef(orderCurrency);
+  const countryCodeRef = useRef(countryCode);
+
+  // Keep refs updated
+  useEffect(() => {
+    checkoutSessionRef.current = checkoutSession;
+    customerIdRef.current = customerId;
+    orderAmountRef.current = orderAmount;
+    orderCurrencyRef.current = orderCurrency;
+    countryCodeRef.current = countryCode;
+  }, [checkoutSession, customerId, orderAmount, orderCurrency, countryCode]);
+
+  // Handle payment creation and continuation
+  const handleCreatePaymentAndContinue = useCallback(async (token: string) => {
+    console.log('💳 Creating payment with OTT...');
+    
+    if (!checkoutSessionRef.current) {
+      console.error('❌ No checkout session available');
+      Alert.alert('Error', 'No checkout session available');
+      return;
+    }
+
+    if (!yunoApiService.isConfigured()) {
+      console.error('❌ API keys not configured');
+      Alert.alert('Error', 'API keys not configured');
+      return;
+    }
+
+    try {
+      setIsPaymentRenderLoading(true);
+
+      // Step 1: Create payment with the OTT
+      console.log('📤 Calling createPayment API...');
+      const paymentResponse = await yunoApiService.createPayment({
+        checkoutSession: checkoutSessionRef.current,
+        token: token,
+        customerId: customerIdRef.current || undefined,
+        country: countryCodeRef.current || 'CO',
+        currency: orderCurrencyRef.current || 'COP',
+        amount: orderAmountRef.current || 19,
+        description: 'Payment from React Native Example',
+        capture: true,
+      });
+
+      console.log('✅ Payment created:', paymentResponse.status);
+
+      // Step 2: Call continuePaymentRender to complete the flow
+      console.log('📤 Calling continuePaymentRender...');
+      await YunoSdk.continuePaymentRender();
+      console.log('✅ continuePaymentRender called successfully');
+
+    } catch (error: any) {
+      console.error('❌ Error in payment flow:', error);
+      Alert.alert('Payment Error', error.message || 'Failed to process payment');
+      setIsPaymentRenderLoading(false);
+      setShowEmbeddedCheckout(false);
+      setIsRenderFlowReady(false);
+    }
+  }, []);
+
   // Payment Render event listeners
   useEffect(() => {
     console.log('🔌 Setting up Payment Render event listeners...');
 
-    const tokenSubscription = YunoSdk.onPaymentRenderToken((token: string) => {
+    const tokenSubscription = YunoSdk.onPaymentRenderToken(async (token: string) => {
       console.log('🎫 Payment Render Token received:', token.substring(0, 30) + '...');
       setPaymentRenderToken(token);
-      setIsPaymentRenderLoading(false);
       
-      // Close embedded checkout
-      setShowEmbeddedCheckout(false);
-      setIsRenderFlowReady(false);
-      
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({y: 0, animated: true});
-      }, 100);
+      // Automatically create payment and continue
+      await handleCreatePaymentAndContinue(token);
     });
 
     const resultSubscription = YunoSdk.onPaymentRenderResult((result: string) => {
@@ -257,7 +315,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       tokenSubscription.remove();
       resultSubscription.remove();
     };
-  }, []);
+  }, [handleCreatePaymentAndContinue]);
 
   // Required fields validation
   const validateRequiredFields = useCallback(

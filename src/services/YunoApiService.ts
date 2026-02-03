@@ -57,6 +57,39 @@ export interface CustomerSessionResponse {
   customer_id: string;
 }
 
+export interface PaymentData {
+  accountId?: string;
+  country?: string;
+  currency?: string;
+  amount?: number;
+  checkoutSession: string;
+  merchantOrderId?: string;
+  token: string;
+  customerId?: string;
+  description?: string;
+  capture?: boolean;
+}
+
+export interface PaymentResponse {
+  id: string;
+  account_id: string;
+  status: string;
+  sub_status: string;
+  checkout: {
+    session: string;
+  };
+  merchant_order_id: string;
+  amount: {
+    currency: string;
+    value: number;
+  };
+  payment_method: {
+    type: string;
+    token: string;
+  };
+  created_at: string;
+}
+
 class YunoApiService {
   private publicApiKey: string = '';
   private privateSecretKey: string = '';
@@ -198,6 +231,62 @@ class YunoApiService {
     console.log('🔵 Creating customer session with payload:', payload);
     const response = await this.request<CustomerSessionResponse>('/customers/sessions', 'POST', payload);
     console.log('✅ Customer session created:', response);
+    return response;
+  }
+
+  /**
+   * Creates a payment using the one-time token (OTT) from the SDK
+   */
+  async createPayment(paymentData: PaymentData): Promise<PaymentResponse> {
+    const idempotencyKey = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+    const payload: Record<string, any> = {
+      account_id: paymentData.accountId || this.accountId,
+      country: paymentData.country || 'CO',
+      amount: {
+        currency: paymentData.currency || 'COP',
+        value: paymentData.amount || 10000,
+      },
+      checkout: {
+        session: paymentData.checkoutSession,
+      },
+      merchant_order_id: paymentData.merchantOrderId || `order_${Date.now()}`,
+      payment_method: {
+        token: paymentData.token,
+        detail: {
+          card: {
+            capture: paymentData.capture !== false, // Default to true (capture immediately)
+          },
+        },
+      },
+      description: paymentData.description || 'Payment from React Native',
+    };
+
+    // Add customer_payer if customerId is provided
+    if (paymentData.customerId) {
+      payload.customer_payer = {
+        id: paymentData.customerId,
+      };
+    }
+
+    console.log('🔵 Creating payment with payload:', JSON.stringify(payload, null, 2));
+    const response = await this.request<PaymentResponse>(
+      '/payments',
+      'POST',
+      payload,
+      {'X-Idempotency-Key': idempotencyKey}
+    );
+    console.log('✅ Payment created:', response);
+    return response;
+  }
+
+  /**
+   * Gets payment status by payment ID
+   */
+  async getPaymentStatus(paymentId: string): Promise<PaymentResponse> {
+    console.log('🔵 Getting payment status for:', paymentId);
+    const response = await this.request<PaymentResponse>(`/payments/${paymentId}`, 'GET');
+    console.log('✅ Payment status:', response);
     return response;
   }
 
