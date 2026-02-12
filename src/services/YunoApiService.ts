@@ -30,6 +30,7 @@ export interface CheckoutSessionData {
 }
 
 export interface CustomerSessionData {
+  accountId?: string;
   country?: string;
   customerId: string;
   callbackUrl?: string;
@@ -87,6 +88,13 @@ export interface PaymentResponse {
     type: string;
     token: string;
   };
+  created_at: string;
+}
+
+export interface EnrollmentResponse {
+  vaulted_token: string;
+  customer_id: string;
+  payment_method_type: string;
   created_at: string;
 }
 
@@ -223,6 +231,7 @@ class YunoApiService {
 
   async createCustomerSession(sessionData: CustomerSessionData): Promise<CustomerSessionResponse> {
     const payload = {
+      account_id: sessionData.accountId || this.accountId,
       country: sessionData.country || 'CO',
       customer_id: sessionData.customerId,
       callback_url: sessionData.callbackUrl || 'yunoexample://enrollment',
@@ -287,6 +296,38 @@ class YunoApiService {
     console.log('🔵 Getting payment status for:', paymentId);
     const response = await this.request<PaymentResponse>(`/payments/${paymentId}`, 'GET');
     console.log('✅ Payment status:', response);
+    return response;
+  }
+
+  /**
+   * Creates an enrollment (vaulted token) using the one-time token
+   */
+  async createEnrollment(enrollmentData: {
+    customerSession: string;
+    token: string;
+    country?: string;
+    customerId?: string;
+  }): Promise<EnrollmentResponse> {
+    console.log('🔵 Creating enrollment with token');
+
+    const payload: any = {
+      country: enrollmentData.country || 'CO',
+      customer_session: enrollmentData.customerSession,
+      payment_method: {
+        token: enrollmentData.token,
+      },
+    };
+
+    if (enrollmentData.customerId) {
+      payload.customer_id = enrollmentData.customerId;
+    }
+
+    const response = await this.request<EnrollmentResponse>(
+      '/vaulted-tokens',
+      'POST',
+      payload
+    );
+    console.log('✅ Enrollment created:', response);
     return response;
   }
 

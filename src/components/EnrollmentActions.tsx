@@ -9,11 +9,13 @@ import {useTranslation} from '../i18n';
 
 interface EnrollmentActionsProps {
   onEnrollment: () => void;
+  onStartEnrollmentRender?: () => void;
   loading?: boolean;
 }
 
 export const EnrollmentActions: React.FC<EnrollmentActionsProps> = ({
   onEnrollment,
+  onStartEnrollmentRender,
   loading = false,
 }) => {
   const t = useTranslation();
@@ -28,6 +30,16 @@ export const EnrollmentActions: React.FC<EnrollmentActionsProps> = ({
         variant="success"
         disabled={loading}
       />
+      {onStartEnrollmentRender && (
+        <Button
+          testID="button-enrollment-render"
+          title="Enrollment Render"
+          icon="💳"
+          onPress={onStartEnrollmentRender}
+          variant="primary"
+          disabled={loading}
+        />
+      )}
     </Card>
   );
 };

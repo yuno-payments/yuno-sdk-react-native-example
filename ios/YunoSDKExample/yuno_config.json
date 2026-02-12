@@ -1,0 +1,16 @@
+{
+    "country": "CO",
+    "language": "es",
+    "currency": "COP",
+    "amount": 19,
+    "merchantKeys": {
+        "publicKey": "<YOUR_PUBLIC_API_KEY>",
+        "secretKey": "<YOUR_SECRET_API_KEY>",
+        "accountCode": "<YOUR_ACCOUNT_CODE>"
+    },
+    "options": {
+        "showPaymentStatus": false,
+        "cardType": "STEP_BY_STEP",
+        "savedCardEnable": true
+    }
+}
