@@ -180,6 +180,28 @@ declare module '@yuno-payments/yuno-sdk-react-native' {
     token: string;
   }
 
+  export interface EnrollmentRenderArguments {
+    customerSession: string;
+    countryCode: string;
+    paymentMethodType: string;
+    vaultedToken?: string | null;
+  }
+
+  export interface EnrollmentRenderResponse {
+    success: boolean;
+    ott?: string;
+    status?: string;
+    error?: string;
+  }
+
+  export interface EnrollmentRenderResult {
+    result: string;
+  }
+
+  export interface EnrollmentRenderTokenEvent {
+    token: string;
+  }
+
   export interface YunoConfig {
     language?: string;
     cardFlow?: CardFlow;
@@ -282,6 +304,20 @@ declare module '@yuno-payments/yuno-sdk-react-native' {
     static onPaymentRenderToken(
       listener: (token: string) => void
     ): { remove: () => void };
+
+    // Enrollment Render methods
+    static startEnrollmentRenderFlow(
+      params: EnrollmentRenderArguments
+    ): Promise<EnrollmentRenderResponse>;
+    static showEnrollmentForm(): Promise<EnrollmentRenderResponse>;
+    static submitEnrollmentForm(): Promise<EnrollmentRenderResponse>;
+    static continueEnrollmentRender(): Promise<EnrollmentRenderResponse>;
+    static onEnrollmentRenderResult(
+      listener: (result: string) => void
+    ): { remove: () => void };
+    static onEnrollmentRenderToken(
+      listener: (token: string) => void
+    ): { remove: () => void };
   }
 
   export const YunoPaymentMethods: React.FC<{
@@ -315,6 +351,31 @@ declare module '@yuno-payments/yuno-sdk-react-native' {
     onReady?: (event: PaymentFormReadyEvent) => void;
     onSubmit?: (event: PaymentFormSubmitEvent) => void;
     onError?: (event: PaymentFormErrorEvent) => void;
+    style?: any;
+  }>;
+
+  // Enrollment Form Events
+  export interface EnrollmentFormReadyEvent {
+    ready: boolean;
+  }
+
+  export interface EnrollmentFormSubmitEvent {
+    submitted: boolean;
+  }
+
+  export interface EnrollmentFormErrorEvent {
+    message: string;
+  }
+
+  // Embedded Enrollment Form Component
+  export const YunoEnrollmentForm: React.FC<{
+    customerSession: string;
+    countryCode: string;
+    paymentMethodType: string;
+    vaultedToken?: string | null;
+    onReady?: (event: EnrollmentFormReadyEvent) => void;
+    onSubmit?: (event: EnrollmentFormSubmitEvent) => void;
+    onError?: (event: EnrollmentFormErrorEvent) => void;
     style?: any;
   }>;
 }

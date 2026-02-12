@@ -1,0 +1,16 @@
+{
+    "country": "CO",
+    "language": "es",
+    "currency": "COP",
+    "amount": 19,
+    "merchantKeys": {
+        "publicKey": "staging_gAAAAABmeZOe0bcyLz1RHiXsl17FhqodnL9Int_QRX9Q26rqTnESHfrOj1Oh3gc0IG8nQh538Tb3Jd3fndou7ZeSp4prL7KoerizUc8VQpqNxc6HH--gyj_iKZfopdZ6VyA9tc-WTMpyZuEu8HZ9pgel_euJaz4gUCQCMW4kdhoRmydubFovGsHcZtj83rhiX9xciZdXMFgBpOmEW5zZMdr8ktDsStWDLsCjQ8MxyiZvak2_Owqk9bp9UMba03o_ePh5IQiIcJqZ",
+        "secretKey": "gAAAAABmeZOel2Xaq5jpVOdnoNh2XNyXYVHdS8WVmMhRJeru7z-NNMcxDTq5_a5dFAr5h9uEZwz8NEXyLbS06c6kJqsfVSICaUVGq-aoYXhwcgfqITl1x7Op0tdrZ6YqDc-puRy6flllQ0EffxhQbB3EpgHc8gBzrFFD7WKSBdG4Pu54bxFZwkuU_Utvdol40bxD-5-It39eHq2IBvDwoOW7m9DEY3giQgcI6yaGBwNE_oJjuqdI244Fc_oOEWimw4In6dNgQEkh",
+        "accountCode": "5418d625-09f2-4560-b1d7-11c0de151f1d"
+    },
+    "options": {
+        "showPaymentStatus": false,
+        "cardType": "STEP_BY_STEP",
+        "savedCardEnable": true
+    }
+}

@@ -4,8 +4,8 @@
 
 import React, {useState, useCallback, useEffect, useRef} from 'react';
 import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler, ActivityIndicator, Dimensions} from 'react-native';
-import {YunoPaymentMethods, YunoSdk, YunoPaymentForm} from '@yuno-payments/yuno-sdk-react-native';
-import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent, PaymentRenderArguments} from '@yuno-payments/yuno-sdk-react-native';
+import {YunoPaymentMethods, YunoSdk, YunoPaymentForm, YunoEnrollmentForm} from '@yuno-payments/yuno-sdk-react-native';
+import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent, PaymentRenderArguments, EnrollmentRenderArguments} from '@yuno-payments/yuno-sdk-react-native';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window');
 import {useYunoSDK, useTheme} from '../hooks';
@@ -59,7 +59,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // Embedded Checkout state
   const [showEmbeddedCheckout, setShowEmbeddedCheckout] = useState(false);
   const [isRenderFlowReady, setIsRenderFlowReady] = useState(false);
-  
+
+  // Enrollment Render state
+  const [isEnrollmentRenderLoading, setIsEnrollmentRenderLoading] = useState(false);
+  const [enrollmentRenderToken, setEnrollmentRenderToken] = useState<string | null>(null);
+  const [enrollmentRenderResult, setEnrollmentRenderResult] = useState<string | null>(null);
+  const [showEmbeddedEnrollment, setShowEmbeddedEnrollment] = useState(false);
+  const [isEnrollmentRenderFlowReady, setIsEnrollmentRenderFlowReady] = useState(false);
+
   // Order details for checkout display
   const [orderAmount, setOrderAmount] = useState(19);
   const [orderCurrency, setOrderCurrency] = useState('COP');
@@ -217,6 +224,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   // Refs for payment data (needed for event listeners)
   const checkoutSessionRef = useRef(checkoutSession);
+  const customerSessionRef = useRef(customerSession);
   const customerIdRef = useRef(customerId);
   const orderAmountRef = useRef(orderAmount);
   const orderCurrencyRef = useRef(orderCurrency);
@@ -225,11 +233,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // Keep refs updated
   useEffect(() => {
     checkoutSessionRef.current = checkoutSession;
+    customerSessionRef.current = customerSession;
     customerIdRef.current = customerId;
     orderAmountRef.current = orderAmount;
     orderCurrencyRef.current = orderCurrency;
     countryCodeRef.current = countryCode;
-  }, [checkoutSession, customerId, orderAmount, orderCurrency, countryCode]);
+  }, [checkoutSession, customerSession, customerId, orderAmount, orderCurrency, countryCode]);
 
   // Handle payment creation and continuation
   const handleCreatePaymentAndContinue = useCallback(async (token: string) => {
@@ -279,6 +288,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   }, []);
 
+  // NOTE: For automatic enrollment flow, token handling is done by SDK internally
+  // No need for manual createEnrollment API call - SDK handles it automatically
+
   // Payment Render event listeners
   useEffect(() => {
     console.log('🔌 Setting up Payment Render event listeners...');
@@ -286,7 +298,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     const tokenSubscription = YunoSdk.onPaymentRenderToken(async (token: string) => {
       console.log('🎫 Payment Render Token received:', token.substring(0, 30) + '...');
       setPaymentRenderToken(token);
-      
+
       // Automatically create payment and continue
       await handleCreatePaymentAndContinue(token);
     });
@@ -296,7 +308,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       setPaymentRenderResult(result);
       setIsPaymentRenderLoading(false);
       setPaymentRenderToken(null);
-      
+
       // Close embedded checkout
       setShowEmbeddedCheckout(false);
       setIsRenderFlowReady(false);
@@ -316,6 +328,36 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       resultSubscription.remove();
     };
   }, [handleCreatePaymentAndContinue]);
+
+  // Enrollment Render event listeners (automatic flow - SDK handles token internally)
+  useEffect(() => {
+    console.log('🔌 Setting up Enrollment Render event listeners...');
+
+    // Note: No token subscription needed - SDK handles token automatically
+    const resultSubscription = YunoSdk.onEnrollmentRenderResult((result: string) => {
+      console.log('📊 Enrollment Render Result:', result);
+      setEnrollmentRenderResult(result);
+      setIsEnrollmentRenderLoading(false);
+      setEnrollmentRenderToken(null);
+
+      // Close embedded enrollment
+      setShowEmbeddedEnrollment(false);
+      setIsEnrollmentRenderFlowReady(false);
+
+      if (result === 'SUCCEEDED' || result === 'succeeded') {
+        Alert.alert('Success', 'Card saved successfully!');
+      } else if (result === 'FAILED' || result === 'fail') {
+        Alert.alert('Error', 'Failed to save card. Please try again.');
+      } else if (result === 'CANCELLED' || result === 'userCancelled') {
+        Alert.alert('Cancelled', 'Card enrollment was cancelled.');
+      }
+    });
+
+    return () => {
+      console.log('🔌 Cleaning up Enrollment Render event listeners...');
+      resultSubscription.remove();
+    };
+  }, []);
 
   // Required fields validation
   const validateRequiredFields = useCallback(
@@ -455,12 +497,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // Handler for Payment Render - Opens embedded checkout view
   const handlePaymentRender = useCallback(async () => {
     console.log('🔵 handlePaymentRender called - Starting render flow with embedded checkout');
-    
+
     // Requires checkoutSession and paymentMethodType
     const missingFields: string[] = [];
     if (!checkoutSession.trim()) missingFields.push(t.config.checkoutSession);
     if (!paymentMethodType.trim()) missingFields.push(t.config.paymentMethodType);
-    
+
     if (missingFields.length > 0) {
       Alert.alert(
         t.payment.requiredFields,
@@ -503,12 +545,63 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   }, [checkoutSession, countryCode, paymentMethodType, vaultedToken, t]);
 
+  // Handler for Enrollment Render - Opens embedded enrollment view
+  const handleStartEnrollmentRender = useCallback(async () => {
+    console.log('🔵 handleStartEnrollmentRender called - Starting enrollment render flow');
+
+    // Requires customerSession and paymentMethodType
+    const missingFields: string[] = [];
+    if (!customerSession.trim()) missingFields.push(t.config.customerSession);
+    if (!paymentMethodType.trim()) missingFields.push(t.config.paymentMethodType);
+
+    if (missingFields.length > 0) {
+      Alert.alert(
+        t.enrollment.requiredFields,
+        `${t.enrollment.pleaseEnter}: ${missingFields.join(', ')}`,
+      );
+      return;
+    }
+
+    // Reset state
+    setEnrollmentRenderToken(null);
+    setEnrollmentRenderResult(null);
+    setIsEnrollmentRenderLoading(true);
+
+    try {
+      const params: EnrollmentRenderArguments = {
+        customerSession,
+        countryCode,
+        paymentMethodType,
+        vaultedToken: vaultedToken.trim() || null,
+      };
+
+      console.log('✅ Starting Enrollment Render Flow with params:', params);
+
+      // Step 1: Start the enrollment render flow
+      const response = await YunoSdk.startEnrollmentRenderFlow(params);
+      console.log('✅ startEnrollmentRenderFlow response:', response);
+
+      if (response.success) {
+        console.log('✅ Enrollment render flow started, showing embedded enrollment');
+        setIsEnrollmentRenderFlowReady(true);
+        setShowEmbeddedEnrollment(true);
+        setIsEnrollmentRenderLoading(false);
+      } else {
+        throw new Error('Failed to start enrollment render flow');
+      }
+    } catch (error: any) {
+      console.error('❌ Enrollment Render error:', error);
+      Alert.alert('Error', error.message || 'Failed to start enrollment render flow');
+      setIsEnrollmentRenderLoading(false);
+    }
+  }, [customerSession, countryCode, paymentMethodType, vaultedToken, t]);
+
   // Handle form ready event
   const handleFormReady = useCallback(() => {
     console.log('✅ Payment form is ready');
   }, []);
 
-  // Handle form submit event  
+  // Handle form submit event
   const handleFormSubmit = useCallback(() => {
     console.log('📤 Payment form submitted');
   }, []);
@@ -526,6 +619,31 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     console.log('🔙 Closing embedded checkout');
     setShowEmbeddedCheckout(false);
     setIsRenderFlowReady(false);
+  }, []);
+
+  // Handle enrollment form ready event
+  const handleEnrollmentFormReady = useCallback(() => {
+    console.log('✅ Enrollment form is ready');
+  }, []);
+
+  // Handle enrollment form submit event
+  const handleEnrollmentFormSubmit = useCallback(() => {
+    console.log('📤 Enrollment form submitted');
+  }, []);
+
+  // Handle enrollment form error event
+  const handleEnrollmentFormError = useCallback((event: {message: string}) => {
+    console.error('❌ Enrollment form error:', event.message);
+    Alert.alert('Form Error', event.message);
+    setShowEmbeddedEnrollment(false);
+    setIsEnrollmentRenderFlowReady(false);
+  }, []);
+
+  // Handle close embedded enrollment
+  const handleCloseEmbeddedEnrollment = useCallback(() => {
+    console.log('🔙 Closing embedded enrollment');
+    setShowEmbeddedEnrollment(false);
+    setIsEnrollmentRenderFlowReady(false);
   }, []);
 
   // Helper to ensure customer exists
@@ -754,18 +872,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </View>
         </View>
 
-        <ScrollView 
+        <ScrollView
           style={styles.checkoutScrollView}
           contentContainerStyle={styles.checkoutScrollContent}
           showsVerticalScrollIndicator={false}>
-          
+
           {/* Order Summary Card */}
           <View style={styles.orderSummaryCard}>
             <View style={styles.orderHeader}>
               <Text style={styles.orderHeaderTitle}>Order Summary</Text>
               <Text style={styles.orderHeaderSubtitle}>1 item</Text>
             </View>
-            
+
             {/* Product Item */}
             <View style={styles.productItem}>
               <View style={styles.productImage}>
@@ -777,10 +895,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </View>
               <Text style={styles.productPrice}>${orderAmount.toLocaleString()}</Text>
             </View>
-            
+
             {/* Divider */}
             <View style={styles.divider} />
-            
+
             {/* Price Breakdown */}
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Subtotal</Text>
@@ -805,7 +923,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 <Text style={styles.secureTagText}>🔒 Secure</Text>
               </View>
             </View>
-            
+
             {/* Embedded Payment Form */}
             <View style={styles.paymentFormWrapper}>
               <YunoPaymentForm
@@ -834,6 +952,114 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <View style={styles.trustBadge}>
               <Text style={styles.trustIcon}>🛡️</Text>
               <Text style={styles.trustText}>Secure Payment</Text>
+            </View>
+          </View>
+
+          {/* Powered By */}
+          <View style={styles.poweredBy}>
+            <Text style={styles.poweredByText}>Powered by</Text>
+            <Text style={styles.poweredByLogo}>YUNO</Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // Embedded Enrollment view for Enrollment Render
+  if (showEmbeddedEnrollment && isEnrollmentRenderFlowReady) {
+    return (
+      <SafeAreaView style={styles.checkoutContainer}>
+        {/* Enrollment Header */}
+        <View style={styles.checkoutHeader}>
+          <TouchableOpacity
+            onPress={handleCloseEmbeddedEnrollment}
+            style={styles.closeButton}
+            activeOpacity={0.7}>
+            <Text style={styles.closeButtonText}>←</Text>
+          </TouchableOpacity>
+          <View style={styles.checkoutHeaderCenter}>
+            <Text style={styles.checkoutTitle}>Save Card</Text>
+          </View>
+          <View style={styles.closeButton}>
+            <Text style={styles.stepIndicator}>1/1</Text>
+          </View>
+        </View>
+
+        <ScrollView
+          style={styles.checkoutScrollView}
+          contentContainerStyle={styles.checkoutScrollContent}
+          showsVerticalScrollIndicator={false}>
+
+          {/* Enrollment Info Card */}
+          <View style={styles.orderSummaryCard}>
+            <View style={styles.orderHeader}>
+              <Text style={styles.orderHeaderTitle}>Save Payment Method</Text>
+              <Text style={styles.orderHeaderSubtitle}>For faster checkout</Text>
+            </View>
+
+            {/* Enrollment Description */}
+            <View style={styles.productItem}>
+              <View style={styles.productImage}>
+                <Text style={styles.productEmoji}>💳</Text>
+              </View>
+              <View style={styles.productDetails}>
+                <Text style={styles.productName}>Secure Card Storage</Text>
+                <Text style={styles.productDescription}>Save your card details for quick and easy future payments</Text>
+              </View>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.divider} />
+
+            {/* Benefits */}
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>✓ Faster checkout</Text>
+            </View>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>✓ Secure encryption</Text>
+            </View>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>✓ Easy management</Text>
+            </View>
+          </View>
+
+          {/* Enrollment Form Section */}
+          <View style={styles.paymentSection}>
+            <View style={styles.paymentSectionHeader}>
+              <Text style={styles.paymentSectionTitle}>💳 Card Details</Text>
+              <View style={styles.secureTag}>
+                <Text style={styles.secureTagText}>🔒 Secure</Text>
+              </View>
+            </View>
+
+            {/* Embedded Enrollment Form */}
+            <View style={styles.paymentFormWrapper}>
+              <YunoEnrollmentForm
+                customerSession={customerSession}
+                countryCode={countryCode}
+                paymentMethodType={paymentMethodType}
+                vaultedToken={vaultedToken || null}
+                onReady={handleEnrollmentFormReady}
+                onSubmit={handleEnrollmentFormSubmit}
+                onError={handleEnrollmentFormError}
+                style={styles.embeddedForm}
+              />
+            </View>
+          </View>
+
+          {/* Trust Badges */}
+          <View style={styles.trustBadges}>
+            <View style={styles.trustBadge}>
+              <Text style={styles.trustIcon}>🔐</Text>
+              <Text style={styles.trustText}>256-bit SSL</Text>
+            </View>
+            <View style={styles.trustBadge}>
+              <Text style={styles.trustIcon}>✓</Text>
+              <Text style={styles.trustText}>PCI Compliant</Text>
+            </View>
+            <View style={styles.trustBadge}>
+              <Text style={styles.trustIcon}>🛡️</Text>
+              <Text style={styles.trustText}>Secure Storage</Text>
             </View>
           </View>
 
@@ -951,7 +1177,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
         <EnrollmentActions
           onEnrollment={handleEnrollment}
-          loading={isLoading}
+          onStartEnrollmentRender={handleStartEnrollmentRender}
+          loading={isLoading || isEnrollmentRenderLoading}
         />
       </ScrollView>
     </SafeAreaView>
