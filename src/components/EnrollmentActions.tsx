@@ -1,11 +1,12 @@
 /**
- * Modern enrollment actions component
+ * Enrollment actions component
  */
 
 import React from 'react';
+import {View, StyleSheet} from 'react-native';
 import {Card} from './Card';
 import {Button} from './Button';
-import {useTranslation} from '../i18n';
+import {spacing} from '../theme';
 
 interface EnrollmentActionsProps {
   onEnrollment: () => void;
@@ -18,28 +19,32 @@ export const EnrollmentActions: React.FC<EnrollmentActionsProps> = ({
   onStartEnrollmentRender,
   loading = false,
 }) => {
-  const t = useTranslation();
-
   return (
-    <Card title="Save Payment Method" icon="🔐" subtitle="Enroll cards for faster checkout">
-      <Button
-        testID="button-enrollment"
-        title="Start Enrollment"
-        icon="➕"
-        onPress={onEnrollment}
-        variant="success"
-        disabled={loading}
-      />
-      {onStartEnrollmentRender && (
+    <Card title="🔐 Enrollment Options" subtitle="Save cards for faster checkout">
+      <View style={styles.list}>
         <Button
-          testID="button-enrollment-render"
-          title="Enrollment Render"
-          icon="💳"
-          onPress={onStartEnrollmentRender}
-          variant="primary"
+          testID="button-enrollment"
+          title="Full Enrollment"
+          onPress={onEnrollment}
+          variant="success"
           disabled={loading}
         />
-      )}
+        {onStartEnrollmentRender && (
+          <Button
+            testID="button-enrollment-render"
+            title="Enrollment Render"
+            onPress={onStartEnrollmentRender}
+            variant="success"
+            disabled={loading}
+          />
+        )}
+      </View>
     </Card>
   );
 };
+
+const styles = StyleSheet.create({
+  list: {
+    gap: spacing.sm,
+  },
+});

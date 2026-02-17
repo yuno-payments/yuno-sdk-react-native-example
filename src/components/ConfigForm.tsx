@@ -63,7 +63,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       {loading ? (
         <ActivityIndicator color="#FFFFFF" size="small" />
       ) : (
-        <Text style={styles.generateBtnText}>⚡</Text>
+        <Text style={styles.generateBtnText}>+</Text>
       )}
     </TouchableOpacity>
   );
@@ -171,7 +171,7 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: 22, // Align with input
+      marginTop: 21,
       shadowColor: colors.primary1,
       shadowOffset: {width: 0, height: 4},
       shadowOpacity: 0.3,
@@ -185,5 +185,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     },
     generateBtnText: {
       fontSize: 20,
+      color: '#FFFFFF',
     },
   });

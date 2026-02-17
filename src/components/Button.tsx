@@ -77,13 +77,8 @@ export const Button: React.FC<ButtonProps> = ({
 
     return (
       <View style={styles.content}>
-        {icon && iconPosition === 'left' && (
-          <Text style={[styles.icon, textStyleFinal]}>{icon}</Text>
-        )}
         <Text style={textStyleFinal}>{title}</Text>
-        {icon && iconPosition === 'right' && (
-          <Text style={[styles.icon, styles.iconRight, textStyleFinal]}>{icon}</Text>
-        )}
+        <Text style={[styles.chevron, textStyleFinal]}>›</Text>
       </View>
     );
   };
@@ -105,7 +100,7 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     button: {
       borderRadius: 12,
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'flex-start',
       flexDirection: 'row',
     },
     autoWidth: {
@@ -114,7 +109,12 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     content: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
+      flex: 1,
+    },
+    chevron: {
+      fontSize: 20,
+      marginLeft: spacing.sm,
     },
     icon: {
       marginRight: spacing.xs,
