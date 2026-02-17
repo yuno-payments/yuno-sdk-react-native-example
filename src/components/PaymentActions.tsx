@@ -1,5 +1,5 @@
 /**
- * Modern payment actions component
+ * Payment actions component
  */
 
 import React from 'react';
@@ -7,7 +7,6 @@ import {View, StyleSheet} from 'react-native';
 import {Card} from './Card';
 import {Button} from './Button';
 import {spacing} from '../theme';
-import {useTranslation} from '../i18n';
 
 interface PaymentActionsProps {
   onStartPayment: () => void;
@@ -24,65 +23,44 @@ export const PaymentActions: React.FC<PaymentActionsProps> = ({
   onPaymentRender,
   loading = false,
 }) => {
-  const t = useTranslation();
-
   return (
-    <Card title="Payment Options" icon="💳" subtitle="Choose how to process payment">
-      <View style={styles.grid}>
-        <View style={styles.row}>
-          <Button
-            testID="button-start-payment"
-            title="Full Checkout"
-            icon="🛒"
-            onPress={onStartPayment}
-            variant="primary"
-            disabled={loading}
-            style={styles.gridButton}
-          />
-          <Button
-            testID="button-start-payment-lite"
-            title="Lite"
-            icon="⚡"
-            onPress={onStartPaymentLite}
-            variant="secondary"
-            disabled={loading}
-            style={styles.gridButton}
-          />
-        </View>
-        <View style={styles.row}>
-          <Button
-            testID="button-seamless-payment"
-            title="Seamless"
-            icon="✨"
-            onPress={onSeamlessPayment}
-            variant="secondary"
-            disabled={loading}
-            style={styles.gridButton}
-          />
-          <Button
-            testID="button-payment-render"
-            title="Render"
-            icon="🎨"
-            onPress={onPaymentRender}
-            variant="primary"
-            disabled={loading}
-            style={styles.gridButton}
-          />
-        </View>
+    <Card title="💳 Payment Options" subtitle="Choose your payment flow">
+      <View style={styles.list}>
+        <Button
+          testID="button-start-payment"
+          title="Full Checkout"
+          onPress={onStartPayment}
+          variant="primary"
+          disabled={loading}
+        />
+        <Button
+          testID="button-start-payment-lite"
+          title="Payment Lite"
+          onPress={onStartPaymentLite}
+          variant="primary"
+          disabled={loading}
+        />
+        <Button
+          testID="button-seamless-payment"
+          title="Seamless Payment"
+          onPress={onSeamlessPayment}
+          variant="primary"
+          disabled={loading}
+        />
+        <Button
+          testID="button-payment-render"
+          title="Payment Render"
+          onPress={onPaymentRender}
+          variant="primary"
+          disabled={loading}
+        />
       </View>
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
-  grid: {
+  list: {
     gap: spacing.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  gridButton: {
-    flex: 1,
   },
 });
