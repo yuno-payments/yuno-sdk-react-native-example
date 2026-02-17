@@ -1,5 +1,5 @@
 /**
- * Card component to group content
+ * Modern Card component with improved styling
  */
 
 import React from 'react';
@@ -9,43 +9,103 @@ import {useTheme} from '../hooks';
 
 interface CardProps {
   title?: string;
+  subtitle?: string;
+  icon?: string;
   children: React.ReactNode;
   style?: ViewStyle;
+  variant?: 'default' | 'elevated' | 'outlined' | 'gradient';
 }
 
-export const Card: React.FC<CardProps> = ({title, children, style}) => {
+export const Card: React.FC<CardProps> = ({
+  title,
+  subtitle,
+  icon,
+  children,
+  style,
+  variant = 'default',
+}) => {
   const {colors} = useTheme();
   const styles = createStyles(colors);
-  
+
+  const cardStyle = [
+    styles.card,
+    variant === 'elevated' && styles.cardElevated,
+    variant === 'outlined' && styles.cardOutlined,
+    variant === 'gradient' && styles.cardGradient,
+    style,
+  ];
+
   return (
-    <View style={[styles.card, style]}>
-      {title && <Text style={styles.title}>{title}</Text>}
+    <View style={cardStyle}>
+      {(title || icon) && (
+        <View style={styles.header}>
+          {icon && <Text style={styles.icon}>{icon}</Text>}
+          <View style={styles.headerText}>
+            {title && <Text style={styles.title}>{title}</Text>}
+            {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          </View>
+        </View>
+      )}
       {children}
     </View>
   );
 };
 
-const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    shadowColor: colors.elevation,
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+      // Softer shadow
+      shadowColor: '#000',
+      shadowOffset: {width: 0, height: 4},
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  title: {
-    ...typography.h3,
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-});
-
+    cardElevated: {
+      borderWidth: 0,
+      shadowOffset: {width: 0, height: 8},
+      shadowOpacity: 0.12,
+      shadowRadius: 24,
+      elevation: 8,
+    },
+    cardOutlined: {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+    cardGradient: {
+      borderWidth: 0,
+      borderColor: colors.primary1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    icon: {
+      fontSize: 24,
+      marginRight: spacing.sm,
+    },
+    headerText: {
+      flex: 1,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      letterSpacing: -0.3,
+    },
+    subtitle: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+  });

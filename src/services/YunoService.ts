@@ -3,16 +3,25 @@
  * Encapsulates all Yuno SDK interaction logic
  */
 
-import {
-  YunoSdk,
-  CardFlow,
-  YunoLanguage,
-} from '@yuno-payments/yuno-sdk-react-native';
+import {YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
 import type {
   PaymentConfig,
   PaymentLiteConfig,
   EnrollmentConfig,
 } from '../types';
+
+// Local enum definitions (workaround for Metro bundler issue with local SDK)
+// These match the SDK's enum values exactly
+enum CardFlow {
+  ONE_STEP = 'ONE_STEP',
+  STEP_BY_STEP = 'STEP_BY_STEP',
+}
+
+enum YunoLanguage {
+  EN = 'EN',
+  ES = 'ES',
+  PT = 'PT',
+}
 
 class YunoService {
   /**
@@ -31,7 +40,7 @@ class YunoService {
     console.log('🚀 Initializing Yuno SDK...');
     
     // Map cardType string to CardFlow enum
-    let cardFlow = CardFlow.ONE_STEP;
+    let cardFlow: CardFlow = CardFlow.ONE_STEP;
     if (params.yunoConfig.cardType) {
       const cardType = params.yunoConfig.cardType.toUpperCase();
       if (cardType === 'STEP_BY_STEP' || cardType === 'TWO_STEPS' || cardType === 'MULTI_STEP') {
@@ -47,7 +56,7 @@ class YunoService {
       countryCode: params.countryCode,
       yunoConfig: {
         language: params.yunoConfig.language || 'en',
-        cardFlow,
+        cardFlow: cardFlow as any,
         saveCardEnabled: params.yunoConfig.savedCardEnable ?? false,
         keepLoader: !(params.yunoConfig.showPaymentStatus ?? true),
       },
@@ -61,7 +70,7 @@ class YunoService {
    */
   async markAsInitialized(countryCode: string): Promise<void> {
     console.log('✅ Marking SDK as initialized...');
-    YunoSdk.markAsInitialized(countryCode, YunoLanguage.ES);
+    YunoSdk.markAsInitialized(countryCode, YunoLanguage.ES as any);
     console.log('✅ SDK marked as initialized');
   }
 

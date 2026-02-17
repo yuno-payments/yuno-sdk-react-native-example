@@ -6,13 +6,13 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
-    "start": "react-native start",
+    "start": "npx react-native start",
     "test": "jest",
     "android:clean": "cd android && ./gradlew clean"
   },
   "dependencies": {
     "@react-native-clipboard/clipboard": "^1.16.3",
-    "@yuno-payments/yuno-sdk-react-native": "1.0.30",
+    "@yuno-payments/yuno-sdk-react-native": "file:../yuno-sdk-react-native",
     "react": "19.1.1",
     "react-native": "0.82.0"
   },

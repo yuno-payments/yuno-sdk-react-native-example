@@ -3,40 +3,48 @@
  */
 
 import React from 'react';
-import {StyleSheet} from 'react-native';
+import {View, StyleSheet} from 'react-native';
 import {Card} from './Card';
 import {Button} from './Button';
 import {spacing} from '../theme';
-import {useTranslation} from '../i18n';
 
 interface EnrollmentActionsProps {
   onEnrollment: () => void;
+  onStartEnrollmentRender?: () => void;
   loading?: boolean;
 }
 
 export const EnrollmentActions: React.FC<EnrollmentActionsProps> = ({
   onEnrollment,
+  onStartEnrollmentRender,
   loading = false,
 }) => {
-  const t = useTranslation();
-
   return (
-    <Card title={`🔐 ${t.enrollment.title}`}>
-      <Button
-        testID="button-enrollment"
-        title={t.enrollment.startEnrollment}
-        onPress={onEnrollment}
-        variant="primary"
-        disabled={loading}
-        style={styles.button}
-      />
+    <Card title="🔐 Enrollment Options" subtitle="Save cards for faster checkout">
+      <View style={styles.list}>
+        <Button
+          testID="button-enrollment"
+          title="Full Enrollment"
+          onPress={onEnrollment}
+          variant="success"
+          disabled={loading}
+        />
+        {onStartEnrollmentRender && (
+          <Button
+            testID="button-enrollment-render"
+            title="Enrollment Render"
+            onPress={onStartEnrollmentRender}
+            variant="success"
+            disabled={loading}
+          />
+        )}
+      </View>
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
-  button: {
-    marginBottom: spacing.sm,
+  list: {
+    gap: spacing.sm,
   },
 });
-

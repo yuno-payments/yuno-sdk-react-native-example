@@ -1,5 +1,5 @@
 /**
- * Reusable button component
+ * Modern button component with improved styling
  */
 
 import React from 'react';
@@ -8,6 +8,7 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
+  View,
   type ViewStyle,
   type TextStyle,
 } from 'react-native';
@@ -17,9 +18,13 @@ import {useTheme} from '../hooks';
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'success' | 'error';
+  variant?: 'primary' | 'secondary' | 'success' | 'error' | 'ghost';
+  size?: 'small' | 'medium' | 'large';
+  icon?: string;
+  iconPosition?: 'left' | 'right';
   disabled?: boolean;
   loading?: boolean;
+  fullWidth?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
   testID?: string;
@@ -29,8 +34,12 @@ export const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
   variant = 'primary',
+  size = 'medium',
+  icon,
+  iconPosition = 'left',
   disabled = false,
   loading = false,
+  fullWidth = true,
   style,
   textStyle,
   testID,
@@ -41,17 +50,38 @@ export const Button: React.FC<ButtonProps> = ({
 
   const buttonStyle = [
     styles.button,
+    styles[`button_${size}`],
     styles[variant],
     isDisabled && styles.disabled,
+    !fullWidth && styles.autoWidth,
     style,
   ];
 
   const textStyleFinal = [
     styles.text,
+    styles[`text_${size}`],
     styles[`${variant}Text`],
     isDisabled && styles.disabledText,
     textStyle,
   ];
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <ActivityIndicator
+          color={variant === 'secondary' || variant === 'ghost' ? colors.primary1 : '#FFFFFF'}
+          size="small"
+        />
+      );
+    }
+
+    return (
+      <View style={styles.content}>
+        <Text style={textStyleFinal}>{title}</Text>
+        <Text style={[styles.chevron, textStyleFinal]}>›</Text>
+      </View>
+    );
+  };
 
   return (
     <TouchableOpacity
@@ -59,64 +89,124 @@ export const Button: React.FC<ButtonProps> = ({
       style={buttonStyle}
       onPress={onPress}
       disabled={isDisabled}
-      activeOpacity={0.7}>
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'secondary' ? colors.text : colors.textInverse}
-        />
-      ) : (
-        <Text style={textStyleFinal}>{title}</Text>
-      )}
+      activeOpacity={0.8}>
+      {renderContent()}
     </TouchableOpacity>
   );
 };
 
-const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleSheet.create({
-  button: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-  },
-  text: {
-    ...typography.button,
-  },
-  // Variants
-  primary: {
-    backgroundColor: colors.text,      // neutralB (black in light, white in dark)
-  },
-  primaryText: {
-    color: colors.textInverse,         // neutralW (white in light, black in dark)
-  },
-  secondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.text,          // neutralB (black in light, white in dark)
-  },
-  secondaryText: {
-    color: colors.text,                // neutralB (black in light, white in dark)
-  },
-  success: {
-    backgroundColor: colors.success,
-  },
-  successText: {
-    color: colors.textInverse,
-  },
-  error: {
-    backgroundColor: colors.error,
-  },
-  errorText: {
-    color: colors.textInverse,
-  },
-  // States
-  disabled: {
-    backgroundColor: colors.disabled,
-    borderColor: colors.disabled,
-  },
-  disabledText: {
-    color: colors.disabledText,
-  },
-});
-
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
+  StyleSheet.create({
+    button: {
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      flexDirection: 'row',
+    },
+    autoWidth: {
+      alignSelf: 'flex-start',
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flex: 1,
+    },
+    chevron: {
+      fontSize: 20,
+      marginLeft: spacing.sm,
+    },
+    icon: {
+      marginRight: spacing.xs,
+    },
+    iconRight: {
+      marginRight: 0,
+      marginLeft: spacing.xs,
+    },
+    text: {
+      fontWeight: '600',
+      letterSpacing: 0.2,
+    },
+    // Sizes
+    button_small: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      minHeight: 36,
+    },
+    button_medium: {
+      paddingVertical: spacing.md - 2,
+      paddingHorizontal: spacing.lg,
+      minHeight: 48,
+    },
+    button_large: {
+      paddingVertical: spacing.md + 2,
+      paddingHorizontal: spacing.xl,
+      minHeight: 56,
+    },
+    text_small: {
+      fontSize: 13,
+    },
+    text_medium: {
+      fontSize: 15,
+    },
+    text_large: {
+      fontSize: 17,
+    },
+    // Variants
+    primary: {
+      backgroundColor: colors.primary1,
+      shadowColor: colors.primary1,
+      shadowOffset: {width: 0, height: 4},
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    primaryText: {
+      color: '#FFFFFF',
+    },
+    secondary: {
+      backgroundColor: colors.secondary1,
+      borderWidth: 0,
+    },
+    secondaryText: {
+      color: colors.primary1,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+    },
+    ghostText: {
+      color: colors.primary1,
+    },
+    success: {
+      backgroundColor: colors.success,
+      shadowColor: colors.success,
+      shadowOffset: {width: 0, height: 4},
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    successText: {
+      color: '#FFFFFF',
+    },
+    error: {
+      backgroundColor: colors.error,
+      shadowColor: colors.error,
+      shadowOffset: {width: 0, height: 4},
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    errorText: {
+      color: '#FFFFFF',
+    },
+    // States
+    disabled: {
+      backgroundColor: colors.disabled,
+      borderColor: colors.disabled,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+    disabledText: {
+      color: colors.disabledText,
+    },
+  });

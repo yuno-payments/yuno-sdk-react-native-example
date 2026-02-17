@@ -1,11 +1,14 @@
 /**
- * Configuration form component
+ * Modern configuration form component
  */
 
 import React from 'react';
+import {View, TouchableOpacity, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import {Card} from './Card';
 import {Input} from './Input';
 import {useTranslation} from '../i18n';
+import {useTheme} from '../hooks';
+import {spacing} from '../theme';
 
 interface ConfigFormProps {
   customerSession: string;
@@ -16,6 +19,12 @@ interface ConfigFormProps {
   onCheckoutSessionChange: (value: string) => void;
   onPaymentMethodTypeChange: (value: string) => void;
   onVaultedTokenChange: (value: string) => void;
+  // Session generation props
+  onGenerateCustomerSession?: () => void;
+  onGenerateCheckoutSession?: () => void;
+  isGeneratingCustomerSession?: boolean;
+  isGeneratingCheckoutSession?: boolean;
+  canGenerateSessions?: boolean;
 }
 
 export const ConfigForm: React.FC<ConfigFormProps> = ({
@@ -27,51 +36,155 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
   onCheckoutSessionChange,
   onPaymentMethodTypeChange,
   onVaultedTokenChange,
+  onGenerateCustomerSession,
+  onGenerateCheckoutSession,
+  isGeneratingCustomerSession = false,
+  isGeneratingCheckoutSession = false,
+  canGenerateSessions = false,
 }) => {
   const t = useTranslation();
+  const {colors} = useTheme();
+  const styles = createStyles(colors);
+
+  const GenerateButton = ({
+    onPress,
+    loading,
+    disabled,
+  }: {
+    onPress?: () => void;
+    loading: boolean;
+    disabled: boolean;
+  }) => (
+    <TouchableOpacity
+      style={[styles.generateBtn, disabled && styles.generateBtnDisabled]}
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.7}>
+      {loading ? (
+        <ActivityIndicator color="#FFFFFF" size="small" />
+      ) : (
+        <Text style={styles.generateBtnText}>+</Text>
+      )}
+    </TouchableOpacity>
+  );
 
   return (
-    <Card title={`⚙️ ${t.config.title}`}>
-      <Input
-        testID="input-customer-session"
-        label={`${t.config.customerSession} (${t.config.requiredForEnrollment})`}
-        placeholder={t.config.customerSessionPlaceholder}
-        value={customerSession}
-        onChangeText={onCustomerSessionChange}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
+    <Card title="Configuration" icon="⚙️" subtitle="Set up your payment session">
+      {/* Customer Session */}
+      <View style={styles.inputRow}>
+        <View style={styles.inputContainer}>
+          <Input
+            testID="input-customer-session"
+            label="Customer Session"
+            placeholder="Enter customer session..."
+            hint="Required for enrollment"
+            value={customerSession}
+            onChangeText={onCustomerSessionChange}
+            autoCapitalize="none"
+            autoCorrect={false}
+            containerStyle={styles.inputFlex}
+          />
+        </View>
+        {onGenerateCustomerSession && (
+          <GenerateButton
+            onPress={onGenerateCustomerSession}
+            loading={isGeneratingCustomerSession}
+            disabled={!canGenerateSessions || isGeneratingCustomerSession}
+          />
+        )}
+      </View>
 
-      <Input
-        testID="input-checkout-session"
-        label={`${t.config.checkoutSession} (${t.config.requiredForPayment}) *`}
-        placeholder={t.config.checkoutSessionPlaceholder}
-        value={checkoutSession}
-        onChangeText={onCheckoutSessionChange}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
+      {/* Checkout Session */}
+      <View style={styles.inputRow}>
+        <View style={styles.inputContainer}>
+          <Input
+            testID="input-checkout-session"
+            label="Checkout Session"
+            placeholder="Enter checkout session..."
+            hint="Required for payment"
+            value={checkoutSession}
+            onChangeText={onCheckoutSessionChange}
+            autoCapitalize="none"
+            autoCorrect={false}
+            containerStyle={styles.inputFlex}
+          />
+        </View>
+        {onGenerateCheckoutSession && (
+          <GenerateButton
+            onPress={onGenerateCheckoutSession}
+            loading={isGeneratingCheckoutSession}
+            disabled={!canGenerateSessions || isGeneratingCheckoutSession}
+          />
+        )}
+      </View>
 
+      {/* Payment Method Type */}
       <Input
         testID="input-payment-method-type"
-        label={`${t.config.paymentMethodType} (${t.config.requiredForLite}) *`}
-        placeholder={t.config.paymentMethodTypePlaceholder}
+        label="Payment Method"
+        placeholder="CARD, APPLE_PAY, etc."
+        hint="Required for lite flow"
+        icon="💳"
         value={paymentMethodType}
         onChangeText={onPaymentMethodTypeChange}
         autoCapitalize="characters"
         autoCorrect={false}
       />
 
+      {/* Vaulted Token */}
       <Input
         testID="input-vaulted-token"
-        label={t.config.vaultedToken}
-        placeholder={t.config.vaultedTokenPlaceholder}
+        label="Vaulted Token"
+        placeholder="Optional saved card token..."
+        hint="Use a previously saved payment method"
+        icon="🔐"
         value={vaultedToken}
         onChangeText={onVaultedTokenChange}
         autoCapitalize="none"
         autoCorrect={false}
+        containerStyle={styles.lastInput}
       />
     </Card>
   );
 };
 
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
+  StyleSheet.create({
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+    },
+    inputContainer: {
+      flex: 1,
+    },
+    inputFlex: {
+      marginBottom: spacing.sm,
+    },
+    lastInput: {
+      marginBottom: 0,
+    },
+    generateBtn: {
+      backgroundColor: colors.primary1,
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 21,
+      shadowColor: colors.primary1,
+      shadowOffset: {width: 0, height: 4},
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    generateBtnDisabled: {
+      backgroundColor: colors.disabled,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+    generateBtnText: {
+      fontSize: 20,
+      color: '#FFFFFF',
+    },
+  });
