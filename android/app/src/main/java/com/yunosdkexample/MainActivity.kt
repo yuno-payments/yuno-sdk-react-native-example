@@ -7,6 +7,8 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.yunosdkexample.BuildConfig
 import com.yunosdkreactnative.YunoSdkModule
 import org.json.JSONObject
@@ -53,7 +55,14 @@ class MainActivity : AppCompatActivity() {
     val header = android.widget.LinearLayout(this).apply {
       orientation = android.widget.LinearLayout.VERTICAL
       setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.header_background))
-      setPadding(64, 80, 64, 64)
+      setPadding(64, 64, 64, 64)
+    }
+
+    // Apply system bar insets dynamically to header padding
+    ViewCompat.setOnApplyWindowInsetsListener(header) { view, insets ->
+      val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+      view.setPadding(64, 64 + systemBars.top, 64, 64)
+      insets
     }
     
     // Title

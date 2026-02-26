@@ -306,8 +306,8 @@ class MainViewController: UIViewController, UITextViewDelegate {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            // Scroll view
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
+            // Scroll view (respects safe area to avoid system bars)
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -325,7 +325,7 @@ class MainViewController: UIViewController, UITextViewDelegate {
             headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             
             // Title
-            titleLabel.topAnchor.constraint(equalTo: headerView.topAnchor, constant: 80),
+            titleLabel.topAnchor.constraint(equalTo: headerView.topAnchor, constant: 32),
             titleLabel.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 32),
             titleLabel.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -32),
             
