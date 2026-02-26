@@ -10,7 +10,8 @@
  */
 
 import React, {useEffect, useState} from 'react';
-import {StatusBar, NativeModules, Platform, View, TouchableOpacity, Text, StyleSheet, SafeAreaView, KeyboardAvoidingView} from 'react-native';
+import {StatusBar, NativeModules, Platform, View, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView} from 'react-native';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {HomeScreen, HeadlessPaymentScreen} from './screens';
 import {useTheme} from './hooks';
 
@@ -39,50 +40,52 @@ function App(props: AppProps): React.JSX.Element {
   }, [props.countryCode, props.configJson]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={colors.headerBackground}
-      />
-      
-      {/* Navigation Tabs */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, currentScreen === 'home' && styles.tabActive]}
-          onPress={() => setCurrentScreen('home')}
-        >
-          <Text style={[styles.tabText, currentScreen === 'home' && styles.tabTextActive]}>
-            Payment Full
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, currentScreen === 'headless' && styles.tabActive]}
-          onPress={() => setCurrentScreen('headless')}
-        >
-          <Text style={[styles.tabText, currentScreen === 'headless' && styles.tabTextActive]}>
-            Headless
-          </Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <StatusBar
+          barStyle={isDark ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.headerBackground}
+        />
 
-      {/* Screen Content with KeyboardAvoidingView */}
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-      >
-        {currentScreen === 'home' ? (
-          <HomeScreen 
-            initialCountryCode={props.countryCode}
-            initialConfigJson={props.configJson}
-          />
-        ) : (
-          <HeadlessPaymentScreen 
-            initialCountryCode={props.countryCode}
-          />
-        )}
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        {/* Navigation Tabs */}
+        <View style={styles.tabBar}>
+          <TouchableOpacity
+            style={[styles.tab, currentScreen === 'home' && styles.tabActive]}
+            onPress={() => setCurrentScreen('home')}
+          >
+            <Text style={[styles.tabText, currentScreen === 'home' && styles.tabTextActive]}>
+              Payment Full
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, currentScreen === 'headless' && styles.tabActive]}
+            onPress={() => setCurrentScreen('headless')}
+          >
+            <Text style={[styles.tabText, currentScreen === 'headless' && styles.tabTextActive]}>
+              Headless
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Screen Content with KeyboardAvoidingView */}
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
+          {currentScreen === 'home' ? (
+            <HomeScreen
+              initialCountryCode={props.countryCode}
+              initialConfigJson={props.configJson}
+            />
+          ) : (
+            <HeadlessPaymentScreen
+              initialCountryCode={props.countryCode}
+            />
+          )}
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
