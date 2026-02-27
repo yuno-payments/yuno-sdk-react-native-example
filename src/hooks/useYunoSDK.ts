@@ -45,30 +45,27 @@ export const useYunoSDK = (
           const apiKey = config.merchantKeys?.publicKey;
           const country = config.country;
           const language = config.language;
-          const cardType = config.options?.cardType || 'ONE_STEP';
           const savedCardEnable = config.options?.savedCardEnable || false;
           const showPaymentStatus = config.options?.showPaymentStatus ?? true;
-          
+
           if (!apiKey || !country) {
             console.error('❌ Missing required fields in config JSON');
             return;
           }
-          
+
           console.log('📋 Initializing with config:', {
             country,
             language,
-            cardType,
             savedCardEnable,
             showPaymentStatus,
           });
-          
+
           // Initialize the SDK through yunoService
           await yunoService.initialize({
             apiKey,
             countryCode: country,
             yunoConfig: {
               language: language || 'en',
-              cardType,
               savedCardEnable,
               showPaymentStatus,
             },

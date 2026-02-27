@@ -25,7 +25,7 @@ import org.json.JSONObject
  * - currency: Currency code
  * - amount: Amount
  * - merchantKeys: { publicKey, secretKey, accountCode }
- * - options: { showPaymentStatus, cardType, savedCardEnable }
+ * - options: { showPaymentStatus, savedCardEnable }
  */
 class MainActivity : AppCompatActivity() {
 
@@ -277,19 +277,12 @@ class MainActivity : AppCompatActivity() {
       // Extract options
       val options = json.getJSONObject("options")
       val savedCardEnable = options.optBoolean("savedCardEnable", false)
-      val cardType = if (options.has("cardType")) {
-        options.getString("cardType").trim().removeSurrounding("\"")
-      } else {
-        "ONE_STEP"
-      }
       val showPaymentStatus = options.optBoolean("showPaymentStatus", true)
-      
+
       android.util.Log.d("MainActivity", "📋 Configuration parsed (cleaned):")
       android.util.Log.d("MainActivity", "  - API Key: ${apiKey.take(20)}...")
       android.util.Log.d("MainActivity", "  - Country: [$country]")
       android.util.Log.d("MainActivity", "  - Language: [$language]")
-      android.util.Log.d("MainActivity", "  - Card Type: [$cardType]")
-      android.util.Log.d("MainActivity", "  - Card Type (uppercase): [${cardType.uppercase()}]")
       android.util.Log.d("MainActivity", "  - Saved Card Enable: $savedCardEnable")
       android.util.Log.d("MainActivity", "  - Show Payment Status: $showPaymentStatus")
       
@@ -298,7 +291,6 @@ class MainActivity : AppCompatActivity() {
         applicationContext = applicationContext,
         apiKey = apiKey,
         language = language,
-        cardType = cardType,
         savedCardEnable = savedCardEnable
       )
       android.util.Log.d("MainActivity", "✅ Yuno SDK initialized successfully")

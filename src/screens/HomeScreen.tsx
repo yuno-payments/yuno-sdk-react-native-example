@@ -71,7 +71,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           country: config.country,
           language: config.language,
           showPaymentStatus: config.options?.showPaymentStatus,
-          cardType: config.options?.cardType,
           savedCardEnable: config.options?.savedCardEnable,
         });
       } catch (error) {

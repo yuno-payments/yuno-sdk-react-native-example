@@ -18,7 +18,7 @@ import UIKit
  * - currency: Currency code
  * - amount: Amount
  * - merchantKeys: { publicKey, secretKey, accountCode }
- * - options: { showPaymentStatus, cardType, savedCardEnable }
+ * - options: { showPaymentStatus, savedCardEnable }
  */
 class MainViewController: UIViewController, UITextViewDelegate {
     
