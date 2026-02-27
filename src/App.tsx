@@ -10,8 +10,7 @@
  */
 
 import React, {useEffect, useState} from 'react';
-import {StatusBar, NativeModules, Platform, View, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView} from 'react-native';
-import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import {StatusBar, Platform, View, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView, SafeAreaView} from 'react-native';
 import {HomeScreen, HeadlessPaymentScreen} from './screens';
 import {useTheme} from './hooks';
 
@@ -27,11 +26,6 @@ function App(props: AppProps): React.JSX.Element {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
 
   useEffect(() => {
-    // DEBUG: Verificar si el módulo nativo está disponible
-    console.log('🔍 Platform:', Platform.OS);
-    console.log('🔍 NativeModules.YunoSdk =>', NativeModules.YunoSdk);
-    console.log('🔍 YunoSdk methods:', NativeModules.YunoSdk ? Object.keys(NativeModules.YunoSdk) : 'UNDEFINED');
-    
     if (props.countryCode || props.configJson) {
       console.log('📦 App received initial props from native:');
       console.log('  - Country Code:', props.countryCode);
@@ -40,8 +34,7 @@ function App(props: AppProps): React.JSX.Element {
   }, [props.countryCode, props.configJson]);
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>
         <StatusBar
           barStyle={isDark ? 'light-content' : 'dark-content'}
           backgroundColor={colors.headerBackground}
@@ -84,8 +77,7 @@ function App(props: AppProps): React.JSX.Element {
             />
           )}
         </KeyboardAvoidingView>
-      </SafeAreaView>
-    </SafeAreaProvider>
+    </SafeAreaView>
   );
 }
 

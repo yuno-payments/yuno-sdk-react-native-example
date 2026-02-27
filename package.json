@@ -14,8 +14,7 @@
     "@react-native-clipboard/clipboard": "^1.16.3",
     "@yuno-payments/yuno-sdk-react-native": "1.0.31-beta.4",
     "react": "19.1.1",
-    "react-native": "0.82.0",
-    "react-native-safe-area-context": "^5.7.0"
+    "react-native": "0.82.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
