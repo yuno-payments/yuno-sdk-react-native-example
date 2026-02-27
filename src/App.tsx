@@ -10,9 +10,14 @@
  */
 
 import React, {useEffect, useState} from 'react';
-import {StatusBar, Platform, View, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView, SafeAreaView} from 'react-native';
+import {StatusBar, Platform, View, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView, SafeAreaView as RNSafeAreaView} from 'react-native';
+import {SafeAreaProvider, SafeAreaView as SACSafeAreaView} from 'react-native-safe-area-context';
 import {HomeScreen, HeadlessPaymentScreen} from './screens';
 import {useTheme} from './hooks';
+
+// iOS: built-in SafeAreaView (avoids RCTEventEmitter.receiveEvent crash with Fabric)
+// Android: react-native-safe-area-context (built-in SafeAreaView is a no-op on Android)
+const SafeAreaView = Platform.OS === 'ios' ? RNSafeAreaView : SACSafeAreaView;
 
 interface AppProps {
   countryCode?: string;
@@ -33,52 +38,59 @@ function App(props: AppProps): React.JSX.Element {
     }
   }, [props.countryCode, props.configJson]);
 
-  return (
+  const content = (
     <SafeAreaView style={styles.container}>
-        <StatusBar
-          barStyle={isDark ? 'light-content' : 'dark-content'}
-          backgroundColor={colors.headerBackground}
-        />
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.headerBackground}
+      />
 
-        {/* Navigation Tabs */}
-        <View style={styles.tabBar}>
-          <TouchableOpacity
-            style={[styles.tab, currentScreen === 'home' && styles.tabActive]}
-            onPress={() => setCurrentScreen('home')}
-          >
-            <Text style={[styles.tabText, currentScreen === 'home' && styles.tabTextActive]}>
-              Payment Full
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, currentScreen === 'headless' && styles.tabActive]}
-            onPress={() => setCurrentScreen('headless')}
-          >
-            <Text style={[styles.tabText, currentScreen === 'headless' && styles.tabTextActive]}>
-              Headless
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Screen Content with KeyboardAvoidingView */}
-        <KeyboardAvoidingView
-          style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      {/* Navigation Tabs */}
+      <View style={styles.tabBar}>
+        <TouchableOpacity
+          style={[styles.tab, currentScreen === 'home' && styles.tabActive]}
+          onPress={() => setCurrentScreen('home')}
         >
-          {currentScreen === 'home' ? (
-            <HomeScreen
-              initialCountryCode={props.countryCode}
-              initialConfigJson={props.configJson}
-            />
-          ) : (
-            <HeadlessPaymentScreen
-              initialCountryCode={props.countryCode}
-            />
-          )}
-        </KeyboardAvoidingView>
+          <Text style={[styles.tabText, currentScreen === 'home' && styles.tabTextActive]}>
+            Payment Full
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, currentScreen === 'headless' && styles.tabActive]}
+          onPress={() => setCurrentScreen('headless')}
+        >
+          <Text style={[styles.tabText, currentScreen === 'headless' && styles.tabTextActive]}>
+            Headless
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Screen Content with KeyboardAvoidingView */}
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        {currentScreen === 'home' ? (
+          <HomeScreen
+            initialCountryCode={props.countryCode}
+            initialConfigJson={props.configJson}
+          />
+        ) : (
+          <HeadlessPaymentScreen
+            initialCountryCode={props.countryCode}
+          />
+        )}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
+
+  // Android needs SafeAreaProvider for react-native-safe-area-context to work
+  if (Platform.OS === 'android') {
+    return <SafeAreaProvider>{content}</SafeAreaProvider>;
+  }
+
+  return content;
 }
 
 const styles = StyleSheet.create({
