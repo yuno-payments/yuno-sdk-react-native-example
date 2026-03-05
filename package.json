@@ -1,6 +1,6 @@
 {
   "name": "yuno-sdk-example",
-  "version": "1.1.0-rc.2",
+  "version": "1.1.0-rc.3",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@react-native-clipboard/clipboard": "^1.16.3",
-    "@yuno-payments/yuno-sdk-react-native": "1.1.0-rc.2",
+    "@yuno-payments/yuno-sdk-react-native": "1.1.0-rc.3",
     "react": "19.1.1",
     "react-native": "0.82.0",
     "react-native-safe-area-context": "^5.7.0"
