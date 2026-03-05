@@ -58,7 +58,7 @@ platform :ios do
       git_basic_authorization: ENV["MATCH_GIT_AUTHORIZATION"],
       verbose: true,
       git_url: "https://github.com/yuno-payments/yuno-ios-certificates",
-      git_branch: "SizePodCerts"
+      git_branch: "ExampleCerts"
     )
   end
 
@@ -72,11 +72,11 @@ platform :ios do
     )
   end
 
-  desc "Sign app for device farm (Ad-hoc certificates)"
+  desc "Sign app for device farm (Development certificates)"
   lane :sign_sdk_farm do
     get_app_certificates(
       app_bundle: ENV["APP_BUNDLE"],
-      dist_type: "adhoc"
+      dist_type: "development"
     )
   end
 
@@ -120,8 +120,8 @@ platform :ios do
     build_app(
       workspace: ENV["APP_WORKSPACE"],
       scheme: ENV["APP_SCHEME"],
-      configuration: "Release",
-      export_method: "ad-hoc",
+      configuration: "Debug",
+      export_method: "development",
       include_bitcode: false,
       output_directory: lane_context[SharedValues::IPA_OUTPUT_PATH],
       output_name: output_name
