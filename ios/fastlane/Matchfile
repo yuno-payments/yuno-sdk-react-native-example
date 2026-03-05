@@ -1,6 +1,6 @@
 git_url("https://github.com/yuno-payments/yuno-ios-certificates")
 
-git_branch("SizePodCerts")
+git_branch("ExampleCerts")
 
 storage_mode("git")
 
