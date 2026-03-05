@@ -72,11 +72,11 @@ platform :ios do
     )
   end
 
-  desc "Sign app for device farm (Development certificates)"
+  desc "Sign app for device farm (Ad-hoc certificates)"
   lane :sign_sdk_farm do
     get_app_certificates(
       app_bundle: ENV["APP_BUNDLE"],
-      dist_type: "development"
+      dist_type: "adhoc"
     )
   end
 
@@ -120,8 +120,8 @@ platform :ios do
     build_app(
       workspace: ENV["APP_WORKSPACE"],
       scheme: ENV["APP_SCHEME"],
-      configuration: "Debug",
-      export_method: "development",
+      configuration: "Release",
+      export_method: "ad-hoc",
       include_bitcode: false,
       output_directory: lane_context[SharedValues::IPA_OUTPUT_PATH],
       output_name: output_name
