@@ -42,8 +42,6 @@ target 'YunoSDKExample' do
       target.build_configurations.each do |config|
         config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'i386'
         config.build_settings['OTHER_LDFLAGS'] ||= ['$(inherited)']
-        config.build_settings['OTHER_LDFLAGS'] << '-Wl'
-        config.build_settings['OTHER_LDFLAGS'] << '-ld_classic'
         config.build_settings['REACT_NATIVE_PATH'] = '${PODS_ROOT}/../../node_modules/react-native'
         config.build_settings['USE_HERMES'] = 'true'
         # Ensure Swift is properly configured
@@ -84,7 +82,7 @@ target 'YunoSDKExample' do
         File.open(xcconfig_path, 'a') do |file|
           file.puts "\n// Custom build settings for Xcode 15+ compatibility"
           file.puts 'EXCLUDED_ARCHS[sdk=iphonesimulator*] = i386'
-          file.puts 'OTHER_LDFLAGS = $(inherited) -Wl -ld_classic'
+          file.puts 'OTHER_LDFLAGS = $(inherited)'
           file.puts 'REACT_NATIVE_PATH = ${PODS_ROOT}/../../node_modules/react-native'
           file.puts 'USE_HERMES = true'
           file.puts 'SWIFT_VERSION = 5.0'

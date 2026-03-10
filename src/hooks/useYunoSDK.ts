@@ -2,7 +2,7 @@
  * Main hook to handle the Yuno SDK
  */
 
-import {useState, useCallback, useEffect} from 'react';
+import {useState, useCallback, useEffect, useRef} from 'react';
 import {Alert} from 'react-native';
 import {YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
 import {yunoService} from '../services/YunoService';
@@ -26,6 +26,8 @@ export const useYunoSDK = (
   const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [enrollmentStatus, setEnrollmentStatus] = useState<string>('');
   const [ottToken, setOttToken] = useState<string>('');
+  const ottTokenRef = useRef(ottToken);
+  ottTokenRef.current = ottToken;
   const [ottTokenInfo, setOttTokenInfo] = useState<OneTimeTokenInfo | null>(
     null,
   );
@@ -43,30 +45,27 @@ export const useYunoSDK = (
           const apiKey = config.merchantKeys?.publicKey;
           const country = config.country;
           const language = config.language;
-          const cardType = config.options?.cardType || 'ONE_STEP';
           const savedCardEnable = config.options?.savedCardEnable || false;
           const showPaymentStatus = config.options?.showPaymentStatus ?? true;
-          
+
           if (!apiKey || !country) {
             console.error('❌ Missing required fields in config JSON');
             return;
           }
-          
+
           console.log('📋 Initializing with config:', {
             country,
             language,
-            cardType,
             savedCardEnable,
             showPaymentStatus,
           });
-          
+
           // Initialize the SDK through yunoService
           await yunoService.initialize({
             apiKey,
             countryCode: country,
             yunoConfig: {
               language: language || 'en',
-              cardType,
               savedCardEnable,
               showPaymentStatus,
             },
@@ -118,7 +117,7 @@ export const useYunoSDK = (
       const lastOtt = await yunoService.getLastOTT();
       const lastOttInfo = await yunoService.getLastOTTInfo();
 
-      if (lastOtt && lastOtt !== ottToken) {
+      if (lastOtt && lastOtt !== ottTokenRef.current) {
         console.log('🎉 New OTT found! Updating state...');
         setOttToken(lastOtt);
       }
@@ -129,7 +128,7 @@ export const useYunoSDK = (
     } catch (error) {
       console.error('❌ Error retrieving last OTT:', error);
     }
-  }, [ottToken]);
+  }, []);
 
   // Setup de listeners
   useYunoEvents({
@@ -244,7 +243,7 @@ export const useYunoSDK = (
       countryCode: string,
       showPaymentStatus: boolean = true
     ) => {
-      if (!ottToken) {
+      if (!ottTokenRef.current) {
         Alert.alert('Error', 'No hay OTT disponible para continuar el pago');
         return;
       }
@@ -266,7 +265,7 @@ export const useYunoSDK = (
         setIsLoading(false);
       }
     },
-    [ottToken],
+    [],
   );
 
   const clearOTT = useCallback(async () => {

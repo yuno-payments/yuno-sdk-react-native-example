@@ -3,7 +3,7 @@
  */
 
 import React, {useState, useCallback, useEffect, useRef} from 'react';
-import {SafeAreaView, ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler} from 'react-native';
+import {ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler} from 'react-native';
 import {YunoPaymentMethods, YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
 import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno-payments/yuno-sdk-react-native';
 import {useYunoSDK, useTheme} from '../hooks';
@@ -71,7 +71,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           country: config.country,
           language: config.language,
           showPaymentStatus: config.options?.showPaymentStatus,
-          cardType: config.options?.cardType,
           savedCardEnable: config.options?.savedCardEnable,
         });
       } catch (error) {
@@ -335,7 +334,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // If payment methods are being shown, render the component
   if (showPaymentMethods) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>{t.paymentMethods.title}</Text>
           <Text style={styles.subtitle}>{t.paymentMethods.subtitle}</Text>
@@ -379,13 +378,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           activeOpacity={0.7}>
           <Text style={styles.backButtonText}>{t.paymentMethods.backButton}</Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
     );
   }
 
   // Normal form view
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{t.app.title}</Text>
         <Text style={styles.subtitle}>{t.app.subtitle}</Text>
@@ -436,7 +435,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           loading={isLoading}
         />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
