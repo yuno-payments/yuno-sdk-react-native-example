@@ -154,3 +154,4 @@ logs/
 .tmp/
 temp/
 tmp/
+google-services.json
