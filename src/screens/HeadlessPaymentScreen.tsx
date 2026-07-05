@@ -82,7 +82,7 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
   const [isLoading, setIsLoading] = useState(false);
   const [ott, setOtt] = useState<string | null>(null);
   const [vaultedToken, setVaultedToken] = useState<string | null>(null);
-  const [threeDsUrl, setThreeDsUrl] = useState<string | null>(null);
+  const [cardPaymentResult, setCardPaymentResult] = useState<string | null>(null);
   const [checkoutSession, setCheckoutSession] = useState('');
   const [countryCode, setCountryCode] = useState(initialCountryCode || 'CO');
 
@@ -172,19 +172,21 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
       setIsLoading(true);
       setOtt(null); // Close OTT dialog
 
-      console.log('🚀 Getting 3DS challenge URL with headless flow...');
+      console.log('🚀 Continuing card payment with headless flow (3DS handled natively)...');
       console.log('📍 Using country code:', countryCode);
-      const result = await YunoSdk.getThreeDSecureChallenge(
+      const result = await YunoSdk.continueCardPayment(
         checkoutSession,
         countryCode
       );
 
-      console.log('✅ 3DS Challenge result:', result);
+      console.log('✅ continueCardPayment result:', result);
 
-      setThreeDsUrl(result.data);
+      setCardPaymentResult(
+        `${result.paymentState}${result.paymentSubState ? ` / ${result.paymentSubState}` : ''}`
+      );
     } catch (error: any) {
-      console.error('❌ Error getting 3DS challenge:', error);
-      Alert.alert('Error', error.message || 'Failed to get 3DS challenge URL');
+      console.error('❌ Error continuing card payment:', error);
+      Alert.alert('Error', error.message || 'Failed to continue card payment');
     } finally {
       setIsLoading(false);
     }
@@ -317,25 +319,25 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
         </View>
       )}
 
-      {/* 3DS URL Dialog */}
-      {threeDsUrl && (
+      {/* Card Payment Result Dialog */}
+      {cardPaymentResult && (
         <View style={styles.modal}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>3DS Challenge URL</Text>
+            <Text style={styles.modalTitle}>Card Payment Result</Text>
             <ScrollView style={styles.modalScroll}>
-              <Text style={styles.modalText}>{threeDsUrl}</Text>
+              <Text style={styles.modalText}>{cardPaymentResult}</Text>
             </ScrollView>
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.button, styles.buttonSecondary]}
-                onPress={() => copyToClipboard(threeDsUrl)}
-                testID="copy-3ds-url-button"
+                onPress={() => copyToClipboard(cardPaymentResult)}
+                testID="copy-card-payment-result-button"
               >
                 <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Copy</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.buttonSecondary]}
-                onPress={() => setThreeDsUrl(null)}
+                onPress={() => setCardPaymentResult(null)}
               >
                 <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Close</Text>
               </TouchableOpacity>

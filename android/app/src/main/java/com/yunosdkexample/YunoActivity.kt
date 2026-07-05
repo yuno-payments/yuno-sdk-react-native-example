@@ -43,6 +43,7 @@ class YunoActivity : ReactActivity() {
           return Bundle().apply {
             countryCode?.let { putString("countryCode", it) }
             configJson?.let { putString("configJson", it) }
+            intent.getStringExtra(EXTRA_INITIAL_SCREEN)?.let { putString("initialScreen", it) }
           }
         }
       }
@@ -51,6 +52,7 @@ class YunoActivity : ReactActivity() {
     const val EXTRA_YUNO_API_KEY = "YUNO_API_KEY" // Deprecated, config now passed via MainActivity
     const val EXTRA_COUNTRY_CODE = "YUNO_COUNTRY_CODE"
     const val EXTRA_CONFIG_JSON = "YUNO_CONFIG_JSON"
+    const val EXTRA_INITIAL_SCREEN = "YUNO_INITIAL_SCREEN"
   }
 
   /**

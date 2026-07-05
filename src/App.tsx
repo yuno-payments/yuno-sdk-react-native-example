@@ -13,6 +13,7 @@ import React, {useEffect, useState} from 'react';
 import {StatusBar, Platform, View, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView, SafeAreaView as RNSafeAreaView} from 'react-native';
 import {SafeAreaProvider, SafeAreaView as SACSafeAreaView} from 'react-native-safe-area-context';
 import {HomeScreen, HeadlessPaymentScreen} from './screens';
+import VtexApp from './vtex/App';
 import {useTheme} from './hooks';
 
 // iOS: built-in SafeAreaView (avoids RCTEventEmitter.receiveEvent crash with Fabric)
@@ -22,13 +23,19 @@ const SafeAreaView = Platform.OS === 'ios' ? RNSafeAreaView : SACSafeAreaView;
 interface AppProps {
   countryCode?: string;
   configJson?: string;
+  initialScreen?: string;
 }
 
-type Screen = 'home' | 'headless';
+type Screen = 'home' | 'headless' | 'vtex';
 
 function App(props: AppProps): React.JSX.Element {
   const {colors, isDark} = useTheme();
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  // The VTEX shortcut skips the native SDK init (the VTEX flow self-initializes
+  // via preflight), so the other tabs would run uninitialized — hide them
+  const vtexOnly = props.initialScreen === 'vtex';
+  const [currentScreen, setCurrentScreen] = useState<Screen>(
+    vtexOnly ? 'vtex' : 'home',
+  );
 
   useEffect(() => {
     if (props.countryCode || props.configJson) {
@@ -46,24 +53,35 @@ function App(props: AppProps): React.JSX.Element {
       />
 
       {/* Navigation Tabs */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, currentScreen === 'home' && styles.tabActive]}
-          onPress={() => setCurrentScreen('home')}
-        >
-          <Text style={[styles.tabText, currentScreen === 'home' && styles.tabTextActive]}>
-            Payment Full
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, currentScreen === 'headless' && styles.tabActive]}
-          onPress={() => setCurrentScreen('headless')}
-        >
-          <Text style={[styles.tabText, currentScreen === 'headless' && styles.tabTextActive]}>
-            Headless
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {!vtexOnly && (
+        <View style={styles.tabBar}>
+          <TouchableOpacity
+            style={[styles.tab, currentScreen === 'home' && styles.tabActive]}
+            onPress={() => setCurrentScreen('home')}
+          >
+            <Text style={[styles.tabText, currentScreen === 'home' && styles.tabTextActive]}>
+              Payment Full
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, currentScreen === 'headless' && styles.tabActive]}
+            onPress={() => setCurrentScreen('headless')}
+          >
+            <Text style={[styles.tabText, currentScreen === 'headless' && styles.tabTextActive]}>
+              Headless
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, currentScreen === 'vtex' && styles.tabActive]}
+            onPress={() => setCurrentScreen('vtex')}
+            testID="tab-vtex"
+          >
+            <Text style={[styles.tabText, currentScreen === 'vtex' && styles.tabTextActive]}>
+              VTEX Wallet
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Screen Content with KeyboardAvoidingView */}
       <KeyboardAvoidingView
@@ -76,10 +94,12 @@ function App(props: AppProps): React.JSX.Element {
             initialCountryCode={props.countryCode}
             initialConfigJson={props.configJson}
           />
-        ) : (
+        ) : currentScreen === 'headless' ? (
           <HeadlessPaymentScreen
             initialCountryCode={props.countryCode}
           />
+        ) : (
+          <VtexApp />
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>
