@@ -13,7 +13,8 @@ interface AppStateForegroundCallbacks {
 export const useAppStateForeground = (
   callbacks: AppStateForegroundCallbacks,
 ) => {
-  const {onForeground, onBackground} = callbacks;
+  const callbacksRef = useRef(callbacks);
+  callbacksRef.current = callbacks;
   const appState = useRef<AppStateStatus>(AppState.currentState);
 
   useEffect(() => {
@@ -32,13 +33,13 @@ export const useAppStateForeground = (
           nextAppState === 'active'
         ) {
           console.log('✅ App has come to the foreground!');
-          onForeground?.();
+          callbacksRef.current.onForeground?.();
         } else if (
           appState.current === 'active' &&
           nextAppState.match(/inactive|background/)
         ) {
           console.log('⚠️ App has gone to the background');
-          onBackground?.();
+          callbacksRef.current.onBackground?.();
         }
 
         appState.current = nextAppState;
@@ -48,6 +49,6 @@ export const useAppStateForeground = (
     return () => {
       subscription.remove();
     };
-  }, [onForeground, onBackground]);
+  }, []);
 };
 

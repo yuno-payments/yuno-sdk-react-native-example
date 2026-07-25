@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
-import { YunoSdk, CardType } from '@yuno-payments/yuno-sdk-react-native';
+import { YunoSdk } from '@yuno-payments/yuno-sdk-react-native';
 import type { TokenCollectedData } from '@yuno-payments/yuno-sdk-react-native';
 import { useTheme } from '../hooks';
 import { spacing } from '../theme';

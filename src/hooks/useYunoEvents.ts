@@ -2,7 +2,7 @@
  * Hook to handle Yuno SDK events
  */
 
-import {useEffect, useCallback} from 'react';
+import {useEffect, useRef} from 'react';
 import {NativeEventEmitter, NativeModules} from 'react-native';
 import type {
   YunoPaymentState,
@@ -37,45 +37,14 @@ interface YunoEventsCallbacks {
 }
 
 export const useYunoEvents = (callbacks: YunoEventsCallbacks) => {
-  const {onPaymentStatus, onEnrollmentStatus, onOTT, onOTTInfo} = callbacks;
-
-  const handlePaymentStatus = useCallback(
-    (state: YunoPaymentState) => {
-      console.log('📥 Payment Status Event:', JSON.stringify(state, null, 2));
-      onPaymentStatus?.(state);
-    },
-    [onPaymentStatus],
-  );
-
-  const handleEnrollmentStatus = useCallback(
-    (state: YunoEnrollmentState) => {
-      console.log('📥 Enrollment Status Event:', JSON.stringify(state, null, 2));
-      onEnrollmentStatus?.(state);
-    },
-    [onEnrollmentStatus],
-  );
-
-  const handleOTT = useCallback(
-    (token: string) => {
-      console.log('📥 OTT Event received:', token);
-      onOTT?.(token);
-    },
-    [onOTT],
-  );
-
-  const handleOTTInfo = useCallback(
-    (info: OneTimeTokenInfo) => {
-      console.log('📥 OTT Info Event received:', JSON.stringify(info, null, 2));
-      onOTTInfo?.(info);
-    },
-    [onOTTInfo],
-  );
+  const callbacksRef = useRef(callbacks);
+  callbacksRef.current = callbacks;
 
   useEffect(() => {
     console.log('🎧 Setting up Yuno event listeners...');
 
     const yunoEventEmitter = getYunoEventEmitter();
-    
+
     if (!yunoEventEmitter) {
       console.error('❌ Cannot setup Yuno event listeners: native module not available');
       return;
@@ -83,22 +52,34 @@ export const useYunoEvents = (callbacks: YunoEventsCallbacks) => {
 
     const paymentSubscription = yunoEventEmitter.addListener(
       'YunoPaymentStatus',
-      handlePaymentStatus,
+      (state: YunoPaymentState) => {
+        console.log('📥 Payment Status Event:', JSON.stringify(state, null, 2));
+        callbacksRef.current.onPaymentStatus?.(state);
+      },
     );
 
     const enrollmentSubscription = yunoEventEmitter.addListener(
       'YunoEnrollmentStatus',
-      handleEnrollmentStatus,
+      (state: YunoEnrollmentState) => {
+        console.log('📥 Enrollment Status Event:', JSON.stringify(state, null, 2));
+        callbacksRef.current.onEnrollmentStatus?.(state);
+      },
     );
 
     const ottSubscription = yunoEventEmitter.addListener(
       'YunoOneTimeToken',
-      handleOTT,
+      (token: string) => {
+        console.log('📥 OTT Event received:', token);
+        callbacksRef.current.onOTT?.(token);
+      },
     );
 
     const ottInfoSubscription = yunoEventEmitter.addListener(
       'YunoOneTimeTokenInfo',
-      handleOTTInfo,
+      (info: OneTimeTokenInfo) => {
+        console.log('📥 OTT Info Event received:', JSON.stringify(info, null, 2));
+        callbacksRef.current.onOTTInfo?.(info);
+      },
     );
 
     console.log('✅ Yuno event listeners setup complete');
@@ -111,6 +92,6 @@ export const useYunoEvents = (callbacks: YunoEventsCallbacks) => {
       ottInfoSubscription.remove();
       console.log('✅ Yuno event listeners removed');
     };
-  }, [handlePaymentStatus, handleEnrollmentStatus, handleOTT, handleOTTInfo]);
+  }, []);
 };
 
