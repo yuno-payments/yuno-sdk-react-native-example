@@ -33,6 +33,7 @@ class MainViewController: UIViewController, UITextViewDelegate {
     private let instructionsLabel = UILabel()
     private let configTextView = UITextView()
     private let startButton = UIButton()
+    private let vtexButton = UIButton()
     private let infoCard = UIView()
     private let infoTitleLabel = UILabel()
     private let infoTextLabel = UILabel()
@@ -239,6 +240,31 @@ class MainViewController: UIViewController, UITextViewDelegate {
         startButton.contentEdgeInsets = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         startButton.addTarget(self, action: #selector(startButtonTapped), for: .touchUpInside)
         cardView.addSubview(startButton)
+
+        // Configure VTEX demo button — jumps straight to the React Native VTEX screen
+        // without requiring the config JSON (the VTEX flow self-initializes via preflight)
+        vtexButton.translatesAutoresizingMaskIntoConstraints = false
+        vtexButton.accessibilityIdentifier = "button-vtex-demo"
+        vtexButton.setTitle("🛒 VTEX Wallet Demo", for: .normal)
+        vtexButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
+        vtexButton.backgroundColor = UIColor.clear
+        vtexButton.layer.borderWidth = 1.5
+        if #available(iOS 13.0, *) {
+            let accent = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ?
+                    UIColor.white :
+                    UIColor(red: 0.16, green: 0.16, blue: 0.19, alpha: 1.0)
+            }
+            vtexButton.setTitleColor(accent, for: .normal)
+            vtexButton.layer.borderColor = accent.cgColor
+        } else {
+            vtexButton.setTitleColor(UIColor(red: 0.16, green: 0.16, blue: 0.19, alpha: 1.0), for: .normal)
+            vtexButton.layer.borderColor = UIColor(red: 0.16, green: 0.16, blue: 0.19, alpha: 1.0).cgColor
+        }
+        vtexButton.layer.cornerRadius = 12
+        vtexButton.contentEdgeInsets = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        vtexButton.addTarget(self, action: #selector(vtexButtonTapped), for: .touchUpInside)
+        cardView.addSubview(vtexButton)
         
         // Configure info card
         infoCard.translatesAutoresizingMaskIntoConstraints = false
@@ -360,7 +386,12 @@ class MainViewController: UIViewController, UITextViewDelegate {
             startButton.topAnchor.constraint(equalTo: configTextView.bottomAnchor, constant: 24),
             startButton.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 24),
             startButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -24),
-            startButton.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -24),
+
+            // VTEX demo button
+            vtexButton.topAnchor.constraint(equalTo: startButton.bottomAnchor, constant: 12),
+            vtexButton.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 24),
+            vtexButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -24),
+            vtexButton.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -24),
             
             // Info card
             infoCard.topAnchor.constraint(equalTo: cardView.bottomAnchor, constant: 16),
@@ -449,6 +480,12 @@ class MainViewController: UIViewController, UITextViewDelegate {
     private func navigateToReactNative(countryCode: String, configJson: String) {
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         appDelegate.navigateToReactNative(withCountryCode: countryCode, configJson: configJson)
+    }
+
+    @objc private func vtexButtonTapped() {
+        print("🛒 Navigating to VTEX Wallet demo (no config JSON required)...")
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        appDelegate.navigateToReactNative(withInitialScreen: "vtex")
     }
     
     private func showAlert(title: String, message: String) {

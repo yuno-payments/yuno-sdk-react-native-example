@@ -57,6 +57,32 @@
   [navController pushViewController:reactViewController animated:YES];
 }
 
+- (void)navigateToReactNativeWithInitialScreen:(NSString *)initialScreen
+{
+  // Used by demo flows that self-initialize the SDK from JS (e.g. VTEX preflight) —
+  // no config JSON required
+  NSDictionary *initialProps = @{
+    @"initialScreen": initialScreen ?: @""
+  };
+
+  UIView *rootView = [self.rootViewFactory viewWithModuleName:self.moduleName
+                                            initialProperties:initialProps
+                                                launchOptions:nil];
+
+  if (rootView == nil) {
+    NSLog(@"Error: Could not create React Native root view");
+    return;
+  }
+
+  rootView.backgroundColor = [UIColor whiteColor];
+
+  UIViewController *reactViewController = [[UIViewController alloc] init];
+  reactViewController.view = rootView;
+
+  UINavigationController *navController = (UINavigationController *)self.window.rootViewController;
+  [navController pushViewController:reactViewController animated:YES];
+}
+
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
   return [self bundleURL];

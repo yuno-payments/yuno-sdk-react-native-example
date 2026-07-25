@@ -182,7 +182,37 @@ class MainActivity : AppCompatActivity() {
       topMargin = 24
     }
     cardLayout.addView(startButton, buttonParams)
-    
+
+    // VTEX Wallet demo — goes straight to the React Native VTEX screen without
+    // requiring the config JSON (the VTEX flow self-initializes via preflight)
+    val vtexButton = Button(this).apply {
+      contentDescription = "button-vtex-demo"
+      text = getString(R.string.button_vtex_demo)
+      textSize = 15f
+      setTextColor(ContextCompat.getColor(this@MainActivity, R.color.button_background))
+      typeface = android.graphics.Typeface.DEFAULT_BOLD
+      setPadding(32, 40, 32, 40)
+      isAllCaps = false
+      background = android.graphics.drawable.GradientDrawable().apply {
+        cornerRadius = 24f
+        setColor(android.graphics.Color.TRANSPARENT)
+        setStroke(3, ContextCompat.getColor(this@MainActivity, R.color.button_background))
+      }
+      setOnClickListener {
+        val intent = Intent(this@MainActivity, YunoActivity::class.java).apply {
+          putExtra(YunoActivity.EXTRA_INITIAL_SCREEN, "vtex")
+        }
+        startActivity(intent)
+      }
+    }
+    val vtexButtonParams = android.widget.LinearLayout.LayoutParams(
+      android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+      android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+    ).apply {
+      topMargin = 24
+    }
+    cardLayout.addView(vtexButton, vtexButtonParams)
+
     layout.addView(cardLayout)
 
     // Info card (adapts to theme)

@@ -8,6 +8,7 @@
     <string name="config_json_label">Yuno Configuration JSON:</string>
     <string name="config_json_hint">Enter the configuration JSON</string>
     <string name="button_start">Start Yuno SDK Example</string>
+    <string name="button_vtex_demo">🛒 VTEX Wallet Demo</string>
     
     <!-- Info Section -->
     <string name="info_title">ℹ️ Information</string>
