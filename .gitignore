@@ -154,3 +154,9 @@ logs/
 .tmp/
 temp/
 tmp/
+
+# ================================
+# Yuno credentials (never commit real keys)
+# ================================
+yuno_config.json
+**/yuno_config.json
