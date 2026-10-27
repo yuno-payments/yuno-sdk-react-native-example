@@ -11,11 +11,13 @@ import {useTranslation} from '../i18n';
 
 interface EnrollmentActionsProps {
   onEnrollment: () => void;
+  onEmbeddedEnrollment: () => void;
   loading?: boolean;
 }
 
 export const EnrollmentActions: React.FC<EnrollmentActionsProps> = ({
   onEnrollment,
+  onEmbeddedEnrollment,
   loading = false,
 }) => {
   const t = useTranslation();
@@ -26,6 +28,14 @@ export const EnrollmentActions: React.FC<EnrollmentActionsProps> = ({
         testID="button-enrollment"
         title={t.enrollment.startEnrollment}
         onPress={onEnrollment}
+        variant="primary"
+        disabled={loading}
+        style={styles.button}
+      />
+      <Button
+        testID="button-enrollment-embedded"
+        title={t.enrollment.startEnrollmentEmbedded}
+        onPress={onEmbeddedEnrollment}
         variant="primary"
         disabled={loading}
         style={styles.button}

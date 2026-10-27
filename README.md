@@ -114,21 +114,28 @@ Todos los eventos se registran en la consola:
 
 ### Modificar Configuración de Yuno
 
-En `App.tsx`, puedes modificar la configuración del SDK:
+La app usa el SDK de React Native 2.0.0 (Yuno SDK 3.0.0). La inicialización y las transacciones viven en `src/hooks/useYunoSDK.ts`:
 
 ```typescript
-await YunoSdk.initialize({
-  apiKey: apiKey,
-  countryCode: countryCode,
-  yunoConfig: {
-    lang: YunoLanguage.ES,  // Idioma de la UI
-    cardFlow: CardFlow.MULTI_STEP,  // Flujo de tarjetas
-    saveCardEnabled: true,  // Permitir guardar tarjetas
-    keepLoader: false,  // Mantener loader visible
-    isDynamicViewEnabled: true,  // Vistas dinámicas
+await SdkPayments.initialize(publicKey);
+
+const transaction = new Transaction({
+  countryCode,
+  checkoutSession,
+  language,               // del JSON de configuración
+  saveCardEnabled,        // options.savedCardEnable
+  showStatusScreen,       // options.showPaymentStatus
+  controller: {
+    onStatus,             // resultado final
+    showView,             // solo en los flujos "render" (formulario embebido)
+    createPayment,        // muestra el OTT y espera "Continue Payment with OTT"
   },
 });
+
+await transaction.start({type: 'CARD', vaultedToken});
 ```
+
+Seamless omite `createPayment` (el SDK crea el pago). La lista de métodos usa `transaction.getPaymentMethodsViews` y `<YunoView>`.
 
 ### Personalizar UI
 

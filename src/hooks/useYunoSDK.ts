@@ -1,310 +1,264 @@
-/**
- * Main hook to handle the Yuno SDK
- */
+import {useCallback, useEffect, useRef, useState} from 'react';
+import {Alert, Linking} from 'react-native';
+import {
+  SdkPayments,
+  Transaction,
+  type OneTimeToken,
+  type PaymentMethodSelected,
+  type TransactionController,
+  type TransactionProcess,
+  type TransactionStatus,
+  type YunoViewHandle,
+} from '@yuno-payments/yuno-sdk-react-native';
+import type {AppConfig, EnrollmentConfig, PaymentConfig, StartOptions} from '../types';
 
-import {useState, useCallback, useEffect, useRef} from 'react';
-import {Alert} from 'react-native';
-import {YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
-import {yunoService} from '../services/YunoService';
-import {useYunoEvents} from './useYunoEvents';
-import {useAppStateForeground} from './useAppStateForeground';
-import type {
-  YunoPaymentState,
-  YunoEnrollmentState,
-  OneTimeTokenInfo,
-  PaymentConfig,
-  PaymentLiteConfig,
-  EnrollmentConfig,
-} from '../types';
+interface PendingPayment {
+  resolve: () => void;
+  reject: (error: Error) => void;
+}
 
-export const useYunoSDK = (
-  initialCountryCode: string = 'CO',
-  initialConfigJson?: string,
-) => {
-  // Estado
-  const [isLoading, setIsLoading] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<string>('');
-  const [enrollmentStatus, setEnrollmentStatus] = useState<string>('');
-  const [ottToken, setOttToken] = useState<string>('');
-  const ottTokenRef = useRef(ottToken);
-  ottTokenRef.current = ottToken;
-  const [ottTokenInfo, setOttTokenInfo] = useState<OneTimeTokenInfo | null>(
-    null,
-  );
-
-  // Inicialización
-  // When initialConfigJson is provided (from native), parse it and initialize the SDK
-  useEffect(() => {
-    const initSDK = async () => {
-      try {
-        if (initialConfigJson) {
-          console.log('🚀 Initializing SDK from native config JSON...');
-          const config = JSON.parse(initialConfigJson);
-          
-          // Extract configuration (same structure as Android)
-          const apiKey = config.merchantKeys?.publicKey;
-          const country = config.country;
-          const language = config.language;
-          const savedCardEnable = config.options?.savedCardEnable || false;
-          const showPaymentStatus = config.options?.showPaymentStatus ?? true;
-
-          if (!apiKey || !country) {
-            console.error('❌ Missing required fields in config JSON');
-            return;
-          }
-
-          console.log('📋 Initializing with config:', {
-            country,
-            language,
-            savedCardEnable,
-            showPaymentStatus,
-          });
-
-          // Initialize the SDK through yunoService
-          await yunoService.initialize({
-            apiKey,
-            countryCode: country,
-            yunoConfig: {
-              language: language || 'en',
-              savedCardEnable,
-              showPaymentStatus,
-            },
-          });
-          
-          console.log('✅ SDK initialized successfully from config JSON');
-        } else {
-          // Fallback: just mark as initialized with country code
-          console.log('📱 No config JSON, marking SDK as ready...');
-          await yunoService.markAsInitialized(initialCountryCode);
-          console.log('✅ SDK marked as initialized with country:', initialCountryCode);
-        }
-      } catch (error) {
-        console.error('❌ Error initializing SDK:', error);
-      }
+export function parseAppConfig(configJson?: string): AppConfig | null {
+  if (!configJson) {
+    return null;
+  }
+  try {
+    const config = JSON.parse(configJson);
+    const publicKey = config.merchantKeys?.publicKey;
+    if (!publicKey || !config.country) {
+      return null;
+    }
+    return {
+      publicKey,
+      country: config.country,
+      language: config.language,
+      saveCardEnabled: config.options?.savedCardEnable ?? false,
+      showStatusScreen: config.options?.showPaymentStatus ?? true,
     };
+  } catch {
+    return null;
+  }
+}
 
-    initSDK();
-  }, [initialCountryCode, initialConfigJson]);
+function formatStatus(status: TransactionStatus): string {
+  const message = status.message
+    ? `${status.message.code ?? ''} ${status.message.reason ?? ''}`.trim()
+    : '';
+  return `Status: ${status.status}\nSubstatus: ${status.substatus || 'N/A'}\nMsg: ${message || 'N/A'}`;
+}
 
-  // Manejadores de eventos
-  const handlePaymentStatus = useCallback((state: YunoPaymentState) => {
-    setPaymentStatus(
-      `Status: ${state.status}\nType: ${state.type || 'N/A'}\nMsg: ${
-        state.message || 'N/A'
-      }`,
-    );
-  }, []);
+export const useYunoSDK = (configJson?: string) => {
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [sdkLoading, setSdkLoading] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState('');
+  const [enrollmentStatus, setEnrollmentStatus] = useState('');
+  const [ott, setOtt] = useState<OneTimeToken | null>(null);
+  const [listView, setListView] = useState<YunoViewHandle | null>(null);
+  const [formView, setFormView] = useState<YunoViewHandle | null>(null);
+  const [selected, setSelected] = useState<PaymentMethodSelected | null>(null);
+  const transaction = useRef<Transaction | null>(null);
+  const process = useRef<TransactionProcess | null>(null);
+  const pendingPayment = useRef<PendingPayment | null>(null);
+  const appConfig = useRef(parseAppConfig(configJson));
 
-  const handleEnrollmentStatus = useCallback((state: YunoEnrollmentState) => {
-    setEnrollmentStatus(
-      `Status: ${state.status}\nType: ${state.type || 'N/A'}\nMsg: ${
-        state.message || 'N/A'
-      }`,
-    );
-  }, []);
-
-  const handleOTT = useCallback((token: string) => {
-    setOttToken(token);
-  }, []);
-
-  const handleOTTInfo = useCallback((info: OneTimeTokenInfo) => {
-    setOttTokenInfo(info);
-  }, []);
-
-  // Recuperar OTT cuando la app vuelve al foreground
-  const handleForeground = useCallback(async () => {
-    try {
-      const lastOtt = await yunoService.getLastOTT();
-      const lastOttInfo = await yunoService.getLastOTTInfo();
-
-      if (lastOtt && lastOtt !== ottTokenRef.current) {
-        console.log('🎉 New OTT found! Updating state...');
-        setOttToken(lastOtt);
-      }
-
-      if (lastOttInfo) {
-        setOttTokenInfo(lastOttInfo);
-      }
-    } catch (error) {
-      console.error('❌ Error retrieving last OTT:', error);
+  useEffect(() => {
+    appConfig.current = parseAppConfig(configJson);
+    const config = appConfig.current;
+    if (!config) {
+      console.error('❌ Missing merchantKeys.publicKey or country in the config JSON');
+      return;
     }
+    SdkPayments.initialize(config.publicKey)
+      .then(() => {
+        console.log('✅ Yuno SDK initialized');
+        setIsInitialized(true);
+      })
+      .catch(error => console.error('❌ Error initializing the Yuno SDK:', error));
+  }, [configJson]);
+
+  useEffect(() => {
+    const subscription = Linking.addEventListener('url', ({url}) => {
+      transaction.current?.handleDeeplink(url);
+    });
+    return () => {
+      subscription.remove();
+      transaction.current?.dispose();
+    };
   }, []);
 
-  // Setup de listeners
-  useYunoEvents({
-    onPaymentStatus: handlePaymentStatus,
-    onEnrollmentStatus: handleEnrollmentStatus,
-    onOTT: handleOTT,
-    onOTTInfo: handleOTTInfo,
-  });
+  const reset = useCallback(() => {
+    pendingPayment.current?.reject(new Error('transaction_replaced'));
+    pendingPayment.current = null;
+    transaction.current?.dispose();
+    transaction.current = null;
+    process.current = null;
+    setListView(null);
+    setFormView(null);
+    setSelected(null);
+    setIsLoading(false);
+    setSdkLoading(false);
+  }, []);
 
-  useAppStateForeground({
-    onForeground: handleForeground,
-  });
+  const controller = useCallback(
+    (onStatus: (status: TransactionStatus) => void, options: StartOptions): TransactionController => ({
+      onStatus: status => {
+        console.log('📊 Status:', status.status, status.substatus ?? '', JSON.stringify(status.message ?? null));
+        pendingPayment.current = null;
+        setIsLoading(false);
+        setSdkLoading(false);
+        setFormView(null);
+        setListView(null);
+        onStatus(status);
+      },
+      showLoading: (loading: boolean) => setSdkLoading(loading),
+      ...(options.embedded
+        ? {
+            showView: (view: YunoViewHandle | null, nextProcess: TransactionProcess) => {
+              process.current = nextProcess;
+              setFormView(view);
+            },
+          }
+        : {}),
+      ...(options.createPayment
+        ? {
+            createPayment: (token: OneTimeToken) =>
+              new Promise<void>((resolve, reject) => {
+                console.log('🎫 One-time token received');
+                pendingPayment.current = {resolve, reject};
+                setOtt(token);
+              }),
+          }
+        : {}),
+    }),
+    [],
+  );
 
-  // Métodos de pago
   const startPayment = useCallback(
+    async (config: PaymentConfig, paymentSelected: PaymentMethodSelected, options: StartOptions) => {
+      reset();
+      setPaymentStatus('');
+      setEnrollmentStatus('');
+      setOtt(null);
+      const app = appConfig.current;
+      try {
+        const created = new Transaction({
+          countryCode: config.countryCode,
+          checkoutSession: config.checkoutSession,
+          language: app?.language,
+          saveCardEnabled: app?.saveCardEnabled,
+          showStatusScreen: app?.showStatusScreen,
+          controller: controller(status => setPaymentStatus(formatStatus(status)), options),
+        });
+        transaction.current = created;
+        await created.start(paymentSelected);
+      } catch (error: any) {
+        Alert.alert('Error', `Could not start the payment: ${error.message || 'Unknown error'}`);
+      }
+    },
+    [controller, reset],
+  );
+
+  const showPaymentMethods = useCallback(
     async (config: PaymentConfig) => {
-      // 🧹 Clear previous status before starting new flow
+      reset();
       setPaymentStatus('');
       setEnrollmentStatus('');
-      
-      // 🧹 Clear native payment status to prevent stale status from previous flows
+      setOtt(null);
+      const app = appConfig.current;
       try {
-        await YunoSdk.clearLastPaymentStatus();
-      } catch (error) {
-        console.warn('[useYunoSDK] Failed to clear last payment status:', error);
-      }
-      
-      setIsLoading(true);
-      try {
-        await yunoService.startPayment(config);
+        const created = new Transaction({
+          countryCode: config.countryCode,
+          checkoutSession: config.checkoutSession,
+          language: app?.language,
+          saveCardEnabled: app?.saveCardEnabled,
+          showStatusScreen: app?.showStatusScreen,
+          controller: controller(status => setPaymentStatus(formatStatus(status)), {
+            createPayment: true,
+            embedded: false,
+          }),
+        });
+        transaction.current = created;
+        const views = await created.getPaymentMethodsViews([{kind: 'PAYMENT_METHOD_LIST'}], {
+          onPaymentSelected: paymentSelected => {
+            console.log('💳 Payment method selected:', paymentSelected.type, paymentSelected.selectionSource);
+            setSelected(paymentSelected);
+          },
+        });
+        setListView(views[0]?.view ?? null);
       } catch (error: any) {
-        Alert.alert(
-          'Error',
-          `No se pudo iniciar el pago: ${error.message || 'Error desconocido'}`,
-        );
-      } finally {
-        setIsLoading(false);
+        Alert.alert('Error', `Could not load the payment methods: ${error.message || 'Unknown error'}`);
       }
     },
-    [],
+    [controller, reset],
   );
 
-  const startPaymentLite = useCallback(
-    async (config: PaymentLiteConfig) => {
-      // 🧹 Clear previous status before starting new flow
-      setPaymentStatus('');
-      setEnrollmentStatus('');
-      setIsLoading(true);
-      try {
-        await yunoService.startPaymentLite(config);
-      } catch (error: any) {
-        Alert.alert(
-          'Error',
-          `No se pudo iniciar Payment Lite: ${
-            error.message || 'Error desconocido'
-          }`,
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
-
-  const enrollmentPayment = useCallback(
-    async (config: EnrollmentConfig) => {
-      // 🧹 Clear previous status before starting new flow
-      setPaymentStatus('');
-      setEnrollmentStatus('');
-      setIsLoading(true);
-      try {
-        await yunoService.enrollmentPayment(config);
-      } catch (error: any) {
-        Alert.alert(
-          'Error',
-          `No se pudo iniciar Enrollment: ${
-            error.message || 'Error desconocido'
-          }`,
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
-
-  const startPaymentSeamlessLite = useCallback(
-    async (config: PaymentLiteConfig) => {
-      // 🧹 Clear previous status before starting new flow
-      setPaymentStatus('');
-      setEnrollmentStatus('');
-      setIsLoading(true);
-      try {
-        await yunoService.startPaymentSeamlessLite(config);
-      } catch (error: any) {
-        Alert.alert(
-          'Error',
-          `No se pudo iniciar Seamless Payment: ${
-            error.message || 'Error desconocido'
-          }`,
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
-
-  const continuePayment = useCallback(
-    async (
-      checkoutSession: string,
-      countryCode: string,
-      showPaymentStatus: boolean = true
-    ) => {
-      if (!ottTokenRef.current) {
-        Alert.alert('Error', 'No hay OTT disponible para continuar el pago');
-        return;
-      }
-
-      // 🧹 Clear previous status before starting new flow
-      setPaymentStatus('');
-      setEnrollmentStatus('');
-      setIsLoading(true);
-      try {
-        await yunoService.continuePayment(checkoutSession, countryCode, showPaymentStatus);
-      } catch (error: any) {
-        Alert.alert(
-          'Error',
-          `No se pudo continuar el pago: ${
-            error.message || 'Error desconocido'
-          }`,
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
-
-  const clearOTT = useCallback(async () => {
-    try {
-      await yunoService.clearLastOTT();
-      setOttToken('');
-      setOttTokenInfo(null);
-    } catch (error: any) {
-      Alert.alert(
-        'Error',
-        `No se pudo limpiar el OTT: ${error.message || 'Error desconocido'}`,
-      );
+  const paySelected = useCallback(async () => {
+    if (!selected || !transaction.current) {
+      return;
     }
+    await transaction.current.start(selected);
+  }, [selected]);
+
+  const startEnrollment = useCallback(
+    async (config: EnrollmentConfig, paymentSelected: PaymentMethodSelected, options: StartOptions) => {
+      reset();
+      setPaymentStatus('');
+      setEnrollmentStatus('');
+      const app = appConfig.current;
+      try {
+        const created = new Transaction({
+          countryCode: config.countryCode,
+          customerSession: config.customerSession,
+          language: app?.language,
+          showStatusScreen: app?.showStatusScreen,
+          controller: controller(status => setEnrollmentStatus(formatStatus(status)), options),
+        });
+        transaction.current = created;
+        await created.start(paymentSelected);
+      } catch (error: any) {
+        Alert.alert('Error', `Could not start the enrollment: ${error.message || 'Unknown error'}`);
+      }
+    },
+    [controller, reset],
+  );
+
+  const continuePayment = useCallback(() => {
+    if (!pendingPayment.current) {
+      Alert.alert('Error', 'There is no payment waiting for the one-time token');
+      return;
+    }
+    setIsLoading(true);
+    pendingPayment.current.resolve();
+    pendingPayment.current = null;
   }, []);
 
-  const clearPaymentStatus = useCallback(() => {
-    setPaymentStatus('');
+  const clearOTT = useCallback(() => {
+    pendingPayment.current?.reject(new Error('cancelled_by_merchant'));
+    pendingPayment.current = null;
+    setOtt(null);
   }, []);
 
-  const clearEnrollmentStatus = useCallback(() => {
-    setEnrollmentStatus('');
+  const submitForm = useCallback(() => {
+    process.current?.onSubmit();
   }, []);
 
   return {
-    // Estado
+    isInitialized,
     isLoading,
+    sdkLoading,
     paymentStatus,
     enrollmentStatus,
-    ottToken,
-    ottTokenInfo,
-    // Métodos
+    ott,
+    listView,
+    formView,
+    selected,
+    showPaymentMethods,
+    paySelected,
     startPayment,
-    startPaymentLite,
-    enrollmentPayment,
-    startPaymentSeamlessLite,
+    startEnrollment,
     continuePayment,
     clearOTT,
-    clearPaymentStatus,
-    clearEnrollmentStatus,
+    submitForm,
+    closeTransaction: reset,
   };
 };
-
