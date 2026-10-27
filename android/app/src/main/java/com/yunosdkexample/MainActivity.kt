@@ -10,7 +10,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.yunosdkexample.BuildConfig
-import com.yunosdkreactnative.YunoSdkModule
 import org.json.JSONObject
 
 /**
@@ -285,15 +284,6 @@ class MainActivity : AppCompatActivity() {
       android.util.Log.d("MainActivity", "  - Language: [$language]")
       android.util.Log.d("MainActivity", "  - Saved Card Enable: $savedCardEnable")
       android.util.Log.d("MainActivity", "  - Show Payment Status: $showPaymentStatus")
-      
-      // Initialize Yuno SDK with application context and configuration
-      YunoSdkModule.initialize(
-        applicationContext = applicationContext,
-        apiKey = apiKey,
-        language = language,
-        savedCardEnable = savedCardEnable
-      )
-      android.util.Log.d("MainActivity", "✅ Yuno SDK initialized successfully")
       
       // Navigate to YunoActivity, passing the country code
       val intent = Intent(this, YunoActivity::class.java).apply {

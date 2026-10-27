@@ -1,388 +1,207 @@
-/**
- * Main application screen
- */
-
-import React, {useState, useCallback, useEffect, useRef} from 'react';
-import {ScrollView, StyleSheet, Text, View, Alert, TouchableOpacity, BackHandler} from 'react-native';
-import {YunoPaymentMethods, YunoSdk} from '@yuno-payments/yuno-sdk-react-native';
-import type {PaymentMethodSelectedEvent, PaymentMethodErrorEvent} from '@yuno-payments/yuno-sdk-react-native';
-import {useYunoSDK, useTheme} from '../hooks';
-import {
-  ConfigForm,
-  PaymentActions,
-  EnrollmentActions,
-  OTTDisplay,
-  StatusDisplay,
-} from '../components';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {Alert, BackHandler, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {YunoView, type PaymentMethodSelected} from '@yuno-payments/yuno-sdk-react-native';
+import {parseAppConfig, useTheme, useYunoSDK} from '../hooks';
+import {ConfigForm, EnrollmentActions, OTTDisplay, PaymentActions, StatusDisplay} from '../components';
 import {spacing, typography} from '../theme';
 import {useTranslation} from '../i18n';
-import type {
-  PaymentConfig,
-  PaymentLiteConfig,
-  EnrollmentConfig,
-} from '../types';
 
 interface HomeScreenProps {
   initialCountryCode?: string;
   initialConfigJson?: string;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({
-  initialCountryCode,
-  initialConfigJson,
-}) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({initialCountryCode, initialConfigJson}) => {
   const t = useTranslation();
   const {colors} = useTheme();
   const styles = createStyles(colors);
-
-  // Ref for ScrollView to enable auto-scroll
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Local state for configuration
-  const [countryCode, setCountryCode] = useState('CO');
+  const [countryCode, setCountryCode] = useState(
+    initialCountryCode || parseAppConfig(initialConfigJson)?.country || 'CO',
+  );
   const [customerSession, setCustomerSession] = useState('');
   const [checkoutSession, setCheckoutSession] = useState('');
   const [paymentMethodType, setPaymentMethodType] = useState('CARD');
   const [vaultedToken, setVaultedToken] = useState('');
-  const [showPaymentStatus, setShowPaymentStatus] = useState(true);
-  const [showPaymentMethods, setShowPaymentMethods] = useState(false);
-  const [isPaymentMethodSelected, setIsPaymentMethodSelected] = useState(false);
 
-  // Process initial configuration from native JSON
   useEffect(() => {
     if (initialCountryCode) {
-      console.log('🌍 Setting country code from native:', initialCountryCode);
       setCountryCode(initialCountryCode);
     }
+  }, [initialCountryCode]);
 
-    if (initialConfigJson) {
-      try {
-        console.log('📋 Parsing config JSON from native...');
-        const config = JSON.parse(initialConfigJson);
-        
-        // Extract showPaymentStatus from JSON
-        if (config.options && typeof config.options.showPaymentStatus === 'boolean') {
-          console.log('✅ Setting showPaymentStatus from JSON:', config.options.showPaymentStatus);
-          setShowPaymentStatus(config.options.showPaymentStatus);
-        }
-
-        // Log to confirm we have the data
-        console.log('📦 Parsed config:', {
-          country: config.country,
-          language: config.language,
-          showPaymentStatus: config.options?.showPaymentStatus,
-          savedCardEnable: config.options?.savedCardEnable,
-        });
-      } catch (error) {
-        console.error('❌ Error parsing config JSON:', error);
-      }
-    }
-  }, [initialCountryCode, initialConfigJson]);
-
-  // SDK Hook
   const {
     isLoading,
+    sdkLoading,
     paymentStatus,
     enrollmentStatus,
-    ottToken,
-    ottTokenInfo,
+    ott,
+    listView,
+    formView,
+    selected,
+    showPaymentMethods,
+    paySelected,
     startPayment,
-    startPaymentLite,
-    enrollmentPayment,
-    startPaymentSeamlessLite,
+    startEnrollment,
     continuePayment,
     clearOTT,
-    clearPaymentStatus,
-    clearEnrollmentStatus,
-  } = useYunoSDK(countryCode, initialConfigJson);
+    submitForm,
+    closeTransaction,
+  } = useYunoSDK(initialConfigJson);
 
-  // Effect to return to main view when payment flow finishes
+  const sdkView = ott ? null : listView ? 'list' : formView ? 'form' : null;
+
   useEffect(() => {
-    // If we're showing payment methods AND we receive a status or token, return to main view
-    if (showPaymentMethods && (paymentStatus || ottToken)) {
-      console.log('✅ Payment flow completed, returning to main view');
-      console.log('📊 Payment Status:', paymentStatus || 'N/A');
-      console.log('🎫 OTT Token:', ottToken || 'N/A');
-      
-      // Small delay to ensure native SDK has fully finished
-      setTimeout(() => {
-        setShowPaymentMethods(false);
-        setIsPaymentMethodSelected(false);
-      }, 300);
-    }
-  }, [showPaymentMethods, paymentStatus, ottToken]);
-
-  // Handle Android "back" button
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      () => {
-        // If we're showing payment methods, return to main view
-        if (showPaymentMethods) {
-          console.log('🔙 Back button pressed - Returning to main view');
-          setShowPaymentMethods(false);
-          setIsPaymentMethodSelected(false);
-          return true; // Prevent default behavior (close activity)
-        }
-        
-        // Otherwise, allow default behavior (go to MainActivity)
-        console.log('🔙 Back button pressed - Going to previous activity');
-        return false;
-      },
-    );
-
-    // Cleanup: remove listener when component unmounts
-    return () => backHandler.remove();
-  }, [showPaymentMethods]);
-
-  // Auto-scroll to top when OTT or Status components become visible
-  useEffect(() => {
-    // Check if we have OTT token or any status to display
-    const hasOTT = ottToken && ottToken.trim().length > 0;
-    const hasPaymentStatus = paymentStatus && paymentStatus.trim().length > 0;
-    const hasEnrollmentStatus = enrollmentStatus && enrollmentStatus.trim().length > 0;
-    
-    if (hasOTT || hasPaymentStatus || hasEnrollmentStatus) {
-      console.log('📜 Auto-scrolling to top to show OTT/Status');
-      // Small delay to ensure the components are rendered
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({
-          y: 0,
-          animated: true,
-        });
-      }, 100);
-    }
-  }, [ottToken, paymentStatus, enrollmentStatus]);
-
-  // Required fields validation
-  const validateRequiredFields = useCallback(
-    (requireCheckout: boolean = true): boolean => {
-      if (!customerSession.trim()) {
-        return false;
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (sdkView) {
+        closeTransaction();
+        return true;
       }
-      if (requireCheckout && !checkoutSession.trim()) {
+      return false;
+    });
+    return () => backHandler.remove();
+  }, [sdkView, closeTransaction]);
+
+  useEffect(() => {
+    if (ott || paymentStatus || enrollmentStatus) {
+      setTimeout(() => scrollViewRef.current?.scrollTo({y: 0, animated: true}), 100);
+    }
+  }, [ott, paymentStatus, enrollmentStatus]);
+
+  const requireFields = useCallback(
+    (fields: Array<[string, string]>, title: string, pleaseEnter: string): boolean => {
+      const missing = fields.filter(([value]) => !value.trim()).map(([, label]) => label);
+      if (missing.length > 0) {
+        Alert.alert(title, `${pleaseEnter}: ${missing.join(', ')}`);
         return false;
       }
       return true;
     },
-    [customerSession, checkoutSession],
+    [],
   );
 
-  // Handlers
+  const selectedMethod = useCallback(
+    (): PaymentMethodSelected => ({
+      type: paymentMethodType.trim().toUpperCase(),
+      vaultedToken: vaultedToken.trim() || undefined,
+    }),
+    [paymentMethodType, vaultedToken],
+  );
+
+  const paymentFields = useCallback(
+    (withMethod: boolean) =>
+      requireFields(
+        withMethod
+          ? [
+              [checkoutSession, t.config.checkoutSession],
+              [paymentMethodType, t.config.paymentMethodType],
+            ]
+          : [[checkoutSession, t.config.checkoutSession]],
+        t.payment.requiredFields,
+        t.payment.pleaseEnter,
+      ),
+    [checkoutSession, paymentMethodType, requireFields, t],
+  );
+
   const handleStartPayment = useCallback(() => {
-    console.log('🔵 handleStartPayment called - Showing Payment Methods');
-    console.log('📋 checkoutSession:', checkoutSession || '(empty)');
-    
-    // Payment only requires checkoutSession
-    if (!checkoutSession.trim()) {
-      Alert.alert(t.payment.requiredFields, `${t.payment.pleaseEnter}: ${t.config.checkoutSession}`);
-      return;
+    if (paymentFields(false)) {
+      showPaymentMethods({checkoutSession: checkoutSession.trim(), countryCode});
     }
-
-    // Clear old payment status to prevent useEffect from closing the modal with stale status
-    clearPaymentStatus();
-    clearEnrollmentStatus();
-
-    console.log('✅ Showing payment methods component');
-    setShowPaymentMethods(true);
-  }, [checkoutSession, t, clearPaymentStatus, clearEnrollmentStatus]);
+  }, [paymentFields, showPaymentMethods, checkoutSession, countryCode]);
 
   const handleStartPaymentLite = useCallback(() => {
-    console.log('🔵 handleStartPaymentLite called');
-    console.log('📋 checkoutSession:', checkoutSession || '(empty)');
-    console.log('📋 paymentMethodType:', paymentMethodType || '(empty)');
-    
-    // Payment Lite requires checkoutSession + paymentMethodType
-    const missingFields = [];
-    if (!checkoutSession.trim()) missingFields.push(t.config.checkoutSession);
-    if (!paymentMethodType.trim()) missingFields.push(t.config.paymentMethodType);
-    
-    if (missingFields.length > 0) {
-      Alert.alert(
-        t.payment.requiredFields,
-        `${t.payment.pleaseEnter}: ${missingFields.join(', ')}`,
-      );
-      return;
+    if (paymentFields(true)) {
+      startPayment({checkoutSession: checkoutSession.trim(), countryCode}, selectedMethod(), {
+        createPayment: true,
+        embedded: false,
+      });
     }
-
-    const config: PaymentLiteConfig = {
-      checkoutSession,
-      countryCode,
-      paymentMethodType,
-      vaultedToken: vaultedToken || undefined,
-      showPaymentStatus,
-    };
-
-    console.log('✅ Calling startPaymentLite with config:', config);
-    startPaymentLite(config);
-  }, [
-    checkoutSession,
-    countryCode,
-    paymentMethodType,
-    vaultedToken,
-    showPaymentStatus,
-    startPaymentLite,
-    t,
-  ]);
-
-  const handleEnrollment = useCallback(() => {
-    console.log('🔵 handleEnrollment called');
-    console.log('📋 customerSession:', customerSession || '(empty)');
-    console.log('📋 showPaymentStatus (state):', showPaymentStatus);
-    console.log('📋 showPaymentStatus (typeof):', typeof showPaymentStatus);
-    
-    // Enrollment only requires customerSession
-    if (!customerSession.trim()) {
-      Alert.alert(t.enrollment.requiredFields, `${t.enrollment.pleaseEnter}: ${t.config.customerSession}`);
-      return;
-    }
-
-    const config: EnrollmentConfig = {
-      customerSession,
-      countryCode,
-      showPaymentStatus, // Reuse showPaymentStatus from JSON
-    };
-
-    console.log('✅ Calling enrollmentPayment with config:', JSON.stringify(config, null, 2));
-    enrollmentPayment(config);
-  }, [customerSession, countryCode, showPaymentStatus, enrollmentPayment, t]);
+  }, [paymentFields, startPayment, checkoutSession, countryCode, selectedMethod]);
 
   const handleSeamlessPayment = useCallback(() => {
-    console.log('🔵 handleSeamlessPayment called');
-    console.log('📋 checkoutSession:', checkoutSession || '(empty)');
-    console.log('📋 paymentMethodType:', paymentMethodType || '(empty)');
-    
-    // Seamless Payment requires checkoutSession + paymentMethodType
-    const missingFields = [];
-    if (!checkoutSession.trim()) missingFields.push(t.config.checkoutSession);
-    if (!paymentMethodType.trim()) missingFields.push(t.config.paymentMethodType);
-    
-    if (missingFields.length > 0) {
-      Alert.alert(
-        t.payment.requiredFields,
-        `${t.payment.pleaseEnter}: ${missingFields.join(', ')}`,
-      );
-      return;
+    if (paymentFields(true)) {
+      startPayment({checkoutSession: checkoutSession.trim(), countryCode}, selectedMethod(), {
+        createPayment: false,
+        embedded: false,
+      });
     }
+  }, [paymentFields, startPayment, checkoutSession, countryCode, selectedMethod]);
 
-    const config: PaymentLiteConfig = {
-      checkoutSession,
-      countryCode,
-      paymentMethodType,
-      vaultedToken: vaultedToken || undefined,
-      showPaymentStatus,
-    };
+  const handleEmbeddedPayment = useCallback(() => {
+    if (paymentFields(true)) {
+      startPayment({checkoutSession: checkoutSession.trim(), countryCode}, selectedMethod(), {
+        createPayment: true,
+        embedded: true,
+      });
+    }
+  }, [paymentFields, startPayment, checkoutSession, countryCode, selectedMethod]);
 
-    console.log('✅ Calling startPaymentSeamlessLite with config:', config);
-    startPaymentSeamlessLite(config);
-  }, [
-    checkoutSession,
-    countryCode,
-    paymentMethodType,
-    vaultedToken,
-    showPaymentStatus,
-    startPaymentSeamlessLite,
-    t,
-  ]);
-
-  const handleContinuePayment = useCallback(() => {
-    continuePayment(checkoutSession, countryCode, showPaymentStatus);
-  }, [checkoutSession, countryCode, showPaymentStatus, continuePayment]);
-
-  // Handler for when a payment method is selected
-  const handlePaymentMethodSelected = useCallback(
-    (event: PaymentMethodSelectedEvent) => {
-      console.log('💳 Payment method selected:', event);
-      setIsPaymentMethodSelected(event.isSelected);
+  const enrollment = useCallback(
+    (embedded: boolean) => {
+      if (
+        requireFields(
+          [[customerSession, t.config.customerSession]],
+          t.enrollment.requiredFields,
+          t.enrollment.pleaseEnter,
+        )
+      ) {
+        startEnrollment({customerSession: customerSession.trim(), countryCode}, selectedMethod(), {
+          createPayment: false,
+          embedded,
+        });
+      }
     },
-    []
+    [requireFields, customerSession, countryCode, startEnrollment, selectedMethod, t],
   );
 
-  // Handler for errors in payment methods component
-  const handlePaymentMethodError = useCallback((event: PaymentMethodErrorEvent) => {
-    console.error('❌ Payment method error:', event);
-    Alert.alert('Error', `Could not load payment methods: ${event.message}`, [
-      {text: 'OK'},
-    ]);
-  }, []);
-
-  // Handler to go back from payment methods component
-  const handleBackFromPaymentMethods = useCallback(() => {
-    console.log('🔙 Going back from payment methods');
-    setShowPaymentMethods(false);
-    setIsPaymentMethodSelected(false);
-  }, []);
-
-  // Handler for "Pay" button (Payment Full Flow)
-  const handlePayButtonPress = useCallback(() => {
-    console.log('🔵 handlePayButtonPress called (Payment Full)');
-    console.log('📋 checkoutSession:', checkoutSession);
-    console.log('📋 countryCode:', countryCode);
-    console.log('📋 showPaymentStatus:', showPaymentStatus);
-
-    // No need to validate because it was already validated when showing the list
-    const config: PaymentConfig = {
-      checkoutSession,
-      countryCode,
-      showPaymentStatus,
-    };
-
-    console.log('✅ Calling startPayment with config:', config);
-    startPayment(config);
-  }, [checkoutSession, countryCode, showPaymentStatus, startPayment]);
-
-  // If payment methods are being shown, render the component
-  if (showPaymentMethods) {
+  if (sdkView) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{t.paymentMethods.title}</Text>
-          <Text style={styles.subtitle}>{t.paymentMethods.subtitle}</Text>
-        </View>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.sdkScroll}>
+          <View style={styles.header}>
+            <Text style={styles.title}>{sdkView === 'list' ? t.paymentMethods.title : t.payment.embeddedPayment}</Text>
+            {sdkView === 'list' ? <Text style={styles.subtitle}>{t.paymentMethods.subtitle}</Text> : null}
+          </View>
 
-        <View style={styles.infoContainer}>
-          <Text style={styles.infoLabel}>{t.paymentMethods.checkoutSession}:</Text>
-          <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="middle">
-            {checkoutSession}
-          </Text>
-          <Text style={styles.infoLabel}>{t.paymentMethods.country}:</Text>
-          <Text style={styles.infoValue}>{countryCode}</Text>
-        </View>
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoLabel}>{t.paymentMethods.checkoutSession}:</Text>
+            <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="middle">
+              {checkoutSession || customerSession}
+            </Text>
+            <Text style={styles.infoLabel}>{t.paymentMethods.country}:</Text>
+            <Text style={styles.infoValue}>{countryCode}</Text>
+          </View>
 
-        {/* Flex container that takes all available space */}
-        <View style={styles.paymentMethodsWrapper}>
-          <YunoPaymentMethods
-            testID="yuno-payment-methods-view"
-            checkoutSession={checkoutSession}
-            countryCode={countryCode}
-            onPaymentMethodSelected={handlePaymentMethodSelected}
-            onPaymentMethodError={handlePaymentMethodError}
-            style={styles.paymentMethods}
-          />
-        </View>
+          <View style={styles.paymentMethodsWrapper}>
+            {sdkView === 'list' && listView ? <YunoView testID="yuno-payment-methods-view" view={listView} /> : null}
+            {sdkView === 'form' && formView ? <YunoView testID="yuno-embedded-form-view" view={formView} /> : null}
+          </View>
 
-        {isPaymentMethodSelected && (
-          <TouchableOpacity
-            testID="button-pay"
-            style={styles.payButton}
-            onPress={handlePayButtonPress}
-            activeOpacity={0.7}>
-            <Text style={styles.payButtonText}>{t.paymentMethods.payButton}</Text>
+          {sdkView === 'list' && selected ? (
+            <TouchableOpacity testID="button-pay" style={styles.payButton} onPress={paySelected} activeOpacity={0.7}>
+              <Text style={styles.payButtonText}>{t.paymentMethods.payButton}</Text>
+            </TouchableOpacity>
+          ) : null}
+          {sdkView === 'form' ? (
+            <TouchableOpacity testID="button-submit-embedded" style={styles.payButton} onPress={submitForm} activeOpacity={0.7}>
+              <Text style={styles.payButtonText}>{t.payment.submitEmbedded}</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          <TouchableOpacity testID="button-back" style={styles.backButton} onPress={closeTransaction} activeOpacity={0.7}>
+            <Text style={styles.backButtonText}>{t.paymentMethods.backButton}</Text>
           </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          testID="button-back"
-          style={styles.backButton}
-          onPress={handleBackFromPaymentMethods}
-          activeOpacity={0.7}>
-          <Text style={styles.backButtonText}>{t.paymentMethods.backButton}</Text>
-        </TouchableOpacity>
+          {sdkLoading ? (
+            <Text testID="sdk-loading" style={styles.sdkLoading}>
+              {t.status.processing}
+            </Text>
+          ) : null}
+        </ScrollView>
       </View>
     );
   }
 
-  // Normal form view
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -398,19 +217,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         contentInsetAdjustmentBehavior="automatic">
-        <OTTDisplay
-          token={ottToken}
-          tokenInfo={ottTokenInfo}
-          checkoutSession={checkoutSession}
-          onContinuePayment={handleContinuePayment}
-          onClear={clearOTT}
-          loading={isLoading}
-        />
+        {sdkLoading ? (
+          <Text testID="sdk-loading" style={styles.sdkLoading}>
+            {t.status.processing}
+          </Text>
+        ) : null}
 
-        <StatusDisplay
-          paymentStatus={paymentStatus}
-          enrollmentStatus={enrollmentStatus}
-        />
+        <OTTDisplay ott={ott} onContinuePayment={continuePayment} onClear={clearOTT} loading={isLoading} />
+
+        <StatusDisplay paymentStatus={paymentStatus} enrollmentStatus={enrollmentStatus} />
 
         <ConfigForm
           customerSession={customerSession}
@@ -427,11 +242,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           onStartPayment={handleStartPayment}
           onStartPaymentLite={handleStartPaymentLite}
           onSeamlessPayment={handleSeamlessPayment}
+          onEmbeddedPayment={handleEmbeddedPayment}
           loading={isLoading}
         />
 
         <EnrollmentActions
-          onEnrollment={handleEnrollment}
+          onEnrollment={() => enrollment(false)}
+          onEmbeddedEnrollment={() => enrollment(true)}
           loading={isLoading}
         />
       </ScrollView>
@@ -492,12 +309,17 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleShe
     fontWeight: '600',
   },
   paymentMethodsWrapper: {
-    flex: 1,
     marginTop: spacing.md,
     marginHorizontal: spacing.md,
   },
-  paymentMethods: {
-    flex: 1,
+  sdkScroll: {
+    paddingBottom: spacing.lg,
+  },
+  sdkLoading: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginVertical: spacing.sm,
   },
   payButton: {
     backgroundColor: colors.text,      // neutralB (black in light, white in dark)
