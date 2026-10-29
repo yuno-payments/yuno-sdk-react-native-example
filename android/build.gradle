@@ -31,12 +31,3 @@ allprojects {
         }
     }
 }
-
-// Apply Compose plugin to Yuno SDK module
-subprojects { subproject ->
-    subproject.plugins.withId('com.android.library') {
-        if (subproject.name.contains('yuno-sdk') || subproject.name.contains('yuno-payments')) {
-            subproject.apply plugin: 'org.jetbrains.kotlin.plugin.compose'
-        }
-    }
-}

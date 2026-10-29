@@ -5,7 +5,6 @@ import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
-import com.yunosdkreactnative.YunoSdkModule
 import org.json.JSONObject
 
 /**
@@ -52,22 +51,4 @@ class YunoActivity : ReactActivity() {
     const val EXTRA_COUNTRY_CODE = "YUNO_COUNTRY_CODE"
     const val EXTRA_CONFIG_JSON = "YUNO_CONFIG_JSON"
   }
-
-  /**
-   * REQUIRED FOR YUNO SDK:
-   * Register Yuno callbacks in onCreate() BEFORE super.onCreate().
-   * This is CRITICAL: ActivityResultLaunchers MUST be registered before the activity
-   * reaches the STARTED state.
-   * 
-   * The SDK must be already initialized before this activity starts.
-   */
-  override fun onCreate(savedInstanceState: Bundle?) {
-    // Register Yuno callbacks BEFORE super.onCreate()
-    // This is REQUIRED by Android's registerForActivityResult() API
-    YunoSdkModule.registerYunoCallbacks(this)
-    android.util.Log.d("YunoActivity", "✅ Yuno callbacks registered")
-    
-    super.onCreate(savedInstanceState)
-  }
 }
-

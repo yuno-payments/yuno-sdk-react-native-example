@@ -13,6 +13,7 @@ interface PaymentActionsProps {
   onStartPayment: () => void;
   onStartPaymentLite: () => void;
   onSeamlessPayment: () => void;
+  onEmbeddedPayment: () => void;
   loading?: boolean;
 }
 
@@ -20,6 +21,7 @@ export const PaymentActions: React.FC<PaymentActionsProps> = ({
   onStartPayment,
   onStartPaymentLite,
   onSeamlessPayment,
+  onEmbeddedPayment,
   loading = false,
 }) => {
   const t = useTranslation();
@@ -46,6 +48,14 @@ export const PaymentActions: React.FC<PaymentActionsProps> = ({
         testID="button-seamless-payment"
         title={t.payment.seamlessPayment}
         onPress={onSeamlessPayment}
+        variant="primary"
+        disabled={loading}
+        style={styles.button}
+      />
+      <Button
+        testID="button-embedded-payment"
+        title={t.payment.embeddedPayment}
+        onPress={onEmbeddedPayment}
         variant="primary"
         disabled={loading}
         style={styles.button}
