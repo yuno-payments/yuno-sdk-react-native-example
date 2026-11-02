@@ -11,21 +11,24 @@ import {Button} from './Button';
 import {spacing, typography} from '../theme';
 import {useTranslation} from '../i18n';
 import {useTheme} from '../hooks';
-import type {OneTimeTokenInfo} from '../types';
+import type {OneTimeToken} from '@yuno-payments/yuno-sdk-react-native';
 
 interface OTTDisplayProps {
-  token: string;
-  tokenInfo: OneTimeTokenInfo | null;
-  checkoutSession: string;
+  ott: OneTimeToken | null;
   onContinuePayment: () => void;
   onClear: () => void;
   loading?: boolean;
 }
 
+function text(value: unknown): string {
+  if (value === undefined || value === null || value === '') {
+    return 'N/A';
+  }
+  return typeof value === 'object' ? JSON.stringify(value) : String(value);
+}
+
 export const OTTDisplay: React.FC<OTTDisplayProps> = ({
-  token,
-  tokenInfo,
-  checkoutSession,
+  ott,
   onContinuePayment,
   onClear,
   loading = false,
@@ -34,11 +37,13 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
   const {colors} = useTheme();
   const styles = createStyles(colors);
 
+  const token = typeof ott?.token === 'string' ? ott.token : '';
+
   const handleCopyToken = () => {
     Clipboard.setString(token);
   };
 
-  if (!token) {
+  if (!ott || !token) {
     // Return empty View to maintain position in layout
     return <View />;
   }
@@ -52,38 +57,16 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
         </Text>
       </View>
 
-      {tokenInfo && (
-        <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>{t.ott.additionalInfo}:</Text>
-          <InfoRow label={t.ott.accountId} value={tokenInfo.account_id} />
-          <InfoRow label={t.ott.customerSession} value={tokenInfo.customer_session} />
-          <InfoRow label={t.ott.checkoutSession} value={tokenInfo.checkout_session} />
-          <InfoRow label={t.ott.accountType} value={tokenInfo.account_type} />
-          <InfoRow label={t.ott.category} value={tokenInfo.category} />
-          <InfoRow
-            label={t.ott.issuer}
-            value={
-              typeof tokenInfo.issuer === 'object'
-                ? tokenInfo.issuer?.name || 'N/A'
-                : tokenInfo.issuer || 'N/A'
-            }
-          />
-          <InfoRow label={t.ott.lastFourDigits} value={tokenInfo.last_four_digits} />
-        </View>
-      )}
-
       <View style={styles.buttonContainer}>
-        {checkoutSession && (
-          <Button
-            testID="button-continue-payment"
-            title={t.ott.continuePayment}
-            onPress={onContinuePayment}
-            variant="success"
-            disabled={loading}
-            loading={loading}
-            style={styles.button}
-          />
-        )}
+        <Button
+          testID="button-continue-payment"
+          title={t.ott.continuePayment}
+          onPress={onContinuePayment}
+          variant="success"
+          disabled={loading}
+          loading={loading}
+          style={styles.button}
+        />
         <Button
           testID="button-copy-ott"
           title="Copy"
@@ -101,6 +84,14 @@ export const OTTDisplay: React.FC<OTTDisplayProps> = ({
           style={styles.button}
         />
       </View>
+      <View style={styles.infoContainer}>
+        <Text style={styles.sectionTitle}>{t.ott.additionalInfo}:</Text>
+        <InfoRow label={t.ott.paymentMethod} value={text(ott.type)} />
+        <InfoRow label={t.ott.vaultOnSuccess} value={text(ott.vault_on_success)} />
+        <InfoRow label={t.ott.cardData} value={text(ott.card_data)} />
+        <InfoRow label={t.ott.customerInfo} value={text(ott.customer)} />
+      </View>
+
     </Card>
   );
 };

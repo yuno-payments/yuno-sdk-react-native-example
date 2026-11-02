@@ -19,14 +19,18 @@ Este documento lista todos los identificadores de prueba (`testID`) disponibles 
 ### Botones de Pago
 - **`button-start-payment`**: Botón "Start Payment (Full Flow)"
 - **`button-start-payment-lite`**: Botón "Start Payment Lite"
-- **`button-seamless-payment`**: Botón "Seamless Payment"
+- **`button-seamless-payment`**: Botón "Seamless Payment" (el SDK crea el pago; la sesión debe tener `workflow: SDK_SEAMLESS`)
+- **`button-embedded-payment`**: Botón "Embedded Payment (render)": el formulario del SDK se muestra dentro de la pantalla (`showView`)
 
 ### Botón de Enrollment
 - **`button-enrollment`**: Botón "Enrollment Payment"
+- **`button-enrollment-embedded`**: Botón "Enrollment (render)": el formulario de enrollment se muestra dentro de la pantalla
 
 ### One-Time Token (OTT)
-- **`button-continue-payment`**: Botón para continuar el pago con OTT
-- **`button-clear-ott`**: Botón para limpiar el OTT
+- **`button-continue-payment`**: Continúa el pago después de crearlo con el OTT (resuelve `createPayment`). En Android el SDK nativo espera **60 segundos** como máximo: crear el pago y presionar este botón dentro de ese tiempo, o el resultado es `INTERNAL_ERROR` (`OperationTimeout`)
+- **`sdk-loading`**: Texto "Processing…" mientras el SDK está cargando (la app maneja el loader con `showLoading`, así la pantalla del OTT sigue usable)
+- **`button-copy-ott`**: Copia el OTT
+- **`button-clear-ott`**: Descarta el OTT y cancela el pago (rechaza `createPayment`)
 
 ## Modal de Métodos de Pago
 
@@ -35,7 +39,20 @@ Este documento lista todos los identificadores de prueba (`testID`) disponibles 
 
 ### Botones del Modal
 - **`button-pay`**: Botón "Pay" (aparece después de seleccionar un método de pago)
-- **`button-back`**: Botón "← Back" para volver a la pantalla principal
+- **`button-back`**: Botón "← Back" para volver a la pantalla principal (cierra la transacción)
+
+## Formulario Embebido (render)
+
+- **`yuno-embedded-form-view`**: Vista nativa con el formulario del SDK (tarjeta, APM o enrollment)
+- **`button-submit-embedded`**: Botón del comercio que envía el formulario (`process.onSubmit()`)
+- **`button-back`**: Cierra la transacción y vuelve a la pantalla principal
+
+## Pantalla Headless
+
+- **`headless-payment-json-input`** / **`start-payment-button`**: JSON con `checkoutSession` y `paymentSelected` (`type` + `transactionData`)
+- **`headless-enrollment-json-input`** / **`start-enrollment-button`**: JSON con `customerSession` y `paymentSelected`
+- **`copy-ott-button`**, **`continue-payment-button`**, **`close-ott-button`**: diálogo del OTT
+- **`headless-status-text`** / **`close-status-button`**: resultado (`Status: …`)
 
 ## Uso con Appium
 
@@ -103,5 +120,5 @@ await $('~button-pay').click();
 
 ## Actualizado
 
-Este documento está actualizado con la versión **1.0.49** del SDK de React Native.
+Este documento está actualizado con la versión **2.0.0** del SDK de React Native (Yuno SDK 3.0.0).
 

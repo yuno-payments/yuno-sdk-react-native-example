@@ -40,6 +40,9 @@ export const en = {
     startPayment: 'Start Payment (Full Flow)',
     startPaymentLite: 'Start Payment Lite',
     seamlessPayment: 'Seamless Payment',
+    embeddedPayment: 'Embedded Payment (render)',
+    submitEmbedded: 'Pay (merchant button)',
+    closeEmbedded: 'Close',
     requiredFields: 'Required Fields',
     pleaseEnter: 'Please enter',
   },
@@ -48,6 +51,7 @@ export const en = {
   enrollment: {
     title: 'Enrollment',
     startEnrollment: 'Enrollment Payment',
+    startEnrollmentEmbedded: 'Enrollment (render)',
     requiredFields: 'Required Fields',
     pleaseEnter: 'Please enter',
   },
@@ -58,6 +62,8 @@ export const en = {
     token: 'Token',
     noToken: 'No token available yet',
     continuePayment: 'Continue Payment with OTT',
+    vaultOnSuccess: 'Vault on success',
+    cardData: 'Card data',
     clear: 'Clear OTT',
     additionalInfo: 'Additional Information',
     accountId: 'Account ID',
@@ -90,6 +96,7 @@ export const en = {
     paymentStatus: 'Payment Status',
     enrollmentStatus: 'Enrollment Status',
     noStatus: 'No status yet',
+    processing: 'Processing…',
   },
 
   // Error messages

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -10,60 +10,49 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
-import { YunoSdk } from '@yuno-payments/yuno-sdk-react-native';
-import type { TokenCollectedData } from '@yuno-payments/yuno-sdk-react-native';
-import { useTheme } from '../hooks';
-import { spacing } from '../theme';
+import {Transaction, type OneTimeToken, type TransactionStatus} from '@yuno-payments/yuno-sdk-react-native';
+import {useTheme} from '../hooks';
+import {spacing, typography} from '../theme';
 
 const DEFAULT_PAYMENT_JSON = `{
-  "checkout_session": "73ed16c5-4481-4dce-af42-404b68e21027",
-  "payment_method": {
+  "checkoutSession": "73ed16c5-4481-4dce-af42-404b68e21027",
+  "paymentSelected": {
     "type": "CARD",
-    "vaulted_token": null,
-    "card": {
-      "save": false,
-      "detail": {
-        "expiration_month": 11,
-        "expiration_year": 25,
-        "number": "4000000000001091",
-        "security_code": "123",
-        "holder_name": "JOHN DOE",
+    "transactionData": {
+      "card": {
+        "number": "4111111111111111",
+        "securityCode": "123",
+        "expirationMonth": 12,
+        "expirationYear": 2029,
+        "holderName": "JOHN DOE",
         "type": "CREDIT"
+      },
+      "customer": {
+        "email": "john.doe@example.com",
+        "document": {"documentType": "CC", "documentNumber": "1100221287"}
       }
     }
   }
 }`;
 
 const DEFAULT_ENROLLMENT_JSON = `{
-  "customer_session": "4cad3fa7-82b0-4337-9e7a-a187d50289b0",
-  "payment_method": {
+  "customerSession": "4cad3fa7-82b0-4337-9e7a-a187d50289b0",
+  "paymentSelected": {
     "type": "CARD",
-    "card": {
-      "save": false,
-      "detail": {
-        "expiration_month": 11,
-        "expiration_year": 25,
+    "transactionData": {
+      "card": {
         "number": "4111111111111111",
-        "security_code": "999",
-        "holder_name": "PEPITO",
+        "securityCode": "123",
+        "expirationMonth": 12,
+        "expirationYear": 2029,
+        "holderName": "PEPITO PEREZ",
         "type": "CREDIT"
-      }
-    },
-    "customer": {
-      "id": "customer123",
-      "merchant_customer_id": "merchant123",
-      "first_name": "Pepito",
-      "last_name": "Pérez",
-      "gender": "MALE",
-      "date_of_birth": "1990-01-01",
-      "email": "pepito@example.com",
-      "country": "ES",
-      "nationality": "ES",
-      "created_at": "2023-01-01T00:00:00Z",
-      "updated_at": "2023-01-02T00:00:00Z",
-      "document": {
-        "document_number": "1100221287",
-        "document_type": "CC"
+      },
+      "customer": {
+        "firstName": "Pepito",
+        "lastName": "Pérez",
+        "email": "pepito@example.com",
+        "document": {"documentType": "CC", "documentNumber": "1100221287"}
       }
     }
   }
@@ -73,126 +62,90 @@ interface HeadlessPaymentScreenProps {
   initialCountryCode?: string;
 }
 
-export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPaymentScreenProps) {
-  const { colors } = useTheme();
+function formatStatus(status: TransactionStatus): string {
+  const message = status.message ? `${status.message.code ?? ''} ${status.message.reason ?? ''}`.trim() : '';
+  return `Status: ${status.status}\nSubstatus: ${status.substatus || 'N/A'}\nMsg: ${message || 'N/A'}`;
+}
+
+export default function HeadlessPaymentScreen({initialCountryCode}: HeadlessPaymentScreenProps) {
+  const {colors} = useTheme();
   const styles = createStyles(colors);
-  
+
   const [paymentJsonText, setPaymentJsonText] = useState(DEFAULT_PAYMENT_JSON);
   const [enrollmentJsonText, setEnrollmentJsonText] = useState(DEFAULT_ENROLLMENT_JSON);
   const [isLoading, setIsLoading] = useState(false);
-  const [ott, setOtt] = useState<string | null>(null);
-  const [vaultedToken, setVaultedToken] = useState<string | null>(null);
-  const [threeDsUrl, setThreeDsUrl] = useState<string | null>(null);
-  const [checkoutSession, setCheckoutSession] = useState('');
-  const [countryCode, setCountryCode] = useState(initialCountryCode || 'CO');
+  const [sdkLoading, setSdkLoading] = useState(false);
+  const [ott, setOtt] = useState<OneTimeToken | null>(null);
+  const [status, setStatus] = useState('');
+  const transaction = useRef<Transaction | null>(null);
+  const pendingPayment = useRef<{resolve: () => void; reject: (error: Error) => void} | null>(null);
+  const countryCode = initialCountryCode || 'CO';
 
-  const handleStartPayment = async () => {
+  useEffect(() => () => transaction.current?.dispose(), []);
+
+  const run = async (jsonText: string, enrollment: boolean) => {
+    let parsed: any;
     try {
-      // Parse JSON - keep snake_case names for Android native SDK
-      const parsedData = JSON.parse(paymentJsonText);
-
-      // Store checkout session for later use
-      setCheckoutSession(parsedData.checkout_session);
-
-      setIsLoading(true);
-
-      // Generate token using headless method
-      // Pass parsedData directly as it already has correct snake_case field names
-      console.log('🚀 Generating token with headless flow...');
-      console.log('📍 Using country code:', countryCode);
-      console.log('📦 Token data:', JSON.stringify(parsedData, null, 2));
-      const result = await YunoSdk.generateToken(
-        parsedData as any, // Cast to any since we're passing snake_case object
-        parsedData.checkout_session,
-        countryCode
-      );
-
-      console.log('✅ Token generated:', result);
-
-      if (result.token) {
-        setOtt(result.token);
-      } else if (result.error) {
-        Alert.alert('Error', result.error);
-      }
+      parsed = JSON.parse(jsonText);
     } catch (error: any) {
-      console.error('❌ Error generating token:', error);
-      Alert.alert(
-        'Error',
-        error.message || 'Failed to generate token. Check the console for details.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStartEnrollment = async () => {
-    try {
-      // Parse JSON - keep snake_case names for Android native SDK
-      const parsedData = JSON.parse(enrollmentJsonText);
-
-      setIsLoading(true);
-
-      // Start enrollment using headless method
-      console.log('🚀 Starting enrollment with headless flow...');
-      console.log('📍 Using country code:', countryCode);
-      console.log('📦 Enrollment data:', JSON.stringify(parsedData, null, 2));
-      
-      const result = await YunoSdk.continueEnrollment(
-        parsedData, // Pass parsedData directly (snake_case)
-        parsedData.customer_session,
-        countryCode
-      );
-
-      console.log('✅ Enrollment result:', result);
-
-      if (result.vaultedToken) {
-        setVaultedToken(result.vaultedToken);
-      } else if (result.error) {
-        Alert.alert('Error', `Failed to create vaulted token: ${result.error}`);
-      }
-      
-    } catch (error: any) {
-      console.error('❌ Error in enrollment:', error);
-      Alert.alert(
-        'Error',
-        error.message || 'Failed to start enrollment. Check the console for details.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleContinuePayment = async () => {
-    if (!checkoutSession) {
-      Alert.alert('Error', 'No checkout session available');
+      Alert.alert('Invalid JSON', error.message);
       return;
     }
-
+    transaction.current?.dispose();
+    pendingPayment.current = null;
+    setOtt(null);
+    setStatus('');
+    setIsLoading(true);
+    const controller = {
+      onStatus: (result: TransactionStatus) => {
+        setIsLoading(false);
+        setSdkLoading(false);
+        pendingPayment.current = null;
+        setOtt(null);
+        setStatus(formatStatus(result));
+      },
+      showLoading: (loading: boolean) => setSdkLoading(loading),
+      ...(enrollment
+        ? {}
+        : {
+            createPayment: (token: OneTimeToken) =>
+              new Promise<void>((resolve, reject) => {
+                setIsLoading(false);
+                pendingPayment.current = {resolve, reject};
+                setOtt(token);
+              }),
+          }),
+    };
     try {
-      setIsLoading(true);
-      setOtt(null); // Close OTT dialog
-
-      console.log('🚀 Getting 3DS challenge URL with headless flow...');
-      console.log('📍 Using country code:', countryCode);
-      const result = await YunoSdk.getThreeDSecureChallenge(
-        checkoutSession,
-        countryCode
-      );
-
-      console.log('✅ 3DS Challenge result:', result);
-
-      setThreeDsUrl(result.data);
+      const created = enrollment
+        ? new Transaction({countryCode, customerSession: parsed.customerSession, controller})
+        : new Transaction({countryCode, checkoutSession: parsed.checkoutSession, controller});
+      transaction.current = created;
+      await created.start(parsed.paymentSelected);
     } catch (error: any) {
-      console.error('❌ Error getting 3DS challenge:', error);
-      Alert.alert('Error', error.message || 'Failed to get 3DS challenge URL');
-    } finally {
       setIsLoading(false);
+      Alert.alert('Error', error.message || 'Could not start the transaction');
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    Clipboard.setString(text);
+  const handleContinuePayment = () => {
+    setIsLoading(true);
+    pendingPayment.current?.resolve();
+    pendingPayment.current = null;
+    setOtt(null);
   };
+
+  const handleCloseOtt = () => {
+    pendingPayment.current?.reject(new Error('cancelled_by_merchant'));
+    pendingPayment.current = null;
+    setOtt(null);
+  };
+
+  const copyToClipboard = (value: string) => {
+    Clipboard.setString(value);
+  };
+
+  const token = typeof ott?.token === 'string' ? ott.token : null;
 
   return (
     <View style={styles.container}>
@@ -203,6 +156,12 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
         keyboardDismissMode="interactive"
         contentInsetAdjustmentBehavior="automatic"
       >
+        {sdkLoading ? (
+          <Text testID="sdk-loading" style={styles.sdkLoading}>
+            Processing...
+          </Text>
+        ) : null}
+
         <Text style={styles.title}>Headless Payment</Text>
 
         <Text style={styles.label}>Payment JSON:</Text>
@@ -217,7 +176,7 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
 
         <TouchableOpacity
           style={[styles.button, !paymentJsonText && styles.buttonDisabled]}
-          onPress={handleStartPayment}
+          onPress={() => run(paymentJsonText, false)}
           disabled={!paymentJsonText || isLoading}
           testID="start-payment-button"
         >
@@ -243,100 +202,61 @@ export default function HeadlessPaymentScreen({ initialCountryCode }: HeadlessPa
 
         <TouchableOpacity
           style={[styles.button, !enrollmentJsonText && styles.buttonDisabled]}
-          onPress={handleStartEnrollment}
+          onPress={() => run(enrollmentJsonText, true)}
           disabled={!enrollmentJsonText || isLoading}
           testID="start-enrollment-button"
         >
           {isLoading ? (
             <ActivityIndicator color={colors.textInverse} />
           ) : (
-            <Text style={styles.buttonText}>Continue Enrollment</Text>
+            <Text style={styles.buttonText}>Start Enrollment</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
 
-      {/* One Time Token Dialog */}
-      {ott && (
+      {status ? (
+        <View style={styles.modal}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Status</Text>
+            <Text style={styles.modalText} testID="headless-status-text">
+              {status}
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.button, styles.buttonSecondary]}
+                onPress={() => setStatus('')}
+                testID="close-status-button">
+                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      ) : null}
+
+      {token && (
         <View style={styles.modal}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>One Time Token</Text>
             <ScrollView style={styles.modalScroll}>
-              <Text style={styles.modalText}>{ott}</Text>
+              <Text style={styles.modalText}>{token}</Text>
             </ScrollView>
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.button, styles.buttonSecondary]}
-                onPress={() => copyToClipboard(ott)}
-                testID="copy-ott-button"
-              >
+                onPress={() => copyToClipboard(token)}
+                testID="copy-ott-button">
                 <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Copy</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.buttonSecondary]}
                 onPress={handleContinuePayment}
-                testID="continue-payment-button"
-              >
+                testID="continue-payment-button">
                 <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Continue</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.buttonSecondary]}
-                onPress={() => setOtt(null)}
-              >
-                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* Vaulted Token Dialog */}
-      {vaultedToken && (
-        <View style={styles.modal}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Vaulted Token</Text>
-            <ScrollView style={styles.modalScroll}>
-              <Text style={styles.modalText}>{vaultedToken}</Text>
-            </ScrollView>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.button, styles.buttonSecondary]}
-                onPress={() => copyToClipboard(vaultedToken)}
-                testID="copy-vaulted-token-button"
-              >
-                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Copy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.buttonSecondary]}
-                onPress={() => setVaultedToken(null)}
-                testID="close-vaulted-token-button"
-              >
-                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* 3DS URL Dialog */}
-      {threeDsUrl && (
-        <View style={styles.modal}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>3DS Challenge URL</Text>
-            <ScrollView style={styles.modalScroll}>
-              <Text style={styles.modalText}>{threeDsUrl}</Text>
-            </ScrollView>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.button, styles.buttonSecondary]}
-                onPress={() => copyToClipboard(threeDsUrl)}
-                testID="copy-3ds-url-button"
-              >
-                <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Copy</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.buttonSecondary]}
-                onPress={() => setThreeDsUrl(null)}
-              >
+                onPress={handleCloseOtt}
+                testID="close-ott-button">
                 <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Close</Text>
               </TouchableOpacity>
             </View>
@@ -463,6 +383,12 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   modalButtons: {
     gap: spacing.sm,
+  },
+  sdkLoading: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginVertical: spacing.sm,
   },
   loadingOverlay: {
     position: 'absolute',
