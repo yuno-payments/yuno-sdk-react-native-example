@@ -120,5 +120,5 @@ await $('~button-pay').click();
 
 ## Actualizado
 
-Este documento está actualizado con la versión **2.0.0** del SDK de React Native (Yuno SDK 3.0.0).
+Este documento está actualizado con la versión **2.1.0** del SDK de React Native (Yuno SDK 3.1.0).
 
