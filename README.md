@@ -114,7 +114,7 @@ Todos los eventos se registran en la consola:
 
 ### Modificar Configuración de Yuno
 
-La app usa el SDK de React Native 2.0.0 (Yuno SDK 3.0.0). La inicialización y las transacciones viven en `src/hooks/useYunoSDK.ts`:
+La app usa el SDK de React Native 2.1.0 (Yuno SDK 3.1.0). La inicialización y las transacciones viven en `src/hooks/useYunoSDK.ts`:
 
 ```typescript
 await SdkPayments.initialize(publicKey);
